@@ -32,14 +32,24 @@ Arguments parse_args(int argc, char **argv) {
         "\nA path and name for the output files, e.g. <path>/<to>/my_textured_mesh"
         "\nDon't append an obj extension. The application does that itself because it outputs multiple files (mesh, material file, texture files)."
         "\n");
-    args.add_option('D',"data_cost_file", true, "Skip calculation of data costs and use the ones provided in the given file");
-    args.add_option('L',"labeling_file", true, "Skip view selection and use the labeling provided in the given file");
-    args.add_option('d',"data_term", true, "Data term: {area, gmi} [gmi]");
-    args.add_option('s',"smoothness_term", true, "Smoothness term: {potts, edi} [potts]");
-    args.add_option('o',"outlier_removal", true, "Photometric outlier (pedestrians etc.) removal method: {none, gauss_clamping, gauss_damping} [none]");
-    args.add_option('v',"view_selection_model", false, "Write out view selection model [false]");
-    args.add_option('\0',"skip_global_seam_leveling", false, "Skip global seam leveling [false]");
-    args.add_option('\0',"skip_local_seam_leveling", false, "Skip local seam leveling (Poisson editing) [false]");
+    args.add_option('D',"data_cost_file", true,
+        "Skip calculation of data costs and use the ones provided in the given file");
+    args.add_option('L',"labeling_file", true,
+        "Skip view selection and use the labeling provided in the given file");
+    args.add_option('d',"data_term", true,
+        "Data term: {area, gmi} [gmi]");
+    args.add_option('s',"smoothness_term", true,
+        "Smoothness term: {potts, edi} [potts]");
+    args.add_option('o',"outlier_removal", true,
+        "Photometric outlier (pedestrians etc.) removal method: {none, gauss_clamping, gauss_damping} [none]");
+    args.add_option('v',"view_selection_model", false,
+        "Write out view selection model [false]");
+    args.add_option('\0',"skip_global_seam_leveling", false,
+        "Skip global seam leveling [false]");
+    args.add_option('\0',"skip_geometric_visibility_test", false,
+        "Skip geometric visibility test based on ray intersection [false]");
+    args.add_option('\0',"skip_local_seam_leveling", false,
+        "Skip local seam leveling (Poisson editing) [false]");
     args.parse(argc, argv);
 
     Arguments conf;
@@ -56,6 +66,7 @@ Arguments parse_args(int argc, char **argv) {
     conf.write_view_selection_model = false;
     conf.write_data_term_histograms = false;
     conf.write_mrf_energies = false;
+    conf.geometric_visibility_test = true;
     conf.global_seam_leveling = true;
     conf.local_seam_leveling = true;
 
@@ -82,7 +93,9 @@ Arguments parse_args(int argc, char **argv) {
             conf.outlier_removal = parse_outlier_removal(i->arg);
         break;
         case '\0':
-            if (i->opt->lopt == "skip_global_seam_leveling") {
+            if (i->opt->lopt == "skip_geometic_visibility_test") {
+                conf.geometric_visibility_test = false;
+            } else if (i->opt->lopt == "skip_global_seam_leveling") {
                 conf.global_seam_leveling = false;
             } else if (i->opt->lopt == "skip_local_seam_leveling") {
                 conf.local_seam_leveling = false;

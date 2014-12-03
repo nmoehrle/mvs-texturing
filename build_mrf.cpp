@@ -187,23 +187,24 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     std::size_t const num_faces = faces.size() / 3;
     std::size_t const num_views = texture_views.size();
 
-    /* Build up acceleration structure for the visibility test. */
-    ProgressCounter face_counter("\tBuilding collision model for visibility tests", num_faces);
     CollisionModel3D* model = newCollisionModel3D(true);
-    model->setTriangleNumber(num_faces);
-    for (std::size_t i = 0; i < faces.size(); i += 3) {
-        face_counter.progress<SIMPLE>();
-        math::Vec3f v1 = vertices[faces[i]];
-        math::Vec3f v2 = vertices[faces[i + 1]];
-        math::Vec3f v3 = vertices[faces[i + 2]];
-        model->addTriangle(*v1, *v2, *v3);
-        face_counter.inc();
+    if (conf.geometric_visibility_test) {
+        /* Build up acceleration structure for the visibility test. */
+        ProgressCounter face_counter("\tBuilding collision model for visibility tests", num_faces);
+        model->setTriangleNumber(num_faces);
+        for (std::size_t i = 0; i < faces.size(); i += 3) {
+            face_counter.progress<SIMPLE>();
+            math::Vec3f v1 = vertices[faces[i]];
+            math::Vec3f v2 = vertices[faces[i + 1]];
+            math::Vec3f v3 = vertices[faces[i + 2]];
+            model->addTriangle(*v1, *v2, *v3);
+            face_counter.inc();
+        }
+        model->finalize();
     }
-    model->finalize();
-
     std::vector<std::vector<ReducedProjectedFaceInfo> > reduced_projected_face_infos(num_faces);
 
-    face_counter.reset("\tCalculating face qualities");
+    ProgressCounter face_counter("\tCalculating face qualities", num_faces);
     #pragma omp parallel
     {
         std::vector<ProjectedFaceInfo> infos;
@@ -240,25 +241,26 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 if (!texture_views[j].inside(v1, v2, v3))
                     continue;
 
-                /* Viewing rays do not collide? */
-                bool visible = true;
-                math::Vec3f const * samples[] = {&v1, &v2, &v3};
-                // TODO: random monte carlo samples...
+                if (conf.geometric_visibility_test) {
+                    /* Viewing rays do not collide? */
+                    bool visible = true;
+                    math::Vec3f const * samples[] = {&v1, &v2, &v3};
+                    // TODO: random monte carlo samples...
 
-                for (std::size_t k = 0; k < sizeof(samples) / sizeof(samples[0]); ++k) {
-                    math::Vec3f vertex = *samples[k];
-                    math::Vec3f dir = view_pos - vertex;
-                    float const dir_length = dir.norm();
-                    dir.normalize();
+                    for (std::size_t k = 0; k < sizeof(samples) / sizeof(samples[0]); ++k) {
+                        math::Vec3f vertex = *samples[k];
+                        math::Vec3f dir = view_pos - vertex;
+                        float const dir_length = dir.norm();
+                        dir.normalize();
 
-                    if (model->rayCollision(*vertex, *dir,  false, dir_length * 0.0001f, dir_length)) {
-                        visible = false;
-                        break;
+                        if (model->rayCollision(*vertex, *dir,  false, dir_length * 0.0001f, dir_length)) {
+                            visible = false;
+                            break;
+                        }
                     }
+                    if (!visible)
+                        continue;
                 }
-
-                if (!visible)
-                    continue;
 
                 ProjectedFaceInfo info = {j, 0.0f, math::Vec3f(0.0f, 0.0f, 0.0f)};
 
