@@ -93,7 +93,7 @@ Arguments parse_args(int argc, char **argv) {
             conf.outlier_removal = parse_outlier_removal(i->arg);
         break;
         case '\0':
-            if (i->opt->lopt == "skip_geometic_visibility_test") {
+            if (i->opt->lopt == "skip_geometric_visibility_test") {
                 conf.geometric_visibility_test = false;
             } else if (i->opt->lopt == "skip_global_seam_leveling") {
                 conf.global_seam_leveling = false;
