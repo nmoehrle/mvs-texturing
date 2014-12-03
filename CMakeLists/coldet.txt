@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(ColDet)
+
+set(COLDET_SRCS
+    src/box_bld.cpp
+    src/box.cpp
+    src/cdmath3d.cpp
+    src/coldet_bld.cpp
+    src/coldet.cpp
+    src/multiobject.cpp
+    src/mytritri.cpp
+    src/sysdep.cpp
+    src/tritri.c
+)
+
+if(UNIX)
+    add_definitions(-DGCC)
+endif()
+
+add_library(coldet STATIC ${COLDET_SRCS})
