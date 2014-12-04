@@ -1,5 +1,9 @@
 #include "Arguments.h"
 
+#define SKIP_GLOBAL_SEAM_LEVELING "skip_global_seam_leveling"
+#define SKIP_GEOMETRIC_VISIBILITY_TEST "skip_geometric_visibility_test"
+#define SKIP_LOCAL_SEAM_LEVELING "skip_local_seam_leveling"
+
 Arguments parse_args(int argc, char **argv) {
     util::Arguments args;
     args.set_exit_on_error(true);
@@ -44,11 +48,11 @@ Arguments parse_args(int argc, char **argv) {
         "Photometric outlier (pedestrians etc.) removal method: {none, gauss_clamping, gauss_damping} [none]");
     args.add_option('v',"view_selection_model", false,
         "Write out view selection model [false]");
-    args.add_option('\0',"skip_global_seam_leveling", false,
-        "Skip global seam leveling [false]");
-    args.add_option('\0',"skip_geometric_visibility_test", false,
+    args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false,
         "Skip geometric visibility test based on ray intersection [false]");
-    args.add_option('\0',"skip_local_seam_leveling", false,
+    args.add_option('\0', SKIP_GLOBAL_SEAM_LEVELING, false,
+        "Skip global seam leveling [false]");
+    args.add_option('\0', SKIP_LOCAL_SEAM_LEVELING, false,
         "Skip local seam leveling (Poisson editing) [false]");
     args.parse(argc, argv);
 
@@ -93,11 +97,11 @@ Arguments parse_args(int argc, char **argv) {
             conf.outlier_removal = parse_outlier_removal(i->arg);
         break;
         case '\0':
-            if (i->opt->lopt == "skip_geometric_visibility_test") {
+            if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST) {
                 conf.geometric_visibility_test = false;
-            } else if (i->opt->lopt == "skip_global_seam_leveling") {
+            } else if (i->opt->lopt == SKIP_GLOBAL_SEAM_LEVELING) {
                 conf.global_seam_leveling = false;
-            } else if (i->opt->lopt == "skip_local_seam_leveling") {
+            } else if (i->opt->lopt == SKIP_LOCAL_SEAM_LEVELING) {
                 conf.local_seam_leveling = false;
             } else {
                 throw std::invalid_argument("Invalid long option");
