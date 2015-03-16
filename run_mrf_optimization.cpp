@@ -6,7 +6,7 @@ run_mrf_optimization(MRF * mrf, const Arguments &conf) {
 
     std::vector<MRF::ENERGY_TYPE> energies;
 
-    std::cout << "\tIteration\tEnergy" << std::endl;
+    std::cout << "\tIteration\tEnergy\tRuntime" << std::endl;
     MRF::ENERGY_TYPE const zero = MRF::ENERGY_TYPE(0);
     MRF::ENERGY_TYPE last_energy = zero;
     MRF::ENERGY_TYPE energy = mrf->compute_energy();
@@ -14,7 +14,7 @@ run_mrf_optimization(MRF * mrf, const Arguments &conf) {
 
     unsigned int i = 0;
     while (diff != zero) {
-        std::cout << "\t" << i << "\t" << energy << std::endl;
+        std::cout << "\t" << i << "\t" << energy << "\t" << timer.get_elapsed_sec() << std::endl;
         energies.push_back(energy);
         last_energy = energy;
         i++;
