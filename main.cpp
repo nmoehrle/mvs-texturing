@@ -106,11 +106,13 @@ int main(int argc, char **argv) {
         }
 
         /* Write labeling to file. */
-        std::vector<std::size_t> labeling(graph.num_nodes());
-        for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
-            labeling[i] = graph.get_label(i);
+        if (conf.write_intermediate_results) {
+            std::vector<std::size_t> labeling(graph.num_nodes());
+            for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
+                labeling[i] = graph.get_label(i);
+            }
+            vector_to_file(conf.out_prefix + "_labeling.vec", labeling);
         }
-        vector_to_file(conf.out_prefix + "_labeling.vec", labeling);
 
         /* Release superfluouse embeddings. */
         for (TextureView & texture_view : texture_views) {
@@ -191,7 +193,9 @@ int main(int argc, char **argv) {
 
     std::cout << "Whole texturing procedure took: " << wtimer.get_elapsed_sec() << "s" << std::endl;
     timer.measure("Total");
-    timer.write_to_file(conf.out_prefix + "_timings.csv");
+    if (conf.write_timings) {
+        timer.write_to_file(conf.out_prefix + "_timings.csv");
+    }
 
     if (conf.write_view_selection_model) {
         std::cout << "Generating debug texture patches:" << std::endl;

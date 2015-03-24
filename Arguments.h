@@ -21,6 +21,9 @@ struct Arguments {
     bool write_view_selection_model;
     bool write_data_term_histograms;
     bool write_mrf_energies;
+    bool write_timings;
+    bool write_intermediate_results;
+
     bool geometric_visibility_test;
     bool global_seam_leveling;
     bool local_seam_leveling;

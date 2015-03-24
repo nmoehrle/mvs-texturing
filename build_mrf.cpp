@@ -396,9 +396,11 @@ build_mrf(MRF * mrf, mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView>
     if (conf.data_cost_file.empty()) {
         data_costs = calculate_data_costs(mesh, texture_views, conf);
 
-        std::cout << "\tWriting data cost file... " << std::flush;
-        ST::save_to_file(data_costs, conf.out_prefix + "_data_costs.spt");
-        std::cout << "done." << std::endl;
+        if (conf.write_intermediate_results) {
+            std::cout << "\tWriting data cost file... " << std::flush;
+                ST::save_to_file(data_costs, conf.out_prefix + "_data_costs.spt");
+            std::cout << "done." << std::endl;
+        }
     } else {
         std::cout << "\tLoading data cost file... " << std::flush;
         data_costs = ST::load_from_file(conf.data_cost_file);

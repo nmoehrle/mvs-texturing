@@ -3,6 +3,9 @@
 #define SKIP_GLOBAL_SEAM_LEVELING "skip_global_seam_leveling"
 #define SKIP_GEOMETRIC_VISIBILITY_TEST "skip_geometric_visibility_test"
 #define SKIP_LOCAL_SEAM_LEVELING "skip_local_seam_leveling"
+#define NO_INTERMEDIATE_RESULTS "no_intermediate_results"
+#define WRITE_TIMINGS "write_timings"
+#define WRITE_MRF_ENERGIES "write_mrf_energies"
 
 Arguments parse_args(int argc, char **argv) {
     util::Arguments args;
@@ -11,7 +14,7 @@ Arguments parse_args(int argc, char **argv) {
     args.set_nonopt_minnum(3);
     args.set_helptext_indent(34);
     args.set_description("Textures a mesh given images in form of a 3D scene.");
-    args.set_usage("Usage: " + std::string(argv[0]) + " [options] IN_SCENE IN_MESH OUT_MESH_PREFIX"
+    args.set_usage("Usage: " + std::string(argv[0]) + " [options] IN_SCENE IN_MESH OUT_PREFIX"
         "\n\nIN_SCENE := (SCENE_FOLDER | BUNDLE_FILE | MVE_SCENE::EMBEDDING)"
         "\n\nSCENE_FOLDER:"
         "\nWithin a scene folder a .cam file has to be given for each image."
@@ -32,7 +35,7 @@ Arguments parse_args(int argc, char **argv) {
         "\nThis is the scene representation we use in our research group: http://www.gris.tu-darmstadt.de/projects/multiview-environment/."
         "\n\nIN_MESH:"
         "\nThe mesh that you want to texture and which needs to be in the same coordinate frame as the camera parameters. You can reconstruct one, e.g. with CMVS: http://www.di.ens.fr/cmvs/"
-        "\n\nOUT_MESH_PREFIX:"
+        "\n\nOUT_PREFIX:"
         "\nA path and name for the output files, e.g. <path>/<to>/my_textured_mesh"
         "\nDon't append an obj extension. The application does that itself because it outputs multiple files (mesh, material file, texture files)."
         "\n");
@@ -54,6 +57,12 @@ Arguments parse_args(int argc, char **argv) {
         "Skip global seam leveling [false]");
     args.add_option('\0', SKIP_LOCAL_SEAM_LEVELING, false,
         "Skip local seam leveling (Poisson editing) [false]");
+    args.add_option('\0', WRITE_TIMINGS, false,
+        "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
+    args.add_option('\0', WRITE_MRF_ENERGIES, false,
+        "Write out MRF optimization energies (OUT_PREFIX + _mrf_energies.csv)");
+    args.add_option('\0', NO_INTERMEDIATE_RESULTS, false,
+        "Do not write out intermediate results");
     args.parse(argc, argv);
 
     Arguments conf;
@@ -69,10 +78,12 @@ Arguments parse_args(int argc, char **argv) {
     conf.outlier_removal = NONE;
     conf.write_view_selection_model = false;
     conf.write_data_term_histograms = false;
+    conf.write_timings = false;
     conf.write_mrf_energies = false;
     conf.geometric_visibility_test = true;
     conf.global_seam_leveling = true;
     conf.local_seam_leveling = true;
+    conf.write_intermediate_results = true;
 
     /* Handle optional arguments. */
     for (util::ArgResult const* i = args.next_option();
@@ -103,6 +114,12 @@ Arguments parse_args(int argc, char **argv) {
                 conf.global_seam_leveling = false;
             } else if (i->opt->lopt == SKIP_LOCAL_SEAM_LEVELING) {
                 conf.local_seam_leveling = false;
+            } else if (i->opt->lopt == WRITE_TIMINGS) {
+                conf.write_timings = true;
+            } else if (i->opt->lopt == WRITE_MRF_ENERGIES) {
+                conf.write_mrf_energies = true;
+            } else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS) {
+                conf.write_intermediate_results = false;
             } else {
                 throw std::invalid_argument("Invalid long option");
             }
@@ -131,7 +148,6 @@ Arguments::to_string(){
         << "Data term: \t" << DataTermStrings[data_term] << std::endl
         << "Smoothness term: \t" << SmoothnessTermStrings[smoothness_term] << std::endl
         << "Outlier removal method: \t" << OutlierRemovalStrings[outlier_removal] << std::endl
-        << "Write view selection model: \t" << bool_to_string(write_view_selection_model) << std::endl
         << "Apply global seam leveling: \t" << bool_to_string(global_seam_leveling) << std::endl
         << "Apply local seam leveling: \t" << bool_to_string(local_seam_leveling) << std::endl;
 
