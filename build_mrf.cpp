@@ -293,8 +293,8 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         }
     }
 
-	delete model;
-	model = NULL;
+    delete model;
+    model = NULL;
 
     /* Determine the function for the quantization. */
     float max_quality = 0.0f;
