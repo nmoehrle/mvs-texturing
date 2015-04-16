@@ -293,6 +293,9 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         }
     }
 
+	delete model;
+	model = NULL;
+
     /* Determine the function for the quantization. */
     float max_quality = 0.0f;
     for (std::size_t i = 0; i < reduced_projected_face_infos.size(); ++i)
