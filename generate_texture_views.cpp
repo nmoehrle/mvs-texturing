@@ -29,9 +29,9 @@ from_mve_scene(std::string const & scene_dir, std::string const & embedding_name
         }
 
         if (!view->has_embedding(embedding_name)) {
-            std::cerr << view->get_name() << " has no embedding "
+            std::cout << "Warning: View " << view->get_name() << " has no embedding "
                 << embedding_name << std::endl;
-            exit(EXIT_FAILURE);
+            continue;
         }
 
         if (view->get_byte_image(embedding_name) == NULL) {
