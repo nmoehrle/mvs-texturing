@@ -7,7 +7,6 @@
 
 #include "util/arguments.h"
 #include "util/timer.h"
-#include "util/string.h"
 #include "util/file_system.h"
 
 #include "mve/scene.h"
@@ -78,12 +77,12 @@ int main(int argc, char **argv) {
 
         /* Extract resulting labeling from MRF. */
         for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
-            int label = mrf.what_label(i);
+            int label = mrf.what_label(static_cast<int>(i));
             assert(0 <= label && label < texture_views.size() + 1);
-            graph.set_label(i, label);
+            graph.set_label(i, static_cast<std::size_t>(label));
         }
 
-        /* Fix holes due to geometic inaccuracies. */
+        /* Fix holes due to geometric inaccuracies. */
         std::vector<std::vector<std::size_t> > subgraphs;
         graph.get_subgraphs(0, &subgraphs);
         #pragma omp parallel for
@@ -99,7 +98,7 @@ int main(int argc, char **argv) {
                     const std::size_t new_label = *(adj_labels.begin());
                     for (std::size_t node : subgraphs[i]) {
                         graph.set_label(node, new_label);
-                        //TODO check if projecion is valid... (very likely)
+                        //TODO check if projection is valid... (very likely)
                     }
                 }
             }
@@ -114,7 +113,7 @@ int main(int argc, char **argv) {
             vector_to_file(conf.out_prefix + "_labeling.vec", labeling);
         }
 
-        /* Release superfluouse embeddings. */
+        /* Release superfluous embeddings. */
         for (TextureView & texture_view : texture_views) {
             texture_view.release_validity_mask();
             texture_view.release_gradient_magnitude();

@@ -229,7 +229,7 @@ build_obj_model(ObjModel * obj_model, std::vector<TexturePatch> const & _texture
             while (!texture_patches.empty()) {
                 ObjModel::Group group;
 
-                const int n = material_lib.size();
+                const std::size_t n = material_lib.size();
                 group.material_name = std::string("material") + util::string::get_filled(n, 4);
 
                 int texture_size = calculate_texture_size(texture_patches, BORDER);
@@ -243,7 +243,7 @@ build_obj_model(ObjModel * obj_model, std::vector<TexturePatch> const & _texture
                     TexturePatch texture_patch = *it;
 
                     /* Progress output */
-                    int done_patches = total_num_patches - remaining_patches;
+                    std::size_t done_patches = total_num_patches - remaining_patches;
                     if (total_num_patches > 100 && done_patches % (total_num_patches / 100) == 0)
                         tty << "\r\tGenerating texture atlases (working on atlas " << n + 1 << ") "
                             << floor((static_cast<float>(done_patches) / total_num_patches) * 100.0f + 0.5f)

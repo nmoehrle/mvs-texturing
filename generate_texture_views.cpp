@@ -34,13 +34,19 @@ from_mve_scene(std::string const & scene_dir, std::string const & embedding_name
             continue;
         }
 
-        if (view->get_byte_image(embedding_name) == NULL) {
+        mve::ByteImage::Ptr image = view->get_byte_image(embedding_name);
+
+        if (image == NULL) {
             std::cerr << "Embedding " << embedding_name << " of view " <<
-                view->get_name() << " is not a byte embedding " << std::endl;
+                view->get_name() << " is not a byte embedding!" << std::endl;
             exit(EXIT_FAILURE);
         }
 
-        mve::ByteImage::Ptr image = view->get_byte_image(embedding_name);
+        if (image->channels() < 3) {
+            std::cerr << "Embedding " << embedding_name << " of view " <<
+                view->get_name() << " is not a color image!" << std::endl;
+            exit(EXIT_FAILURE);
+        }
 
         texture_views->push_back(TextureView(view->get_id(), view->get_camera(), image));
         view_counter.inc();
