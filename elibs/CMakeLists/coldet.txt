@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(ColDet)
 
-set(COLDET_SRCS
+set(SOURCES
     src/box_bld.cpp
     src/box.cpp
     src/cdmath3d.cpp
@@ -18,4 +18,4 @@ if(UNIX)
     add_definitions(-DGCC)
 endif()
 
-add_library(coldet STATIC ${COLDET_SRCS})
+add_library(coldet STATIC ${SOURCES})

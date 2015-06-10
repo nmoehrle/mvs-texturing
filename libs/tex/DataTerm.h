@@ -11,7 +11,7 @@ enum DataTerm {
 char const * const DataTermStrings [] = {"area", "gmi"};
 
 inline
-DataTerm parse_data_term(std::string s){
+DataTerm parse_data_term(std::string s) {
     std::size_t n = sizeof(DataTermStrings) / sizeof(char const *);
     for (std::size_t i = 0; i < n; ++i) {
         if (s == DataTermStrings[i]){

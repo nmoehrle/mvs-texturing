@@ -173,9 +173,9 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
 }
 
 void
-generate_texture_views(Arguments const & conf, std::vector<TextureView> * texture_views) {
+generate_texture_views(std::string in_scene, std::vector<TextureView> * texture_views) {
     util::Tokenizer tok;
-    tok.split(conf.in_scene, ':', true);
+    tok.split(in_scene, ':', true);
 
     /* Determine input format. */
 
@@ -204,25 +204,5 @@ generate_texture_views(Arguments const & conf, std::vector<TextureView> * textur
             << "SCENE_FOLDER - a folder containing images and .cam files" << std::endl
             << "MVE_SCENE::EMBEDDING - a mve scene and embedding" << std::endl;
         exit(EXIT_FAILURE);
-    }
-
-    /* We can skip these steps if the view selection does not need to be run. */
-    if (conf.labeling_file.empty()) {
-        ProgressCounter view_counter("\tGenerating validity masks", num_views);
-        #pragma omp parallel for
-        for (std::size_t i = 0; i < num_views; ++i) {
-            view_counter.progress<SIMPLE>();
-            texture_views->at(i).generate_validity_mask();
-            view_counter.inc();
-        }
-
-        view_counter.reset("\tCalculating gradient magnitude");
-        #pragma omp parallel for
-        for (std::size_t i = 0; i < num_views; ++i) {
-            view_counter.progress<SIMPLE>();
-            texture_views->at(i).generate_gradient_magnitude();
-            texture_views->at(i).erode_validity_mask();
-            view_counter.inc();
-        }
     }
 }

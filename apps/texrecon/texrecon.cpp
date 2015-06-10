@@ -1,18 +1,13 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <set>
 
-#include "math/matrix.h"
-
-#include "util/arguments.h"
 #include "util/timer.h"
 #include "util/file_system.h"
 
-#include "mve/scene.h"
-
-#include "texturing.h"
-#include "debug.h"
+#include "Arguments.h"
+#include "tex/texturing.h"
+#include "tex/debug.h"
 
 int main(int argc, char **argv) {
 
@@ -49,7 +44,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Generating texture views: " << std::endl;
     std::vector<TextureView> texture_views;
-    generate_texture_views(conf, &texture_views);
+    generate_texture_views(conf.in_scene, &texture_views);
 
     write_string_to_file(conf.out_prefix + ".conf", conf.to_string());
     timer.measure("Loading");
@@ -57,22 +52,44 @@ int main(int argc, char **argv) {
 
     std::cout << "Building adjacency graph: " << std::endl;
     UniGraph graph(num_faces);
-    build_adjacency_graph(&graph, mesh, vertex_infos);
+    build_adjacency_graph(mesh, vertex_infos, &graph);
 
     if (conf.labeling_file.empty()) {
         std::cout << "Building MRF graph:" << std::endl;
 
+        ST data_costs;
+        if (conf.data_cost_file.empty()) {
+            data_costs = calculate_data_costs(mesh, texture_views, conf.settings);
+
+            if (conf.write_intermediate_results) {
+                std::cout << "\tWriting data cost file... " << std::flush;
+                    ST::save_to_file(data_costs, conf.out_prefix + "_data_costs.spt");
+                std::cout << "done." << std::endl;
+            }
+        } else {
+            std::cout << "\tLoading data cost file... " << std::flush;
+            data_costs = ST::load_from_file(conf.data_cost_file);
+            std::size_t const num_faces = mesh->get_faces().size() / 3;
+            if (data_costs.rows() != texture_views.size() || data_costs.cols() != num_faces) {
+                std::cout << "failed!" << std::endl;
+                std::cerr << "Wrong datacost file for this mesh/scene combination... aborting!" << std::endl;
+                std::exit(EXIT_FAILURE);
+            }
+            std::cout << "done." << std::endl;
+        }
+
         /* Each TextureView is a label and label 0 is undefined */
-#ifdef RESEARCH
-        GCOWrapper mrf(num_faces, texture_views.size() + 1);
-#else
-        LBPSolver mrf(num_faces, texture_views.size() + 1);
-#endif
-        build_mrf(&mrf, mesh, texture_views, graph, conf);
+        #ifdef RESEARCH
+            GCOWrapper mrf(num_faces, texture_views.size() + 1);
+        #else
+            LBPSolver mrf(num_faces, texture_views.size() + 1);
+        #endif
+
+        build_mrf(graph, data_costs, &mrf, conf.settings);
         timer.measure("Calculating data costs");
 
         std::cout << "Running MRF optimization:" << std::endl;
-        run_mrf_optimization(&mrf, conf);
+        run_mrf_optimization(&mrf);
         timer.measure("Running MRF optimization");
 
         /* Extract resulting labeling from MRF. */
@@ -80,28 +97,6 @@ int main(int argc, char **argv) {
             int label = mrf.what_label(static_cast<int>(i));
             assert(0 <= label && label < texture_views.size() + 1);
             graph.set_label(i, static_cast<std::size_t>(label));
-        }
-
-        /* Fix holes due to geometric inaccuracies. */
-        std::vector<std::vector<std::size_t> > subgraphs;
-        graph.get_subgraphs(0, &subgraphs);
-        #pragma omp parallel for
-        for (std::size_t i = 0; i < subgraphs.size(); ++i) {
-            /* Only fix small holes, */
-            const std::size_t max_hole_size = 10;
-            if (subgraphs[i].size() < max_hole_size) {
-                /* which are completely contained within another patch. */
-                std::set<std::size_t> adj_labels;
-                graph.get_adj_labels(subgraphs[i], &adj_labels);
-                adj_labels.erase(0);
-                if (adj_labels.size() == 1 && graph.get_min_conn(subgraphs[i]) == 3) {
-                    const std::size_t new_label = *(adj_labels.begin());
-                    for (std::size_t node : subgraphs[i]) {
-                        graph.set_label(node, new_label);
-                        //TODO check if projection is valid... (very likely)
-                    }
-                }
-            }
         }
 
         /* Write labeling to file. */
@@ -112,17 +107,10 @@ int main(int argc, char **argv) {
             }
             vector_to_file(conf.out_prefix + "_labeling.vec", labeling);
         }
-
-        /* Release superfluous embeddings. */
-        for (TextureView & texture_view : texture_views) {
-            texture_view.release_validity_mask();
-            texture_view.release_gradient_magnitude();
-        }
-
     } else {
         std::cout << "Loading labeling from file... " << std::flush;
 
-        /* Load labeling to file. */
+        /* Load labeling from file. */
         std::vector<std::size_t> labeling = vector_from_file<std::size_t>(conf.labeling_file);
         if (labeling.size() != graph.num_nodes()) {
             std::cerr << "Wrong labeling file for this mesh/scene combination... aborting!" << std::endl;
@@ -152,7 +140,7 @@ int main(int argc, char **argv) {
             texture_view.release_image();
         }
 
-        if (conf.global_seam_leveling) {
+        if (conf.settings.global_seam_leveling) {
             std::cout << "Running global seam leveling:" << std::endl;
             global_seam_leveling(graph, mesh, vertex_infos, vertex_projection_infos, &texture_patches);
             timer.measure("Running global seam leveling");
@@ -169,7 +157,7 @@ int main(int argc, char **argv) {
             timer.measure("Calculating texture patch validity masks");
         }
 
-        if (conf.local_seam_leveling) {
+        if (conf.settings.local_seam_leveling) {
             std::cout << "Running local seam leveling:" << std::endl;
             local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches);
         }
@@ -181,7 +169,7 @@ int main(int argc, char **argv) {
         ObjModel obj_model;
         std::cout << "Building objmodel:" << std::endl;
 
-        build_obj_model(&obj_model, texture_patches, mesh);
+        build_obj_model(mesh, texture_patches, &obj_model);
         timer.measure("Building OBJ model");
 
         std::cout << "\tWriting files... " << std::flush;
@@ -208,7 +196,7 @@ int main(int argc, char **argv) {
         std::cout << "Building debug objmodel:" << std::endl;
         {
             ObjModel obj_model;
-            build_obj_model(&obj_model, texture_patches, mesh);
+            build_obj_model(mesh, texture_patches, &obj_model);
             std::cout << "\tWriting files... " << std::flush;
             obj_model.save_to_files(conf.out_prefix + "_view_selection");
             std::cout << "done." << std::endl;

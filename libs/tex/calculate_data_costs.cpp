@@ -6,55 +6,6 @@
 #include "texturing.h"
 #include "SparseTable.h"
 #include "Histogram.h"
-#include "util.h"
-
-bool IGNORE_LUMINANCE = false;
-const int MAXVALUE = MRF_MAX_ENERGYTERM;
-
-/** Potts model */
-int
-potts(int s1, int s2, int l1, int l2) {
-    /* Suppress compiler warning because of unused variable. */
-    (void) s1; (void) s2;
-    return l1 == l2 && l1 != 0 && l2 != 0 ? 0 : 1 * MAXVALUE;
-}
-
-typedef SparseTable<std::uint32_t, std::uint16_t, int> ST;
-
-/** Struct representing a non directed edge. */
-struct Edge {
-    std::size_t v1_id;
-    std::size_t v2_id;
-
-    Edge(std::size_t _v1_id, std::size_t _v2_id) {
-        if(_v1_id < _v2_id) {
-            v1_id = _v1_id;
-            v2_id = _v2_id;
-        } else {
-            v1_id = _v2_id;
-            v2_id = _v1_id;
-        }
-    }
-};
-
-/** Lexical comparison of non derected edges. */
-bool
-operator<(Edge const & edge1, Edge const & edge2) {
-    return edge1.v1_id < edge2.v1_id || (edge1.v1_id == edge2.v1_id && edge1.v2_id < edge2.v2_id);
-}
-
-/** Setup the neighborhood of the MRF. */
-void
-set_neighbors(MRF * mrf, UniGraph const & graph) {
-    for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
-        std::vector<std::size_t> adj_faces = graph.get_adj_nodes(i);
-        for (std::size_t j = 0; j < adj_faces.size(); ++j) {
-            std::size_t adj_face = adj_faces[j];
-            /* The solver expects only one call of setNeighbours for two neighbours a and b. */
-            if (i < adj_face) mrf->set_neighbors(i, adj_face);
-        }
-    }
-}
 
 /**
  * Dampens the quality of all views in which the face's projection
@@ -64,8 +15,8 @@ set_neighbors(MRF * mrf, UniGraph const & graph) {
  * @param conf The program configuration.
  */
 void
-photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Arguments const & conf) {
-    if (conf.outlier_removal == NONE) return;
+photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings const & settings) {
+    if (settings.outlier_removal == NONE) return;
     if (infos.size() == 0) return;
 
     /* Configuration variables. */
@@ -78,7 +29,7 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Arguments 
     int const minimal_num_inliers = 4;
 
     float outlier_removal_factor = std::numeric_limits<float>::signaling_NaN();
-    switch (conf.outlier_removal) {
+    switch (settings.outlier_removal) {
         case NONE: return;
         case GAUSS_CLAMPING:
             outlier_removal_factor = 1.0f;
@@ -163,7 +114,7 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Arguments 
         Eigen::RowVector3d color = mve_to_eigen(info.mean_color).cast<double>();
         double gauss_value = multi_gauss_unnormalized(color, var_mean, covariance_inv);
         assert(0.0 <= gauss_value && gauss_value <= 1.0);
-        switch(conf.outlier_removal) {
+        switch(settings.outlier_removal) {
             case NONE: return;
             case GAUSS_DAMPING:
                 info.quality *= gauss_value;
@@ -175,10 +126,9 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Arguments 
     }
 }
 
-/** Calculate data costs for the given data term (conf.data_term). */
 ST
-calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> const & texture_views,
-    Arguments const & conf) {
+calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> & texture_views,
+    Settings const & settings) {
 
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
     mve::TriangleMesh::VertexList const & vertices = mesh->get_vertices();
@@ -187,8 +137,25 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     std::size_t const num_faces = faces.size() / 3;
     std::size_t const num_views = texture_views.size();
 
+    ProgressCounter view_counter("\tGenerating validity masks", num_views);
+    #pragma omp parallel for
+    for (std::size_t i = 0; i < num_views; ++i) {
+        view_counter.progress<SIMPLE>();
+        texture_views[i].generate_validity_mask();
+        view_counter.inc();
+    }
+
+    view_counter.reset("\tCalculating gradient magnitude");
+    #pragma omp parallel for
+    for (std::size_t i = 0; i < num_views; ++i) {
+        view_counter.progress<SIMPLE>();
+        texture_views[i].generate_gradient_magnitude();
+        texture_views[i].erode_validity_mask();
+        view_counter.inc();
+    }
+
     CollisionModel3D* model = newCollisionModel3D(true);
-    if (conf.geometric_visibility_test) {
+    if (settings.geometric_visibility_test) {
         /* Build up acceleration structure for the visibility test. */
         ProgressCounter face_counter("\tBuilding collision model for visibility tests", num_faces);
         model->setTriangleNumber(num_faces);
@@ -241,7 +208,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 if (!texture_views[j].inside(v1, v2, v3))
                     continue;
 
-                if (conf.geometric_visibility_test) {
+                if (settings.geometric_visibility_test) {
                     /* Viewing rays do not collide? */
                     bool visible = true;
                     math::Vec3f const * samples[] = {&v1, &v2, &v3};
@@ -265,13 +232,13 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 ProjectedFaceInfo info = {j, 0.0f, math::Vec3f(0.0f, 0.0f, 0.0f)};
 
                 /* Calculate quality. */
-                switch (conf.data_term) {
+                switch (settings.data_term) {
                     case AREA:
                         texture_views[j].get_face_info<AREA>(v1, v2, v3, &info);
-                    break;
+                        break;
                     case GMI:
                         texture_views[j].get_face_info<GMI>(v1, v2, v3, &info);
-                    break;
+                        break;
                 }
 
                 if (info.quality == 0.0f)
@@ -283,7 +250,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 infos.push_back(info);
             }
 
-            photometric_outlier_detection(infos, conf);
+            photometric_outlier_detection(infos, settings);
 
             reduced_projected_face_infos[face_id].reserve(infos.size());
             for (ProjectedFaceInfo const & info : infos)
@@ -307,9 +274,6 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         for (std::size_t j = 0; j < reduced_projected_face_infos[i].size(); ++j)
             hist_qualities.add_value(reduced_projected_face_infos[i][j].quality);
 
-    if (conf.write_data_term_histograms)
-        hist_qualities.save_to_file(conf.out_prefix + "_hist_qualities.csv");
-
     float permille_999 = hist_qualities.get_approximate_permille(0.999f);
 
     Histogram hist_nqualities(0.0f, 1.0f, 1000);
@@ -317,7 +281,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     /* Calculate the costs. */
     assert(num_faces < std::numeric_limits<std::uint32_t>::max());
     assert(num_views < std::numeric_limits<std::uint16_t>::max());
-    assert(MAXVALUE < std::numeric_limits<int>::max());
+    assert(MRF_MAX_ENERGYTERM < std::numeric_limits<int>::max());
     ST data_costs(num_faces, num_views);
     for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(reduced_projected_face_infos.size()); ++i) {
         while(!reduced_projected_face_infos[i].empty()) {
@@ -327,7 +291,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
             /* Clamp to percentile and normalize. */
             float normalized_quality = std::min(1.0f, info.quality / permille_999);
             hist_nqualities.add_value(normalized_quality);
-            int data_cost = (1.0f - normalized_quality) * MAXVALUE;
+            int data_cost = (1.0f - normalized_quality) * MRF_MAX_ENERGYTERM;
             data_costs.set_value(i, info.view_id, data_cost);
         }
 
@@ -335,101 +299,15 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         reduced_projected_face_infos[i].clear();
         reduced_projected_face_infos[i].shrink_to_fit();
     }
-    if (conf.write_data_term_histograms)
-        hist_nqualities.save_to_file(conf.out_prefix + "_hist_nqualities.csv");
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
     std::cout << "\tClamping qualities to " << permille_999 << " within discretization." << std::endl;
+
+    /* Release superfluous embeddings. */
+    for (TextureView & texture_view : texture_views) {
+        texture_view.release_validity_mask();
+        texture_view.release_gradient_magnitude();
+    }
+
     return data_costs;
-}
-
-
-/** Set the data costs of the MRF. */
-void
-set_data_costs(MRF * mrf, ST const & data_costs){
-    /* Set data costs for all labels except label 0 (undefined) */
-    for (std::size_t i = 0; i < data_costs.rows(); i++) {
-        ST::Row const & data_costs_for_label = data_costs.row(i);
-
-        std::vector<MRF::SparseDataCost> costs(data_costs_for_label.size());
-        for(std::size_t j = 0; j < costs.size(); j++) {
-            costs[j].site = data_costs_for_label[j].first;
-            costs[j].cost = data_costs_for_label[j].second;
-        }
-
-
-        int label = i + 1;
-        mrf->set_data_costs(label, &costs);
-    }
-
-    /* Set costs for undefined label */
-    std::vector<MRF::SparseDataCost> costs(data_costs.cols());
-    for (std::size_t i = 0; i < costs.size(); i++) {
-        costs[i].site = i;
-        costs[i].cost = MRF_MAX_ENERGYTERM;
-    }
-    mrf->set_data_costs(0, &costs);
-}
-
-/** Remove all edges of nodes which corresponding face has not been seen in any texture view. */
-void
-isolate_unseen_faces(UniGraph * graph, ST const & data_costs) {
-    int num_unseen_faces = 0;
-    for (std::uint32_t i = 0; i < data_costs.cols(); i++) {
-        ST::Column const & data_costs_for_face = data_costs.col(i);
-
-        if (data_costs_for_face.size() == 0) {
-            num_unseen_faces++;
-
-            std::vector<std::size_t> const & adj_nodes = graph->get_adj_nodes(i);
-            for (std::size_t j = 0; j < adj_nodes.size(); j++)
-                graph->remove_edge(i, adj_nodes[j]);
-        }
-
-    }
-    std::cout << "\t" << num_unseen_faces << " faces have not been seen by a view." << std::endl;
-}
-
-void
-build_mrf(MRF * mrf, mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView>
-    const & texture_views, UniGraph const & graph, Arguments const & conf) {
-    std::size_t const num_faces = mesh->get_faces().size() / 3;
-
-    ST data_costs;
-    if (conf.data_cost_file.empty()) {
-        data_costs = calculate_data_costs(mesh, texture_views, conf);
-
-        if (conf.write_intermediate_results) {
-            std::cout << "\tWriting data cost file... " << std::flush;
-                ST::save_to_file(data_costs, conf.out_prefix + "_data_costs.spt");
-            std::cout << "done." << std::endl;
-        }
-    } else {
-        std::cout << "\tLoading data cost file... " << std::flush;
-        data_costs = ST::load_from_file(conf.data_cost_file);
-        if (data_costs.rows() != texture_views.size() || data_costs.cols() != num_faces) {
-            std::cout << "failed!" << std::endl;
-            std::cerr << "Wrong datacost file for this mesh/scene combination... aborting!" << std::endl;
-            std::exit(EXIT_FAILURE);
-        }
-        std::cout << "done." << std::endl;
-    }
-
-    {
-        UniGraph mod_graph(graph); //TODO temporary waste of memory...
-        isolate_unseen_faces(&mod_graph, data_costs);
-
-        /* Set neighbors must be called prior to set_data_costs (LBP). */
-        set_neighbors(mrf, mod_graph);
-    }
-
-    set_data_costs(mrf, data_costs);
-
-    switch (conf.smoothness_term) {
-        case EDI:
-            std::cerr << "\tThe smoothness term EDI has been removed - falling back to POTTS" << std::endl;
-        case POTTS:
-            mrf->set_smooth_cost(*potts);
-        break;
-    }
 }

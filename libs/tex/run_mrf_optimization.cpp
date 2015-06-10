@@ -1,7 +1,7 @@
 #include "texturing.h"
 
 void
-run_mrf_optimization(MRF * mrf, const Arguments &conf) {
+run_mrf_optimization(MRF * mrf) {
     util::WallTimer timer;
 
     std::vector<MRF::ENERGY_TYPE> energies;
@@ -25,8 +25,8 @@ run_mrf_optimization(MRF * mrf, const Arguments &conf) {
     }
     std::cout << "\t" << i << "\t" << energy << std::endl;
 
-    if (conf.write_mrf_energies)
-        write_vector_to_csv(conf.out_prefix + "_mrf_energies.csv", energies, "Energy");
+    //if (conf.write_mrf_energies)
+    //    write_vector_to_csv(conf.out_prefix + "_mrf_energies.csv", energies, "Energy");
 
     if (diff == zero)
         std::cout << "\t" << "Converged" << std::endl;

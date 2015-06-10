@@ -59,8 +59,6 @@ Arguments parse_args(int argc, char **argv) {
         "Skip local seam leveling (Poisson editing) [false]");
     args.add_option('\0', WRITE_TIMINGS, false,
         "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
-    args.add_option('\0', WRITE_MRF_ENERGIES, false,
-        "Write out MRF optimization energies (OUT_PREFIX + _mrf_energies.csv)");
     args.add_option('\0', NO_INTERMEDIATE_RESULTS, false,
         "Do not write out intermediate results");
     args.parse(argc, argv);
@@ -73,17 +71,17 @@ Arguments parse_args(int argc, char **argv) {
     /* Set defaults for optional arguments. */
     conf.data_cost_file = "";
     conf.labeling_file = "";
-    conf.data_term = GMI;
-    conf.smoothness_term = POTTS;
-    conf.outlier_removal = NONE;
-    conf.write_view_selection_model = false;
-    conf.write_data_term_histograms = false;
+
+    conf.settings.data_term = GMI;
+    conf.settings.smoothness_term = POTTS;
+    conf.settings.outlier_removal = NONE;
+    conf.settings.geometric_visibility_test = true;
+    conf.settings.global_seam_leveling = true;
+    conf.settings.local_seam_leveling = true;
+
     conf.write_timings = false;
-    conf.write_mrf_energies = false;
-    conf.geometric_visibility_test = true;
-    conf.global_seam_leveling = true;
-    conf.local_seam_leveling = true;
     conf.write_intermediate_results = true;
+    conf.write_view_selection_model = false;
 
     /* Handle optional arguments. */
     for (util::ArgResult const* i = args.next_option();
@@ -99,25 +97,23 @@ Arguments parse_args(int argc, char **argv) {
             conf.labeling_file = i->arg;
         break;
         case 'd':
-            conf.data_term = parse_data_term(i->arg);
+            conf.settings.data_term = parse_data_term(i->arg);
         break;
         case 's':
-            conf.smoothness_term = parse_smoothness_term(i->arg);
+            conf.settings.smoothness_term = parse_smoothness_term(i->arg);
         break;
         case 'o':
-            conf.outlier_removal = parse_outlier_removal(i->arg);
+            conf.settings.outlier_removal = parse_outlier_removal(i->arg);
         break;
         case '\0':
             if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST) {
-                conf.geometric_visibility_test = false;
+                conf.settings.geometric_visibility_test = false;
             } else if (i->opt->lopt == SKIP_GLOBAL_SEAM_LEVELING) {
-                conf.global_seam_leveling = false;
+                conf.settings.global_seam_leveling = false;
             } else if (i->opt->lopt == SKIP_LOCAL_SEAM_LEVELING) {
-                conf.local_seam_leveling = false;
+                conf.settings.local_seam_leveling = false;
             } else if (i->opt->lopt == WRITE_TIMINGS) {
                 conf.write_timings = true;
-            } else if (i->opt->lopt == WRITE_MRF_ENERGIES) {
-                conf.write_mrf_energies = true;
             } else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS) {
                 conf.write_intermediate_results = false;
             } else {
@@ -145,11 +141,11 @@ Arguments::to_string(){
         << "Output prefix: \t" << out_prefix << std::endl
         << "Datacost file: \t" << data_cost_file << std::endl
         << "Labeling file: \t" << labeling_file << std::endl
-        << "Data term: \t" << DataTermStrings[data_term] << std::endl
-        << "Smoothness term: \t" << SmoothnessTermStrings[smoothness_term] << std::endl
-        << "Outlier removal method: \t" << OutlierRemovalStrings[outlier_removal] << std::endl
-        << "Apply global seam leveling: \t" << bool_to_string(global_seam_leveling) << std::endl
-        << "Apply local seam leveling: \t" << bool_to_string(local_seam_leveling) << std::endl;
+        << "Data term: \t" << DataTermStrings[settings.data_term] << std::endl
+        << "Smoothness term: \t" << SmoothnessTermStrings[settings.smoothness_term] << std::endl
+        << "Outlier removal method: \t" << OutlierRemovalStrings[settings.outlier_removal] << std::endl
+        << "Apply global seam leveling: \t" << bool_to_string(settings.global_seam_leveling) << std::endl
+        << "Apply local seam leveling: \t" << bool_to_string(settings.local_seam_leveling) << std::endl;
 
     return out.str();
 }

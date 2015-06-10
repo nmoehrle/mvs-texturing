@@ -1,2 +1,4 @@
 build/
-external/
+elibs/
+!elibs/CMakeLists/*
+!elibs/CMakeLists.txt

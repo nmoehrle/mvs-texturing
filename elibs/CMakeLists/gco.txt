@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 
 project(GraphCutOptimization)
 
-set(GCO_SRCS
+set(SOURCES
     GCoptimization.cpp
     graph.cpp
     LinkedBlockList.cpp
     maxflow.cpp
 )
 
-add_library(gco STATIC ${GCO_SRCS})
+add_library(gco STATIC ${SOURCES})

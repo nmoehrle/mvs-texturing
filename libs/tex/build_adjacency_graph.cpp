@@ -1,8 +1,8 @@
 #include "texturing.h"
 
 void
-build_adjacency_graph(UniGraph * graph, mve::TriangleMesh::ConstPtr mesh,
-    mve::VertexInfoList::ConstPtr vertex_infos) {
+build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
+    mve::VertexInfoList::ConstPtr vertex_infos, UniGraph * graph)  {
 
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
     std::size_t const num_faces = faces.size() / 3;

@@ -1,0 +1,11 @@
+file (GLOB HEADERS "*.h")
+file (GLOB SOURCES "[^_]*.cpp")
+
+set(LIBRARY texturing)
+add_library(${LIBRARY} STATIC ${SOURCES})
+add_dependencies(${LIBRARY} ext_mve ext_coldet ext_eigen)
+target_link_libraries(${LIBRARY} coldet -lmve -lmve_util ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES})
+if(RESEARCH)
+    add_dependencies(${LIBRARY} ext_gco)
+    target_link_libraries(${LIBRARY} gco)
+endif()

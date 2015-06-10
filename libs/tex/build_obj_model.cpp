@@ -5,7 +5,8 @@
 
 /**
   * Heuristic to calculate an appropriate texture atlas size.
-  * @warning asserts that no texture patch exceeds the dimensions of the maximal possible texture atlas size.
+  * @warning asserts that no texture patch exceeds the dimensions
+  * of the maximal possible texture atlas size.
   */
 int
 calculate_texture_size(std::list<TexturePatch> & texture_patches, int border = 0) {
@@ -44,7 +45,8 @@ calculate_texture_size(std::list<TexturePatch> & texture_patches, int border = 0
 }
 
 /**
-  * Copies the given src image into the dest image at the given position, optionally adding a border.
+  * Copies the given src image into the dest image at the given position,
+  * optionally adding a border.
   * @warning asserts that the given src image fits into the given dest image.
   */
 void copy_into(mve::ByteImage::ConstPtr src, int x, int y, mve::ByteImage::Ptr dest, int border = 0){
@@ -188,8 +190,8 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
 
 
 void
-build_obj_model(ObjModel * obj_model, std::vector<TexturePatch> const & _texture_patches,
-    mve::TriangleMesh::ConstPtr mesh) {
+build_obj_model(mve::TriangleMesh::ConstPtr mesh,
+    std::vector<TexturePatch> const & _texture_patches, ObjModel * obj_model)  {
 
     mve::TriangleMesh::FaceList const & mesh_faces = mesh->get_faces();
     std::size_t num_faces = mesh_faces.size() / 3;
@@ -211,7 +213,8 @@ build_obj_model(ObjModel * obj_model, std::vector<TexturePatch> const & _texture
     std::list<TexturePatch> texture_patches(_texture_patches.begin(), _texture_patches.end());
 
     std::cout << "\tSorting texture patches... " << std::flush;
-    /* Improve the bin-packing algorithm efficiency by sorting texture patches in descending order of size. */
+    /* Improve the bin-packing algorithm efficiency by sorting texture patches
+     * in descending order of size. */
     texture_patches.sort();
     texture_patches.reverse();
     std::cout << "done." << std::endl;
