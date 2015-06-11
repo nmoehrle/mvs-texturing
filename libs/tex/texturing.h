@@ -20,6 +20,7 @@
 
 #include "util.h"
 
+#include "Settings.h"
 #include "RectangularBin.h"
 #include "ObjModel.h"
 #include "TextureView.h"
@@ -28,19 +29,12 @@
 #include "Tri.h"
 #include "Timer.h"
 #include "ProgressCounter.h"
-#include "MRF.h"
+#include "mrf/MRF.h"
 #include "SparseTable.h"
 
-#include "Settings.h"
+#include "seam_leveling.h"
 
-typedef SparseTable<std::uint32_t, std::uint16_t, int> ST;
-
-struct VertexProjectionInfo {
-    std::size_t texture_patch_id;
-    math::Vec2f projection;
-    std::vector<std::size_t> faces;
-};
-
+typedef SparseTable<std::uint32_t, std::uint16_t, float> ST;
 
 /**
   * Loads the mesh given by filename,

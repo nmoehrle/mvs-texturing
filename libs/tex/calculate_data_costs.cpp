@@ -263,7 +263,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     delete model;
     model = NULL;
 
-    /* Determine the function for the quantization. */
+    /* Determine the function for the normlization. */
     float max_quality = 0.0f;
     for (std::size_t i = 0; i < reduced_projected_face_infos.size(); ++i)
         for (std::size_t j = 0; j < reduced_projected_face_infos[i].size(); ++j)
@@ -276,12 +276,10 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
     float permille_999 = hist_qualities.get_approximate_permille(0.999f);
 
-    Histogram hist_nqualities(0.0f, 1.0f, 1000);
-
     /* Calculate the costs. */
     assert(num_faces < std::numeric_limits<std::uint32_t>::max());
     assert(num_views < std::numeric_limits<std::uint16_t>::max());
-    assert(MRF_MAX_ENERGYTERM < std::numeric_limits<int>::max());
+    assert(MRF_MAX_ENERGYTERM < std::numeric_limits<float>::max());
     ST data_costs(num_faces, num_views);
     for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(reduced_projected_face_infos.size()); ++i) {
         while(!reduced_projected_face_infos[i].empty()) {
@@ -290,8 +288,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
             /* Clamp to percentile and normalize. */
             float normalized_quality = std::min(1.0f, info.quality / permille_999);
-            hist_nqualities.add_value(normalized_quality);
-            int data_cost = (1.0f - normalized_quality) * MRF_MAX_ENERGYTERM;
+            float data_cost = (1.0f - normalized_quality) * MRF_MAX_ENERGYTERM;
             data_costs.set_value(i, info.view_id, data_cost);
         }
 
@@ -301,7 +298,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     }
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
-    std::cout << "\tClamping qualities to " << permille_999 << " within discretization." << std::endl;
+    std::cout << "\tClamping qualities to " << permille_999 << " within normalization." << std::endl;
 
     /* Release superfluous embeddings. */
     for (TextureView & texture_view : texture_views) {

@@ -78,23 +78,24 @@ int main(int argc, char **argv) {
             std::cout << "done." << std::endl;
         }
 
-        /* Each TextureView is a label and label 0 is undefined */
         #ifdef RESEARCH
-            GCOWrapper mrf(num_faces, texture_views.size() + 1);
+        MRF::SOLVER_TYPE solver_type = MRF::GCO;
         #else
-            LBPSolver mrf(num_faces, texture_views.size() + 1);
+        MRF::SOLVER_TYPE solver_type = MRF::LBP;
         #endif
+        /* Each TextureView is a label and label 0 is undefined */
+        MRF::Ptr mrf = MRF::create(num_faces, texture_views.size() + 1, solver_type);
 
-        build_mrf(graph, data_costs, &mrf, conf.settings);
+        build_mrf(graph, data_costs, mrf.get(), conf.settings);
         timer.measure("Calculating data costs");
 
         std::cout << "Running MRF optimization:" << std::endl;
-        run_mrf_optimization(&mrf);
+        run_mrf_optimization(mrf.get());
         timer.measure("Running MRF optimization");
 
         /* Extract resulting labeling from MRF. */
         for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
-            int label = mrf.what_label(static_cast<int>(i));
+            int label = mrf->what_label(static_cast<int>(i));
             assert(0 <= label && label < texture_views.size() + 1);
             graph.set_label(i, static_cast<std::size_t>(label));
         }

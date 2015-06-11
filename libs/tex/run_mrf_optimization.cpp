@@ -4,13 +4,13 @@ void
 run_mrf_optimization(MRF * mrf) {
     util::WallTimer timer;
 
-    std::vector<MRF::ENERGY_TYPE> energies;
+    std::vector<ENERGY_TYPE> energies;
 
     std::cout << "\tIteration\tEnergy\tRuntime" << std::endl;
-    MRF::ENERGY_TYPE const zero = MRF::ENERGY_TYPE(0);
-    MRF::ENERGY_TYPE last_energy = zero;
-    MRF::ENERGY_TYPE energy = mrf->compute_energy();
-    MRF::ENERGY_TYPE diff = last_energy - energy;
+    ENERGY_TYPE const zero = ENERGY_TYPE(0);
+    ENERGY_TYPE last_energy = zero;
+    ENERGY_TYPE energy = mrf->compute_energy();
+    ENERGY_TYPE diff = last_energy - energy;
 
     unsigned int i = 0;
     while (diff != zero) {

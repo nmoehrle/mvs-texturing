@@ -4,7 +4,7 @@
 bool IGNORE_LUMINANCE = false;
 
 /** Potts model */
-int
+float
 potts(int s1, int s2, int l1, int l2) {
     /* Suppress compiler warning because of unused variable. */
     (void) s1; (void) s2;
@@ -55,7 +55,7 @@ set_data_costs(MRF * mrf, ST const & data_costs){
     for (std::size_t i = 0; i < data_costs.rows(); i++) {
         ST::Row const & data_costs_for_label = data_costs.row(i);
 
-        std::vector<MRF::SparseDataCost> costs(data_costs_for_label.size());
+        std::vector<SparseDataCost> costs(data_costs_for_label.size());
         for(std::size_t j = 0; j < costs.size(); j++) {
             costs[j].site = data_costs_for_label[j].first;
             costs[j].cost = data_costs_for_label[j].second;
@@ -63,16 +63,16 @@ set_data_costs(MRF * mrf, ST const & data_costs){
 
 
         int label = i + 1;
-        mrf->set_data_costs(label, &costs);
+        mrf->set_data_costs(label, costs);
     }
 
     /* Set costs for undefined label */
-    std::vector<MRF::SparseDataCost> costs(data_costs.cols());
+    std::vector<SparseDataCost> costs(data_costs.cols());
     for (std::size_t i = 0; i < costs.size(); i++) {
         costs[i].site = i;
         costs[i].cost = MRF_MAX_ENERGYTERM;
     }
-    mrf->set_data_costs(0, &costs);
+    mrf->set_data_costs(0, costs);
 }
 
 /** Remove all edges of nodes which corresponding face has not been seen in any texture view. */

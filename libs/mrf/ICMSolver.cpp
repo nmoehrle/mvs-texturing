@@ -1,0 +1,70 @@
+#include "ICMSolver.h"
+
+#include <limits>
+
+ICMSolver::ICMSolver(int num_sites, int) : sites(num_sites) {}
+
+ENERGY_TYPE ICMSolver::compute_energy() {
+    ENERGY_TYPE energy = 0;
+    for (std::size_t i = 0; i < sites.size(); ++i) {
+        Site const & site = sites[i];
+        energy += site.data_cost + smooth_cost(i, site.label);
+    }
+    return energy;
+}
+
+ENERGY_TYPE ICMSolver::optimize(int num_iterations) {
+    for (int i = 0; i < num_iterations; ++i) {
+        for (std::size_t j = 0; j < sites.size(); ++j) {
+            Site * site = &sites[j];
+            /* Current cost */
+            ENERGY_TYPE min_cost = std::numeric_limits<ENERGY_TYPE>::max(); //site->data_cost + smooth_cost(j, site->label);
+            for (int k = 0; k < site->labels.size(); ++k) {
+                ENERGY_TYPE cost = site->data_costs[k] + smooth_cost(j, site->labels[k]);
+                if (cost < min_cost) {
+                    min_cost = cost;
+                    site->data_cost = site->data_costs[k];
+                    site->label = site->labels[k];
+                }
+            }
+        }
+    }
+    return compute_energy();
+}
+
+void ICMSolver::set_smooth_cost(SmoothCostFunction func) {
+    smooth_cost_func = func;
+}
+
+void ICMSolver::set_neighbors(int site1, int site2) {
+    sites[site1].neighbors.push_back(site2);
+    sites[site2].neighbors.push_back(site1);
+}
+
+
+void ICMSolver::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
+    for (std::size_t i = 0; i < costs.size(); ++i) {
+        Site * site = &sites[costs[i].site];
+        site->labels.push_back(label);
+        int data_cost = costs[i].cost;
+        site->data_costs.push_back(data_cost);
+
+        if (data_cost < site->data_cost) {
+            site->label = label;
+            site->data_cost = data_cost;
+        }
+    }
+}
+
+int ICMSolver::what_label(int site) {
+    return sites[site].label;
+}
+
+ENERGY_TYPE ICMSolver::smooth_cost(int site, int label) {
+    ENERGY_TYPE smooth_cost = 0;
+    for (int neighbor : sites[site].neighbors) {
+         smooth_cost += smooth_cost_func(site, neighbor, label, sites[neighbor].label);
+    }
+    return smooth_cost;
+}
+

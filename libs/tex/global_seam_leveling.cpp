@@ -1,103 +1,11 @@
 #include "texturing.h"
+#include "seam_leveling.h"
 #include <Eigen/Sparse>
 #include <map>
 #include <set>
 #include "util/timer.h"
 
-#define STRIP_SIZE 20
-
 typedef Eigen::SparseMatrix<float> SpMat;
-
-struct ProjectedEdgeInfo {
-    std::size_t texture_patch_id;
-    math::Vec2f p1;
-    math::Vec2f p2;
-
-    bool operator<(ProjectedEdgeInfo const & projected_edge_info) const {
-        return texture_patch_id < projected_edge_info.texture_patch_id;
-    }
-};
-
-struct MeshEdge {
-    std::size_t v1;
-    std::size_t v2;
-};
-
-void
-find_seam_edges(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
-    std::vector<MeshEdge> * seam_edges) {
-    mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
-
-    seam_edges->clear();
-
-    // Is it possible that a single edge is part of more than three faces whichs' label is non zero???
-
-    for (std::size_t node = 0; node < graph.num_nodes(); ++node) {
-        std::vector<std::size_t> const & adj_nodes = graph.get_adj_nodes(node);
-        for (std::size_t adj_node : adj_nodes) {
-            /* Add each edge only once. */
-            if (node > adj_node) continue;
-
-            int label1 = graph.get_label(node);
-            int label2 = graph.get_label(adj_node);
-            /* Add only seam edges. */
-            if (label1 == 0 || label2 == 0 || label1 == label2) continue;
-
-            /* Find shared edge of the faces. */
-            std::vector<std::size_t> shared_edge;
-            for (int i = 0; i < 3; ++i){
-                std::size_t v1 = faces[3 * node + i];
-
-                for (int j = 0; j < 3; j++){
-                    std::size_t v2 = faces[3 * adj_node + j];
-
-                    if (v1 == v2) shared_edge.push_back(v1);
-                }
-            }
-
-            assert(shared_edge.size() == 2);
-            std::size_t v1 = shared_edge[0];
-            std::size_t v2 = shared_edge[1];
-
-            assert(v1 != v2);
-            if (v1 > v2) std::swap(v1, v2);
-
-            MeshEdge seam_edge = {v1, v2};
-            seam_edges->push_back(seam_edge);
-        }
-    }
-}
-
-void
-find_mesh_edge_projections(std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
-    MeshEdge mesh_edge, std::vector<ProjectedEdgeInfo> * projected_edge_infos) {
-    std::vector<VertexProjectionInfo> const & v1_projection_infos = vertex_projection_infos[mesh_edge.v1];
-    std::vector<VertexProjectionInfo> const & v2_projection_infos = vertex_projection_infos[mesh_edge.v2];
-
-    /* Use a set to eliminate duplicates which may occur if the mesh is degenerated. */
-    std::set<ProjectedEdgeInfo> projected_edge_infos_set;
-
-    for (VertexProjectionInfo v1_projection_info : v1_projection_infos) {
-        for (VertexProjectionInfo v2_projection_info : v2_projection_infos) {
-            if (v1_projection_info.texture_patch_id != v2_projection_info.texture_patch_id) continue;
-
-            for (std::size_t face_id1 : v1_projection_info.faces) {
-                for (std::size_t face_id2 : v2_projection_info.faces) {
-                    if(face_id1 != face_id2) continue;
-
-                    std::size_t texture_patch_id = v1_projection_info.texture_patch_id;
-                    math::Vec2f p1 = v1_projection_info.projection;
-                    math::Vec2f p2 = v2_projection_info.projection;
-
-                    ProjectedEdgeInfo projected_edge_info = {texture_patch_id, p1, p2};
-                    projected_edge_infos_set.insert(projected_edge_info);
-                }
-            }
-        }
-    }
-
-    projected_edge_infos->insert(projected_edge_infos->end(), projected_edge_infos_set.begin(), projected_edge_infos_set.end());
-}
 
 math::Vec3f
 sample_edge(TexturePatch const & texture_patch, math::Vec2f p1, math::Vec2f p2) {
@@ -326,7 +234,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     std::cout << "\tLhs dimensionality: " << Lhs.rows() << " x " << Lhs.cols() << std::endl;
 
     util::WallTimer timer;
-    std::cout << "Calculating adjustments:"<< std::endl;
+    std::cout << "\tCalculating adjustments:"<< std::endl;
     #pragma omp parallel for
     for (std::size_t channel = 0; channel < 3; ++channel) {
         /* Prepare solver. */
@@ -386,130 +294,6 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         }
 
         texture_patch->adjust_colors(patch_adjust_values);
-        texture_patch_counter.inc();
-    }
-}
-
-math::Vec3f
-mean_color_of_edge_point(std::vector<ProjectedEdgeInfo> projected_edge_infos,
-    std::vector<TexturePatch> const & texture_patches, float t) {
-
-    assert(0.0f <= t && t <= 1.0f);
-    math::Accum<math::Vec3f> color_accum(math::Vec3f(0.0f));
-
-    for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
-        math::Vec2f pixel = projected_edge_info.p1 * t + (1.0f - t) * projected_edge_info.p2;
-        math::Vec3f color = texture_patches[projected_edge_info.texture_patch_id].get_pixel_value(pixel);
-        color_accum.add(color, 1.0f);
-    }
-
-    math::Vec3f mean_color = color_accum.normalized();
-    return mean_color;
-}
-
-void
-draw_line(math::Vec2f p1, math::Vec2f p2, std::vector<ProjectedEdgeInfo> const & projected_edge_infos,
-    std::vector<TexturePatch> const & texture_patches, TexturePatch * texture_patch) {
-    /* http://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */
-
-    int x0 = std::floor(p1[0] + 0.5f);
-    int y0 = std::floor(p1[1] + 0.5f);
-    int const x1 = std::floor(p2[0] + 0.5f);
-    int const y1 = std::floor(p2[1] + 0.5f);
-
-    float tdx = static_cast<float>(x1 - x0);
-    float tdy = static_cast<float>(y1 - y0);
-    float length = std::sqrt(tdx * tdx + tdy * tdy);
-
-    int const dx = std::abs(x1 - x0);
-    int const dy = std::abs(y1 - y0) ;
-    int const sx = x0 < x1 ? 1 : -1;
-    int const sy = y0 < y1 ? 1 : -1;
-    int err = dx - dy;
-
-    int x = x0;
-    int y = y0;
-    while (true) {
-        math::Vec2i pixel(x, y);
-
-        tdx = static_cast<float>(x1 - x);
-        tdy = static_cast<float>(y1 - y);
-
-        /* If the length is zero we sample the midpoint of the projected edge. */
-        float t = length != 0.0f ? std::sqrt(tdx * tdx + tdy * tdy) / length : 0.5f;
-
-        texture_patch->set_pixel_value(pixel, mean_color_of_edge_point(projected_edge_infos, texture_patches, t));
-        if (x == x1 && y == y1)
-            break;
-
-        int const e2 = 2 * err;
-        if (e2 > -dy) {
-            err -= dy;
-            x += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y += sy;
-        }
-    }
-}
-
-
-void
-local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
-    std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
-    std::vector<TexturePatch> * texture_patches) {
-
-    std::vector<TexturePatch> orig_texture_patches(texture_patches->begin(), texture_patches->end());
-
-    std::size_t const num_vertices = vertex_projection_infos.size();
-
-    {
-        std::vector<MeshEdge> seam_edges;
-        find_seam_edges(graph, mesh, &seam_edges);
-
-        for (MeshEdge seam_edge : seam_edges){
-            std::vector<ProjectedEdgeInfo> projected_edge_infos;
-            find_mesh_edge_projections(vertex_projection_infos, seam_edge, &projected_edge_infos);
-
-            for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
-                draw_line(projected_edge_info.p1, projected_edge_info.p2, projected_edge_infos,
-                    orig_texture_patches, &(texture_patches->at(projected_edge_info.texture_patch_id)));
-            }
-        }
-    }
-
-    for (std::size_t i = 0; i < num_vertices; ++i) {
-        std::vector<VertexProjectionInfo> const & projection_infos = vertex_projection_infos[i];
-        if (projection_infos.size() <= 1) continue;
-
-        math::Accum<math::Vec3f> color_accum(math::Vec3f(0.0f));
-        for (std::size_t j = 0; j < projection_infos.size(); ++j) {
-            VertexProjectionInfo const & projection_info = projection_infos[j];
-            TexturePatch const & original_texture_patch = orig_texture_patches[projection_info.texture_patch_id];
-            math::Vec3f color = original_texture_patch.get_pixel_value(projection_info.projection);
-            color_accum.add(color, 1.0f);
-        }
-
-        math::Vec3f mean_color = color_accum.normalized();
-
-        for (std::size_t j = 0; j < projection_infos.size(); ++j){
-            VertexProjectionInfo const & projection_info = projection_infos[j];
-            math::Vec2i pixel(projection_info.projection +  math::Vec2f(0.5f, 0.5f));
-            TexturePatch * texture_patch = &(texture_patches->at(projection_info.texture_patch_id));
-            texture_patch->set_pixel_value(pixel, mean_color);
-        }
-    }
-
-    ProgressCounter texture_patch_counter("\tBlending texture patches", texture_patches->size());
-    #pragma omp parallel for schedule(dynamic)
-    for (std::size_t i = 0; i < texture_patches->size(); ++i) {
-        TexturePatch * texture_patch = &texture_patches->at(i);
-        texture_patch_counter.progress<SIMPLE>();
-        texture_patch->prepare_blending_mask(STRIP_SIZE);
-        texture_patch->blend(orig_texture_patches[i].get_image());
-        texture_patch->release_blending_mask();
-        texture_patch->erode_validity_mask();
         texture_patch_counter.inc();
     }
 }
