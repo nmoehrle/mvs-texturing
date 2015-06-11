@@ -1,10 +1,12 @@
-#include "ICMSolver.h"
+#include "ICMGraph.h"
 
 #include <limits>
 
-ICMSolver::ICMSolver(int num_sites, int) : sites(num_sites) {}
+MRF_NAMESPACE_BEGIN
 
-ENERGY_TYPE ICMSolver::compute_energy() {
+ICMGraph::ICMGraph(int num_sites, int) : sites(num_sites) {}
+
+ENERGY_TYPE ICMGraph::compute_energy() {
     ENERGY_TYPE energy = 0;
     for (std::size_t i = 0; i < sites.size(); ++i) {
         Site const & site = sites[i];
@@ -13,7 +15,7 @@ ENERGY_TYPE ICMSolver::compute_energy() {
     return energy;
 }
 
-ENERGY_TYPE ICMSolver::optimize(int num_iterations) {
+ENERGY_TYPE ICMGraph::optimize(int num_iterations) {
     for (int i = 0; i < num_iterations; ++i) {
         for (std::size_t j = 0; j < sites.size(); ++j) {
             Site * site = &sites[j];
@@ -32,17 +34,17 @@ ENERGY_TYPE ICMSolver::optimize(int num_iterations) {
     return compute_energy();
 }
 
-void ICMSolver::set_smooth_cost(SmoothCostFunction func) {
+void ICMGraph::set_smooth_cost(SmoothCostFunction func) {
     smooth_cost_func = func;
 }
 
-void ICMSolver::set_neighbors(int site1, int site2) {
+void ICMGraph::set_neighbors(int site1, int site2) {
     sites[site1].neighbors.push_back(site2);
     sites[site2].neighbors.push_back(site1);
 }
 
 
-void ICMSolver::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
+void ICMGraph::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
     for (std::size_t i = 0; i < costs.size(); ++i) {
         Site * site = &sites[costs[i].site];
         site->labels.push_back(label);
@@ -56,11 +58,11 @@ void ICMSolver::set_data_costs(int label, std::vector<SparseDataCost> const & co
     }
 }
 
-int ICMSolver::what_label(int site) {
+int ICMGraph::what_label(int site) {
     return sites[site].label;
 }
 
-ENERGY_TYPE ICMSolver::smooth_cost(int site, int label) {
+ENERGY_TYPE ICMGraph::smooth_cost(int site, int label) {
     ENERGY_TYPE smooth_cost = 0;
     for (int neighbor : sites[site].neighbors) {
          smooth_cost += smooth_cost_func(site, neighbor, label, sites[neighbor].label);
@@ -68,3 +70,4 @@ ENERGY_TYPE ICMSolver::smooth_cost(int site, int label) {
     return smooth_cost;
 }
 
+MRF_NAMESPACE_END

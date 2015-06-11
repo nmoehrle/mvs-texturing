@@ -1,17 +1,19 @@
 #pragma once
 
-#include "MRF.h"
+#include "Graph.h"
 
 #ifdef RESEARCH
 #define GCO_ENERGYTYPE float
 #include "GCoptimization.h"
 
-class GCOWrapper : public MRF {
+MRF_NAMESPACE_BEGIN
+
+class GCOGraph : public Graph {
     private:
         GCoptimizationGeneralGraph gco;
 
     public:
-        GCOWrapper(int num_sites, int num_lables);
+        GCOGraph(int num_sites, int num_lables);
 
         void set_smooth_cost(SmoothCostFunction func);
         void set_data_costs(int label, std::vector<SparseDataCost> const & costs);
@@ -20,4 +22,7 @@ class GCOWrapper : public MRF {
         ENERGY_TYPE optimize(int num_iterations);
         int what_label(int site);
 };
+
+MRF_NAMESPACE_END
+
 #endif

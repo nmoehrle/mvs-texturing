@@ -1,16 +1,16 @@
 #include "texturing.h"
 
 void
-run_mrf_optimization(MRF * mrf) {
+run_mrf_optimization(mrf::Graph * mrf) {
     util::WallTimer timer;
 
-    std::vector<ENERGY_TYPE> energies;
+    std::vector<mrf::ENERGY_TYPE> energies;
 
     std::cout << "\tIteration\tEnergy\tRuntime" << std::endl;
-    ENERGY_TYPE const zero = ENERGY_TYPE(0);
-    ENERGY_TYPE last_energy = zero;
-    ENERGY_TYPE energy = mrf->compute_energy();
-    ENERGY_TYPE diff = last_energy - energy;
+    mrf::ENERGY_TYPE const zero = mrf::ENERGY_TYPE(0);
+    mrf::ENERGY_TYPE last_energy = zero;
+    mrf::ENERGY_TYPE energy = mrf->compute_energy();
+    mrf::ENERGY_TYPE diff = last_energy - energy;
 
     unsigned int i = 0;
     while (diff != zero) {

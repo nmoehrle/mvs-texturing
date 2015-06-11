@@ -1,11 +1,13 @@
-#include "LBPSolver.h"
+#include "LBPGraph.h"
 
 #include <algorithm>
 #include <limits>
 
-LBPSolver::LBPSolver(int num_sites, int) : vertices(num_sites) {}
+MRF_NAMESPACE_BEGIN
 
-ENERGY_TYPE LBPSolver::compute_energy() {
+LBPGraph::LBPGraph(int num_sites, int) : vertices(num_sites) {}
+
+ENERGY_TYPE LBPGraph::compute_energy() {
     ENERGY_TYPE energy = 0;
 
     #pragma omp parallel for reduction(+:energy)
@@ -23,7 +25,7 @@ ENERGY_TYPE LBPSolver::compute_energy() {
     return energy;
 }
 
-ENERGY_TYPE LBPSolver::optimize(int num_iterations) {
+ENERGY_TYPE LBPGraph::optimize(int num_iterations) {
     for (int i = 0; i < num_iterations; ++i) {
         #pragma omp parallel for
         for (int edge_idx = 0; edge_idx < edges.size(); ++edge_idx) {
@@ -83,11 +85,11 @@ ENERGY_TYPE LBPSolver::optimize(int num_iterations) {
     return compute_energy();
 }
 
-void LBPSolver::set_smooth_cost(SmoothCostFunction func) {
+void LBPGraph::set_smooth_cost(SmoothCostFunction func) {
     smooth_cost_func = func;
 }
 
-void LBPSolver::set_neighbors(int site1, int site2){
+void LBPGraph::set_neighbors(int site1, int site2){
     edges.push_back(DirectedEdge(site1, site2));
     vertices[site2].incoming_edges.push_back(edges.size() - 1);
     edges.push_back(DirectedEdge(site2, site1));
@@ -95,7 +97,7 @@ void LBPSolver::set_neighbors(int site1, int site2){
 }
 
 
-void LBPSolver::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
+void LBPGraph::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
     for (std::size_t i = 0; i < costs.size(); ++i) {
         Vertex * vertex = &vertices[costs[i].site];
         vertex->labels.push_back(label);
@@ -115,6 +117,8 @@ void LBPSolver::set_data_costs(int label, std::vector<SparseDataCost> const & co
     }
 }
 
-int LBPSolver::what_label(int site) {
+int LBPGraph::what_label(int site) {
     return vertices[site].label;
 }
+
+MRF_NAMESPACE_END

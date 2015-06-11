@@ -1,17 +1,19 @@
-#include "GCOWrapper.h"
+#include "GCOGraph.h"
 
 #include <iostream>
 #include <algorithm>
 
+MRF_NAMESPACE_BEGIN
+
 #ifdef RESEARCH
-GCOWrapper::GCOWrapper(int num_sites, int num_lables) : gco(num_sites, num_lables) {
+GCOGraph::GCOGraph(int num_sites, int num_lables) : gco(num_sites, num_lables) {
     /* GCoptimization uses rand() to create a random label order
      * - specify seed for repeadability. */
     srand(9313513);
     gco.setLabelOrder(true);
 }
 
-void GCOWrapper::set_smooth_cost(SmoothCostFunction func) {
+void GCOGraph::set_smooth_cost(SmoothCostFunction func) {
     gco.setSmoothCost((GCoptimization::SmoothCostFn) func);
 }
 
@@ -20,7 +22,7 @@ bool comp_spd_site(GCoptimization::SparseDataCost spd1, GCoptimization::SparseDa
     return spd1.site < spd2.site;
 }
 
-void GCOWrapper::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
+void GCOGraph::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
     /* Sparse data costs must be sorted in increasing order of site ID */
     std::vector<GCoptimization::SparseDataCost> gcocosts(costs.size());
     for (std::size_t i = 0; i < costs.size(); ++i) {
@@ -30,11 +32,11 @@ void GCOWrapper::set_data_costs(int label, std::vector<SparseDataCost> const & c
     gco.setDataCost(label, gcocosts.data(), gcocosts.size());
 }
 
-ENERGY_TYPE GCOWrapper::compute_energy() {
+ENERGY_TYPE GCOGraph::compute_energy() {
     return static_cast<ENERGY_TYPE>(gco.compute_energy());
 }
 
-ENERGY_TYPE GCOWrapper::optimize(int num_iterations) {
+ENERGY_TYPE GCOGraph::optimize(int num_iterations) {
     try {
         return static_cast<ENERGY_TYPE>(gco.expansion(num_iterations));
     } catch (GCException e) {
@@ -43,13 +45,13 @@ ENERGY_TYPE GCOWrapper::optimize(int num_iterations) {
     }
 }
 
-void GCOWrapper::set_neighbors(int site1, int site2) {
+void GCOGraph::set_neighbors(int site1, int site2) {
     gco.setNeighbors(site1, site2);
 }
 
-int GCOWrapper::what_label(int site) {
+int GCOGraph::what_label(int site) {
     return static_cast<int>(gco.whatLabel(site));
 }
 #endif
 
-//MRF_NAMESPACE_END
+MRF_NAMESPACE_END

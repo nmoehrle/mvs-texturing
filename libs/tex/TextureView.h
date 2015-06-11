@@ -12,7 +12,8 @@
 #include "mve/image_io.h"
 
 #include "Tri.h"
-#include "DataTerm.h"
+
+#include "Settings.h"
 
 /** Struct containing the quality and mean color of a face within a view. */
 struct ProjectedFaceInfo {
@@ -229,7 +230,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     double integral = 0.0;
 
     std::size_t num_samples = 0;
-    if (area > 0.5f){
+    if (area > 0.5f) {
         /* Sort pixel in ascending order of y */
         while (true)
             if(p1[1] <= p2[1])
@@ -255,7 +256,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
             float min_x = aabb.min_x - 0.5f;
             float max_x = aabb.max_x + 0.5f;
 
-            if (fast_sampling_possible){
+            if (fast_sampling_possible) {
                 float const cy = static_cast<float>(y) + 0.5f;
 
                 min_x = (cy - b1) / m1;
@@ -279,9 +280,9 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
                 color_accum.add(color, 1.0f);
 
                 /* Calculate DataTerms. */
-                if(T == GMI)
+                if (T == GMI) {
                     integral += (static_cast<double>(gradient_magnitude->at(x, y, 0)) / 255.0);
-
+                }
                 ++num_samples;
             }
         }
@@ -299,7 +300,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
         }
         mean_color = ((c1 + c2 + c3) / 3.0);
 
-        if (T == GMI){
+        if (T == GMI) {
             double gmv1 = static_cast<double>(gradient_magnitude->linear_at(p1[0], p1[1], 0)) / 255.0;
             double gmv2 = static_cast<double>(gradient_magnitude->linear_at(p2[0], p2[1], 0)) / 255.0;
             double gmv3 = static_cast<double>(gradient_magnitude->linear_at(p3[0], p3[1], 0)) / 255.0;
@@ -308,7 +309,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     }
 
     face_info->mean_color = mean_color;
-    switch (T){
+    switch (T) {
         case AREA:
             face_info->quality = area;
         break;

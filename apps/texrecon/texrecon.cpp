@@ -79,12 +79,12 @@ int main(int argc, char **argv) {
         }
 
         #ifdef RESEARCH
-        MRF::SOLVER_TYPE solver_type = MRF::GCO;
+        mrf::SOLVER_TYPE solver_type = mrf::GCO;
         #else
-        MRF::SOLVER_TYPE solver_type = MRF::LBP;
+        mrf::SOLVER_TYPE solver_type = mrf::LBP;
         #endif
         /* Each TextureView is a label and label 0 is undefined */
-        MRF::Ptr mrf = MRF::create(num_faces, texture_views.size() + 1, solver_type);
+        mrf::Graph::Ptr mrf = mrf::Graph::create(num_faces, texture_views.size() + 1, solver_type);
 
         build_mrf(graph, data_costs, mrf.get(), conf.settings);
         timer.measure("Calculating data costs");

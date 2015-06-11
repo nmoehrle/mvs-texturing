@@ -29,7 +29,7 @@
 #include "Tri.h"
 #include "Timer.h"
 #include "ProgressCounter.h"
-#include "mrf/MRF.h"
+#include "mrf/Graph.h"
 #include "SparseTable.h"
 
 #include "seam_leveling.h"
@@ -67,13 +67,13 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
   * Builds up the mrf graph for the mesh.
   */
 void
-build_mrf(UniGraph graph, ST const & data_costs, MRF * mrf, Settings const & settings);
+build_mrf(UniGraph graph, ST const & data_costs, mrf::Graph * mrf, Settings const & settings);
 
 /**
   * Runs mrf optimization.
   */
 void
-run_mrf_optimization(MRF * mrf);
+run_mrf_optimization(mrf::Graph * mrf);
 
 /**
   * Generates texture patches using the graph to determine adjacent faces with the same label.

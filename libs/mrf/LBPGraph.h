@@ -1,9 +1,11 @@
 #pragma once
 
-#include "MRF.h"
+#include "Graph.h"
+
+MRF_NAMESPACE_BEGIN
 
 /** Implementation of the loopy belief propagation algorithm. */
-class LBPSolver : public MRF {
+class LBPGraph : public Graph {
     private:
         struct DirectedEdge {
             int v1;
@@ -26,7 +28,7 @@ class LBPSolver : public MRF {
         std::vector<Vertex> vertices;
         SmoothCostFunction smooth_cost_func;
     public:
-        LBPSolver(int num_sites, int num_labels);
+        LBPGraph(int num_sites, int num_labels);
 
         void set_smooth_cost(SmoothCostFunction func);
         void set_data_costs(int label, std::vector<SparseDataCost> const & costs);
@@ -35,3 +37,5 @@ class LBPSolver : public MRF {
         ENERGY_TYPE optimize(int num_iterations);
         int what_label(int site);
 };
+
+MRF_NAMESPACE_END

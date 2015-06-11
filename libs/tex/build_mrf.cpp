@@ -35,7 +35,7 @@ operator<(Edge const & edge1, Edge const & edge2) {
 
 /** Setup the neighborhood of the MRF. */
 void
-set_neighbors(MRF * mrf, UniGraph const & graph) {
+set_neighbors(mrf::Graph * mrf, UniGraph const & graph) {
     for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
         std::vector<std::size_t> adj_faces = graph.get_adj_nodes(i);
         for (std::size_t j = 0; j < adj_faces.size(); ++j) {
@@ -50,12 +50,12 @@ set_neighbors(MRF * mrf, UniGraph const & graph) {
 
 /** Set the data costs of the MRF. */
 void
-set_data_costs(MRF * mrf, ST const & data_costs){
+set_data_costs(mrf::Graph * mrf, ST const & data_costs){
     /* Set data costs for all labels except label 0 (undefined) */
     for (std::size_t i = 0; i < data_costs.rows(); i++) {
         ST::Row const & data_costs_for_label = data_costs.row(i);
 
-        std::vector<SparseDataCost> costs(data_costs_for_label.size());
+        std::vector<mrf::SparseDataCost> costs(data_costs_for_label.size());
         for(std::size_t j = 0; j < costs.size(); j++) {
             costs[j].site = data_costs_for_label[j].first;
             costs[j].cost = data_costs_for_label[j].second;
@@ -67,7 +67,7 @@ set_data_costs(MRF * mrf, ST const & data_costs){
     }
 
     /* Set costs for undefined label */
-    std::vector<SparseDataCost> costs(data_costs.cols());
+    std::vector<mrf::SparseDataCost> costs(data_costs.cols());
     for (std::size_t i = 0; i < costs.size(); i++) {
         costs[i].site = i;
         costs[i].cost = MRF_MAX_ENERGYTERM;
@@ -95,7 +95,7 @@ isolate_unseen_faces(UniGraph * graph, ST const & data_costs) {
 }
 
 void
-build_mrf(UniGraph graph, ST const & data_costs, MRF * mrf, Settings const & settings) {
+build_mrf(UniGraph graph, ST const & data_costs, mrf::Graph * mrf, Settings const & settings) {
     /* Graph is copied...*/
     isolate_unseen_faces(&graph, data_costs);
 

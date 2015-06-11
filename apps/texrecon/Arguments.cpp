@@ -5,7 +5,6 @@
 #define SKIP_LOCAL_SEAM_LEVELING "skip_local_seam_leveling"
 #define NO_INTERMEDIATE_RESULTS "no_intermediate_results"
 #define WRITE_TIMINGS "write_timings"
-#define WRITE_MRF_ENERGIES "write_mrf_energies"
 
 Arguments parse_args(int argc, char **argv) {
     util::Arguments args;
@@ -97,13 +96,13 @@ Arguments parse_args(int argc, char **argv) {
             conf.labeling_file = i->arg;
         break;
         case 'd':
-            conf.settings.data_term = parse_data_term(i->arg);
+            conf.settings.data_term = parse_choice<DataTerm>(i->arg);
         break;
         case 's':
-            conf.settings.smoothness_term = parse_smoothness_term(i->arg);
+            conf.settings.smoothness_term = parse_choice<SmoothnessTerm>(i->arg);
         break;
         case 'o':
-            conf.settings.outlier_removal = parse_outlier_removal(i->arg);
+            conf.settings.outlier_removal = parse_choice<OutlierRemoval>(i->arg);
         break;
         case '\0':
             if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST) {
@@ -141,9 +140,9 @@ Arguments::to_string(){
         << "Output prefix: \t" << out_prefix << std::endl
         << "Datacost file: \t" << data_cost_file << std::endl
         << "Labeling file: \t" << labeling_file << std::endl
-        << "Data term: \t" << DataTermStrings[settings.data_term] << std::endl
-        << "Smoothness term: \t" << SmoothnessTermStrings[settings.smoothness_term] << std::endl
-        << "Outlier removal method: \t" << OutlierRemovalStrings[settings.outlier_removal] << std::endl
+        << "Data term: \t" << choice_string<DataTerm>(settings.data_term) << std::endl
+        << "Smoothness term: \t" << choice_string<SmoothnessTerm>(settings.smoothness_term) << std::endl
+        << "Outlier removal method: \t" << choice_string<OutlierRemoval>(settings.outlier_removal) << std::endl
         << "Apply global seam leveling: \t" << bool_to_string(settings.global_seam_leveling) << std::endl
         << "Apply local seam leveling: \t" << bool_to_string(settings.local_seam_leveling) << std::endl;
 

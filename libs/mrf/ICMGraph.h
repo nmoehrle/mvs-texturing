@@ -1,9 +1,11 @@
 #pragma once
 
-#include "MRF.h"
+#include "Graph.h"
+
+MRF_NAMESPACE_BEGIN
 
 /** Implementation of the iterated conditional mode algrorithm. */
-class ICMSolver : public MRF {
+class ICMGraph : public Graph {
     private:
         struct Site {
             int label;
@@ -18,7 +20,7 @@ class ICMSolver : public MRF {
         std::vector<Site> sites;
         SmoothCostFunction smooth_cost_func;
     public:
-        ICMSolver(int num_sites, int num_labels);
+        ICMGraph(int num_sites, int num_labels);
         ENERGY_TYPE smooth_cost(int site, int label);
 
         void set_smooth_cost(SmoothCostFunction func);
@@ -29,3 +31,4 @@ class ICMSolver : public MRF {
         int what_label(int site);
 };
 
+MRF_NAMESPACE_END
