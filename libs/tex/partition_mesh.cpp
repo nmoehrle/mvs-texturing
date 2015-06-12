@@ -144,10 +144,6 @@ partition_connected_component(UniGraph * graph, std::size_t label_of_connected_c
             }
         }
 
-        for (Node node : nodes)
-            assert(graph->get_label(node) >= min_label_for_partition_labeling
-                   && graph->get_label(node) < min_label_for_partition_labeling + num_partitions);
-
         /* If we are in the final iteration we stop here to keep the graph labels
          * (they would be removed in the following region shrinking step). */
         if (kmeans_iteration == num_kmeans_iterations - 1)
@@ -190,9 +186,6 @@ partition_connected_component(UniGraph * graph, std::size_t label_of_connected_c
                 old_queue.insert(old_queue.begin(), new_queue.begin(), new_queue.end());
             }
         }
-
-        for (Node node : nodes)
-            assert(graph->get_label(node) == unvisited);
     }
 
     return num_partitions;

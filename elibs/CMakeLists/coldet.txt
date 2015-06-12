@@ -18,4 +18,5 @@ if(UNIX)
     add_definitions(-DGCC)
 endif()
 
+set(CMAKE_BUILD_TYPE Release)
 add_library(coldet STATIC ${SOURCES})

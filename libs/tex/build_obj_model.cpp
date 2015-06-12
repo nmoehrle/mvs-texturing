@@ -24,6 +24,7 @@ calculate_texture_size(std::list<TexturePatch> & texture_patches) {
     /* A TexturePatch must fit into the largest possible texture. */
     int const max_padding = MAX_TEXTURE_SIZE >> 7;
     int const max_patch_size = MAX_TEXTURE_SIZE - 2 * max_padding;
+    (void) max_patch_size; //Suppress unused variable if -DNDEBUG
     assert(max_patch_size >= max_width && max_patch_size >= max_height);
 
     /* Heuristic to determine a proper texture size. */

@@ -28,7 +28,7 @@ ENERGY_TYPE LBPGraph::compute_energy() {
 ENERGY_TYPE LBPGraph::optimize(int num_iterations) {
     for (int i = 0; i < num_iterations; ++i) {
         #pragma omp parallel for
-        for (int edge_idx = 0; edge_idx < edges.size(); ++edge_idx) {
+        for (std::size_t edge_idx = 0; edge_idx < edges.size(); ++edge_idx) {
             DirectedEdge & edge = edges[edge_idx];
             std::vector<int> const & labels1 = vertices[edge.v1].labels;
             std::vector<int> const & labels2 = vertices[edge.v2].labels;

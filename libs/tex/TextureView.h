@@ -106,8 +106,9 @@ class TextureView {
         /** Erodes the validity mask by one pixel. */
         void erode_validity_mask(void);
 
-        template <DataTerm T> void
-        get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3, ProjectedFaceInfo * face_info) const;
+        void
+        get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3,
+            ProjectedFaceInfo * face_info, Settings const & settings) const;
 
         void
         export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3, std::string const & filename) const;
@@ -201,120 +202,3 @@ TextureView::release_image(void) {
     image.reset();
 }
 
-template <DataTerm T> void
-TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
-    math::Vec3f const & v3, ProjectedFaceInfo * face_info) const {
-
-    assert(image != NULL);
-    assert(gradient_magnitude != NULL);
-
-    math::Vec2f p1 = get_pixel_coords(v1);
-    math::Vec2f p2 = get_pixel_coords(v2);
-    math::Vec2f p3 = get_pixel_coords(v3);
-
-    assert(valid_pixel(p1) && valid_pixel(p2) && valid_pixel(p3));
-
-    Tri tri(p1, p2, p3);
-    Rect<float> aabb = tri.get_aabb();
-    float area = tri.get_area();
-
-    if (area < std::numeric_limits<float>::epsilon()) {
-        face_info->quality = 0.0f;
-        return;
-    }
-
-    math::Vec3d mean_color(0.0);
-    math::Accum<math::Vec3f> color_accum(math::Vec3d(0.0));
-
-    /* Only relevant for GMI. */
-    double integral = 0.0;
-
-    std::size_t num_samples = 0;
-    if (area > 0.5f) {
-        /* Sort pixel in ascending order of y */
-        while (true)
-            if(p1[1] <= p2[1])
-                if(p2[1] <= p3[1]) break;
-                else std::swap(p2, p3);
-            else std::swap(p1, p2);
-
-        /* Calculate line equations. */
-        float const m1 = (p1[1] - p3[1]) / (p1[0] - p3[0]);
-        float const b1 = p1[1] - m1 * p1[0];
-
-        /* area != 0.0f => m1 != 0.0f. */
-
-        float const m2 = (p1[1] - p2[1]) / (p1[0] - p2[0]);
-        float const b2 = p1[1] - m2 * p1[0];
-
-        float const m3 = (p2[1] - p3[1]) / (p2[0] - p3[0]);
-        float const b3 = p2[1] - m3 * p2[0];
-
-        bool fast_sampling_possible = std::isfinite(m1) && m2 != 0.0f && std::isfinite(m2) && m3 != 0.0f && std::isfinite(m3);
-
-        for (int y = std::floor(aabb.min_y); y < std::ceil(aabb.max_y); ++y) {
-            float min_x = aabb.min_x - 0.5f;
-            float max_x = aabb.max_x + 0.5f;
-
-            if (fast_sampling_possible) {
-                float const cy = static_cast<float>(y) + 0.5f;
-
-                min_x = (cy - b1) / m1;
-                if (cy <= p2[1]) max_x = (cy - b2) / m2;
-                else max_x = (cy - b3) / m3;
-
-                if (min_x >= max_x) std::swap(min_x, max_x);
-
-                if (min_x < aabb.min_x || min_x > aabb.max_x) continue;
-                if (max_x < aabb.min_x || max_x > aabb.max_x) continue;
-            }
-
-            for (int x = std::floor(min_x + 0.5f); x < std::ceil(max_x - 0.5f); ++x) {
-                math::Vec3d color;
-
-                if (!fast_sampling_possible && !tri.inside(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f)) continue;
-
-                for (std::size_t i = 0; i < 3; i++){
-                     color[i] = static_cast<double>(image->at(x, y, i)) / 255.0;
-                }
-                color_accum.add(color, 1.0f);
-
-                /* Calculate DataTerms. */
-                if (T == GMI) {
-                    integral += (static_cast<double>(gradient_magnitude->at(x, y, 0)) / 255.0);
-                }
-                ++num_samples;
-            }
-        }
-    }
-
-    if (num_samples > 0) {
-        mean_color = color_accum.normalized();
-        integral = (integral / num_samples) * static_cast<double>(area);
-    } else {
-        math::Vec3d c1, c2, c3;
-        for (std::size_t i = 0; i < 3; ++i) {
-             c1[i] = static_cast<double>(image->linear_at(p1[0], p1[1], i)) / 255.0;
-             c2[i] = static_cast<double>(image->linear_at(p2[0], p2[1], i)) / 255.0;
-             c3[i] = static_cast<double>(image->linear_at(p3[0], p3[1], i)) / 255.0;
-        }
-        mean_color = ((c1 + c2 + c3) / 3.0);
-
-        if (T == GMI) {
-            double gmv1 = static_cast<double>(gradient_magnitude->linear_at(p1[0], p1[1], 0)) / 255.0;
-            double gmv2 = static_cast<double>(gradient_magnitude->linear_at(p2[0], p2[1], 0)) / 255.0;
-            double gmv3 = static_cast<double>(gradient_magnitude->linear_at(p3[0], p3[1], 0)) / 255.0;
-            integral = ((gmv1 + gmv2 + gmv3) / 3.0) * static_cast<double>(area);
-        }
-    }
-
-    face_info->mean_color = mean_color;
-    switch (T) {
-        case AREA:
-            face_info->quality = area;
-        break;
-        case GMI:
-            face_info->quality = integral;
-        break;
-    }
-}

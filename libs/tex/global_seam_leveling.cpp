@@ -245,27 +245,27 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
         /* Prepare right hand side. */
         Eigen::VectorXf b(A_rows);
-        for (std::size_t i = 0; i < coefficients_b.size(); ++i)
+        for (std::size_t i = 0; i < coefficients_b.size(); ++i) {
             b[i] = coefficients_b[i][channel];
+        }
         Eigen::VectorXf Rhs = SpMat(A.transpose()) * b;
 
         /* Solve for x. */
         Eigen::VectorXf x(x_rows);
         x = cg.solve(Rhs);
-        #pragma omp critical
-        std::cout << "\t\tColor channel " << channel << ": CG took "
-            << cg.iterations() << " iterations. Residual is " << cg.error() << std::endl;
 
         /* Subtract mean because system is underconstrained and we seek the solution with minimal adjustments. */
         x = x.array() - x.mean();
 
         #pragma omp critical
-        {
-            for (std::size_t i = 0; i < num_vertices; ++i) {
-                for (std::size_t j = 0; j < labels[i].size(); ++j) {
-                    std::size_t label = labels[i][j];
-                    adjust_values[i][label][channel] = x[vertlabel2row[i][label]];
-                }
+        std::cout << "\t\tColor channel " << channel << ": CG took "
+            << cg.iterations() << " iterations. Residual is " << cg.error() << std::endl;
+
+        #pragma omp critical
+        for (std::size_t i = 0; i < num_vertices; ++i) {
+            for (std::size_t j = 0; j < labels[i].size(); ++j) {
+                std::size_t label = labels[i][j];
+                adjust_values[i][label][channel] = x[vertlabel2row[i][label]];
             }
         }
     }

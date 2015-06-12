@@ -145,13 +145,15 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         view_counter.inc();
     }
 
-    view_counter.reset("\tCalculating gradient magnitude");
-    #pragma omp parallel for
-    for (std::size_t i = 0; i < num_views; ++i) {
-        view_counter.progress<SIMPLE>();
-        texture_views[i].generate_gradient_magnitude();
-        texture_views[i].erode_validity_mask();
-        view_counter.inc();
+    if (settings.data_term == GMI) {
+        view_counter.reset("\tCalculating gradient magnitude");
+        #pragma omp parallel for
+        for (std::size_t i = 0; i < num_views; ++i) {
+            view_counter.progress<SIMPLE>();
+            texture_views[i].generate_gradient_magnitude();
+            texture_views[i].erode_validity_mask();
+            view_counter.inc();
+        }
     }
 
     CollisionModel3D* model = newCollisionModel3D(true);
@@ -185,19 +187,19 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
             infos.clear();
             infos.reserve(num_views);
 
+            math::Vec3f const & v1 = vertices[faces[i]];
+            math::Vec3f const & v2 = vertices[faces[i + 1]];
+            math::Vec3f const & v3 = vertices[faces[i + 2]];
+            math::Vec3f const & face_normal = face_normals[face_id];
+            math::Vec3f const face_center = (v1 + v2 + v3) / 3;
+
             /* Check visibility and compute quality of each face in each texture view. */
             for (std::uint16_t j = 0; j < texture_views.size(); ++j) {
-                math::Vec3f const & v1 = vertices[faces[i]];
-                math::Vec3f const & v2 = vertices[faces[i + 1]];
-                math::Vec3f const & v3 = vertices[faces[i + 2]];
-
                 math::Vec3f const & view_pos = texture_views[j].get_pos();
+                math::Vec3f const & viewing_direction = texture_views[j].get_viewing_direction();
 
-                math::Vec3f const & face_normal = face_normals[face_id];
-                math::Vec3f face_center = (v1 + v2 + v3) / 3;
                 math::Vec3f view_to_face_vec = (face_center - view_pos).normalized();
                 math::Vec3f face_to_view_vec = (view_pos - face_center).normalized();
-                math::Vec3f const & viewing_direction = texture_views[j].get_viewing_direction();
 
                 /* Backface culling */
                 float viewing_angle = face_to_view_vec.dot(face_normal);
@@ -225,24 +227,15 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                             break;
                         }
                     }
-                    if (!visible)
-                        continue;
+                    if (!visible) continue;
                 }
 
                 ProjectedFaceInfo info = {j, 0.0f, math::Vec3f(0.0f, 0.0f, 0.0f)};
 
                 /* Calculate quality. */
-                switch (settings.data_term) {
-                    case AREA:
-                        texture_views[j].get_face_info<AREA>(v1, v2, v3, &info);
-                        break;
-                    case GMI:
-                        texture_views[j].get_face_info<GMI>(v1, v2, v3, &info);
-                        break;
-                }
+                texture_views[j].get_face_info(v1, v2, v3, &info, settings);
 
-                if (info.quality == 0.0f)
-                    continue;
+                if (info.quality == 0.0) continue;
 
                 /* Change color space. */
                 mve::image::color_rgb_to_ycbcr(*(info.mean_color));
@@ -253,8 +246,9 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
             photometric_outlier_detection(infos, settings);
 
             reduced_projected_face_infos[face_id].reserve(infos.size());
-            for (ProjectedFaceInfo const & info : infos)
+            for (ProjectedFaceInfo const & info : infos) {
                 reduced_projected_face_infos[face_id].push_back(reduce(info));
+            }
 
             face_counter.inc();
         }
@@ -303,7 +297,9 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     /* Release superfluous embeddings. */
     for (TextureView & texture_view : texture_views) {
         texture_view.release_validity_mask();
-        texture_view.release_gradient_magnitude();
+        if (settings.data_term == GMI) {
+            texture_view.release_gradient_magnitude();
+        }
     }
 
     return data_costs;

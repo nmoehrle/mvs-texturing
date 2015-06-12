@@ -85,23 +85,137 @@ TextureView::erode_validity_mask(void) {
                 continue;
             }
 
-            bool invalid = !validity_mask[x + y * width];
-            for (int j = -1; j <= 1 && !invalid; ++j) {
-                for (int i = -1; i <= 1 && !invalid; ++i) {
-                    int nx = x + i;
-                    int ny = y + j;
-                    if (0 <= nx && nx < width &&
-                        0 <= ny && ny < height &&
-                        !validity_mask[nx + ny * width]) {
-                        eroded_validity_mask[x + y * width] = false;
-                        invalid = true;
-                    }
+            if (validity_mask[x + y * width]) continue;
+            for (int j = -1; j <= 1; ++j) {
+                for (int i = -1; i <= 1; ++i) {
+                    int const nx = x + i;
+                    int const ny = y + j;
+                    eroded_validity_mask[nx + ny * width] = false;
                 }
             }
         }
     }
 
     validity_mask.swap(eroded_validity_mask);
+}
+
+void
+TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
+    math::Vec3f const & v3, ProjectedFaceInfo * face_info, Settings const & settings) const {
+
+    assert(image != NULL);
+    assert(settings.data_term != GMI || gradient_magnitude != NULL);
+
+    math::Vec2f p1 = get_pixel_coords(v1);
+    math::Vec2f p2 = get_pixel_coords(v2);
+    math::Vec2f p3 = get_pixel_coords(v3);
+
+    assert(valid_pixel(p1) && valid_pixel(p2) && valid_pixel(p3));
+
+    Tri tri(p1, p2, p3);
+    float area = tri.get_area();
+
+    if (area < std::numeric_limits<float>::epsilon()) {
+        face_info->quality = 0.0f;
+        return;
+    }
+
+    std::size_t num_samples = 0;
+    math::Vec3d colors(0.0);
+    double gmi = 0.0;
+
+    bool sampling_necessary = settings.data_term != AREA || settings.outlier_removal != NONE;
+
+    if (sampling_necessary && area > 0.5f) {
+        /* Sort pixels in ascending order of y */
+        while (true)
+            if(p1[1] <= p2[1])
+                if(p2[1] <= p3[1]) break;
+                else std::swap(p2, p3);
+            else std::swap(p1, p2);
+
+        /* Calculate line equations. */
+        float const m1 = (p1[1] - p3[1]) / (p1[0] - p3[0]);
+        float const b1 = p1[1] - m1 * p1[0];
+
+        /* area != 0.0f => m1 != 0.0f. */
+        float const m2 = (p1[1] - p2[1]) / (p1[0] - p2[0]);
+        float const b2 = p1[1] - m2 * p1[0];
+
+        float const m3 = (p2[1] - p3[1]) / (p2[0] - p3[0]);
+        float const b3 = p2[1] - m3 * p2[0];
+
+        bool fast_sampling_possible = std::isfinite(m1) && m2 != 0.0f && std::isfinite(m2) && m3 != 0.0f && std::isfinite(m3);
+
+        Rect<float> aabb = tri.get_aabb();
+        for (int y = std::floor(aabb.min_y); y < std::ceil(aabb.max_y); ++y) {
+            float min_x = aabb.min_x - 0.5f;
+            float max_x = aabb.max_x + 0.5f;
+
+            if (fast_sampling_possible) {
+                float const cy = static_cast<float>(y) + 0.5f;
+
+                min_x = (cy - b1) / m1;
+                if (cy <= p2[1]) max_x = (cy - b2) / m2;
+                else max_x = (cy - b3) / m3;
+
+                if (min_x >= max_x) std::swap(min_x, max_x);
+
+                if (min_x < aabb.min_x || min_x > aabb.max_x) continue;
+                if (max_x < aabb.min_x || max_x > aabb.max_x) continue;
+            }
+
+            for (int x = std::floor(min_x + 0.5f); x < std::ceil(max_x - 0.5f); ++x) {
+                math::Vec3d color;
+
+                const float cx = static_cast<float>(x) + 0.5f;
+                const float cy = static_cast<float>(y) + 0.5f;
+                if (!fast_sampling_possible && !tri.inside(cx, cy)) continue;
+
+                if (settings.outlier_removal != NONE) {
+                    for (std::size_t i = 0; i < 3; i++){
+                         color[i] = static_cast<double>(image->at(x, y, i)) / 255.0;
+                    }
+                    colors += color;
+                }
+
+                if (settings.data_term == GMI) {
+                    gmi += static_cast<double>(gradient_magnitude->at(x, y, 0)) / 255.0;
+                }
+                ++num_samples;
+            }
+        }
+    }
+
+    if (settings.data_term == GMI) {
+        if (num_samples > 0) {
+            gmi = (gmi / num_samples) * static_cast<double>(area);
+        } else {
+            double gmv1 = static_cast<double>(gradient_magnitude->linear_at(p1[0], p1[1], 0)) / 255.0;
+            double gmv2 = static_cast<double>(gradient_magnitude->linear_at(p2[0], p2[1], 0)) / 255.0;
+            double gmv3 = static_cast<double>(gradient_magnitude->linear_at(p3[0], p3[1], 0)) / 255.0;
+            gmi = ((gmv1 + gmv2 + gmv3) / 3.0) * static_cast<double>(area);
+        }
+    }
+
+    if (settings.outlier_removal != NONE) {
+        if (num_samples > 0) {
+            face_info->mean_color = colors / num_samples;
+        } else {
+            math::Vec3d c1, c2, c3;
+            for (std::size_t i = 0; i < 3; ++i) {
+                 c1[i] = static_cast<double>(image->linear_at(p1[0], p1[1], i)) / 255.0;
+                 c2[i] = static_cast<double>(image->linear_at(p2[0], p2[1], i)) / 255.0;
+                 c3[i] = static_cast<double>(image->linear_at(p3[0], p3[1], i)) / 255.0;
+            }
+            face_info->mean_color = ((c1 + c2 + c3) / 3.0);
+        }
+    }
+
+    switch (settings.data_term) {
+        case AREA: face_info->quality = area; break;
+        case GMI:  face_info->quality = gmi; break;
+    }
 }
 
 bool

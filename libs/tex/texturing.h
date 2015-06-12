@@ -16,6 +16,8 @@
 #include "util/timer.h"
 #include "math/accum.h"
 
+#include "mrf/Graph.h"
+
 #include "coldet.h"
 
 #include "util.h"
@@ -29,7 +31,6 @@
 #include "Tri.h"
 #include "Timer.h"
 #include "ProgressCounter.h"
-#include "mrf/Graph.h"
 #include "SparseTable.h"
 
 #include "seam_leveling.h"

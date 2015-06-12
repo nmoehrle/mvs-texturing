@@ -70,7 +70,7 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
 
         /* Find corresponding image file. */
         int step = 1;
-        for (std::size_t j = i + 1; 0 <= j && j < dir.size(); j += step) {
+        for (std::size_t j = i + 1; j < dir.size(); j += step) {
             util::fs::File const & img_file = dir[j];
 
             /* Since the files are sorted we can break - no more files with the same prefix exist. */

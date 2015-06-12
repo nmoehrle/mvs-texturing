@@ -12,6 +12,7 @@ Graph::Ptr Graph::create(int num_sites, int num_labels, SOLVER_TYPE solver_type)
         #ifdef RESEARCH
         case GCO: return Graph::Ptr(new GCOGraph(num_sites, num_labels));
         #endif
+        default: return Graph::Ptr(new LBPGraph(num_sites, num_labels));
     }
 }
 

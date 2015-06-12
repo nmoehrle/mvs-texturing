@@ -21,7 +21,7 @@ ENERGY_TYPE ICMGraph::optimize(int num_iterations) {
             Site * site = &sites[j];
             /* Current cost */
             ENERGY_TYPE min_cost = std::numeric_limits<ENERGY_TYPE>::max(); //site->data_cost + smooth_cost(j, site->label);
-            for (int k = 0; k < site->labels.size(); ++k) {
+            for (std::size_t k = 0; k < site->labels.size(); ++k) {
                 ENERGY_TYPE cost = site->data_costs[k] + smooth_cost(j, site->labels[k]);
                 if (cost < min_cost) {
                     min_cost = cost;
