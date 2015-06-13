@@ -84,6 +84,12 @@ By starting the application without any parameters and you will get a
 description of the expected file formats and optional parameters.
 
 
+#Troubleshooting
+When you encounter errors or unexpected behavior please make sure to switch
+the build type to debug e.g. ```cmake -DCMAKE_BUILD_TYPE=DEBUG ..```, recompile
+and rerun the application. The default build type is release in which assertions
+are ignored, they could however give valuable insight in failure cases.
+
 #License, Patents and Citing
 Our software is licensed as described in the COPYING.txt file which is in the
 same folder as this README.md file.
