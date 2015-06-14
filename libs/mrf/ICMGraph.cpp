@@ -4,7 +4,8 @@
 
 MRF_NAMESPACE_BEGIN
 
-ICMGraph::ICMGraph(int num_sites, int) : sites(num_sites) {}
+ICMGraph::ICMGraph(int num_sites, int num_labels) :
+    sites(num_sites) {}
 
 ENERGY_TYPE ICMGraph::compute_energy() {
     ENERGY_TYPE energy = 0;
@@ -68,6 +69,10 @@ ENERGY_TYPE ICMGraph::smooth_cost(int site, int label) {
          smooth_cost += smooth_cost_func(site, neighbor, label, sites[neighbor].label);
     }
     return smooth_cost;
+}
+
+int ICMGraph::num_sites() {
+    return static_cast<int>(sites.size());
 }
 
 MRF_NAMESPACE_END

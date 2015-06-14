@@ -48,14 +48,14 @@ int main(int argc, char **argv) {
 
     write_string_to_file(conf.out_prefix + ".conf", conf.to_string());
     timer.measure("Loading");
-    wtimer.reset();
 
     std::cout << "Building adjacency graph: " << std::endl;
     UniGraph graph(num_faces);
     build_adjacency_graph(mesh, vertex_infos, &graph);
 
+    wtimer.reset();
     if (conf.labeling_file.empty()) {
-        std::cout << "Building MRF graph:" << std::endl;
+        std::cout << "View selection:" << std::endl;
 
         ST data_costs;
         if (conf.data_cost_file.empty()) {
@@ -77,28 +77,10 @@ int main(int argc, char **argv) {
             }
             std::cout << "done." << std::endl;
         }
-
-        #ifdef RESEARCH
-        mrf::SOLVER_TYPE solver_type = mrf::GCO;
-        #else
-        mrf::SOLVER_TYPE solver_type = mrf::LBP;
-        #endif
-        /* Each TextureView is a label and label 0 is undefined */
-        mrf::Graph::Ptr mrf = mrf::Graph::create(num_faces, texture_views.size() + 1, solver_type);
-
-        build_mrf(graph, data_costs, mrf.get(), conf.settings);
         timer.measure("Calculating data costs");
 
-        std::cout << "Running MRF optimization:" << std::endl;
-        run_mrf_optimization(mrf.get());
+        view_selection(data_costs, &graph, conf.settings);
         timer.measure("Running MRF optimization");
-
-        /* Extract resulting labeling from MRF. */
-        for (std::size_t i = 0; i < graph.num_nodes(); ++i) {
-            int label = mrf->what_label(static_cast<int>(i));
-            assert(0 <= label && label < texture_views.size() + 1);
-            graph.set_label(i, static_cast<std::size_t>(label));
-        }
 
         /* Write labeling to file. */
         if (conf.write_intermediate_results) {
@@ -130,6 +112,7 @@ int main(int argc, char **argv) {
 
         std::cout << "done." << std::endl;
     }
+    std::cout << "\tTook: " << wtimer.get_elapsed_sec() << "s" << std::endl;
 
     /* Create texture patches and adjust them. */
     std::vector<TexturePatch> texture_patches;

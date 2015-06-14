@@ -16,7 +16,6 @@ class ICMGraph : public Graph {
             Site() : label(0), data_cost(MRF_MAX_ENERGYTERM) {}
         };
 
-
         std::vector<Site> sites;
         SmoothCostFunction smooth_cost_func;
     public:
@@ -29,6 +28,8 @@ class ICMGraph : public Graph {
         ENERGY_TYPE compute_energy();
         ENERGY_TYPE optimize(int num_iterations);
         int what_label(int site);
+
+        int num_sites();
 };
 
 MRF_NAMESPACE_END

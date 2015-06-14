@@ -5,7 +5,8 @@
 
 MRF_NAMESPACE_BEGIN
 
-LBPGraph::LBPGraph(int num_sites, int) : vertices(num_sites) {}
+LBPGraph::LBPGraph(int num_sites, int) :
+    vertices(num_sites) {}
 
 ENERGY_TYPE LBPGraph::compute_energy() {
     ENERGY_TYPE energy = 0;
@@ -119,6 +120,10 @@ void LBPGraph::set_data_costs(int label, std::vector<SparseDataCost> const & cos
 
 int LBPGraph::what_label(int site) {
     return vertices[site].label;
+}
+
+int LBPGraph::num_sites() {
+    return static_cast<int>(vertices.size());
 }
 
 MRF_NAMESPACE_END

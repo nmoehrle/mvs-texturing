@@ -65,16 +65,10 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     Settings const & settings);
 
 /**
-  * Builds up the mrf graph for the mesh.
-  */
+ * Runs the view selection procedure and saves the labeling in the graph
+ */
 void
-build_mrf(UniGraph graph, ST const & data_costs, mrf::Graph * mrf, Settings const & settings);
-
-/**
-  * Runs mrf optimization.
-  */
-void
-run_mrf_optimization(mrf::Graph * mrf);
+view_selection(ST const & data_costs, UniGraph * graph, Settings const & settings);
 
 /**
   * Generates texture patches using the graph to determine adjacent faces with the same label.

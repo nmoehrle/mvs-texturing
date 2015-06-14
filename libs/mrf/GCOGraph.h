@@ -21,6 +21,9 @@ class GCOGraph : public Graph {
         ENERGY_TYPE compute_energy();
         ENERGY_TYPE optimize(int num_iterations);
         int what_label(int site);
+
+        int num_sites();
+        int num_labels();
 };
 
 MRF_NAMESPACE_END

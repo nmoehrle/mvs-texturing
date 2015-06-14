@@ -24,6 +24,7 @@ class LBPGraph : public Graph {
             Vertex() : label(0), data_cost(MRF_MAX_ENERGYTERM) {}
         };
 
+
         std::vector<DirectedEdge> edges;
         std::vector<Vertex> vertices;
         SmoothCostFunction smooth_cost_func;
@@ -36,6 +37,8 @@ class LBPGraph : public Graph {
         ENERGY_TYPE compute_energy();
         ENERGY_TYPE optimize(int num_iterations);
         int what_label(int site);
+
+        int num_sites();
 };
 
 MRF_NAMESPACE_END

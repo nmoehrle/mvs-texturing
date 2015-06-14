@@ -52,6 +52,15 @@ void GCOGraph::set_neighbors(int site1, int site2) {
 int GCOGraph::what_label(int site) {
     return static_cast<int>(gco.whatLabel(site));
 }
+
+int GCOGraph::num_sites() {
+    return static_cast<int>(gco.numSites());
+}
+
+int GCOGraph::num_labels() {
+    return static_cast<int>(gco.numLabels());
+}
+
 #endif
 
 MRF_NAMESPACE_END

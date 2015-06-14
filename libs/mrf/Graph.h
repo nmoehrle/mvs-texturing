@@ -34,6 +34,7 @@ public:
     virtual ENERGY_TYPE compute_energy() = 0;
     virtual ENERGY_TYPE optimize(int num_iterations) = 0;
     virtual int what_label(int site) = 0;
+    virtual int num_sites() = 0;
 
     static Graph::Ptr create(int num_sites, int num_labels, SOLVER_TYPE solver_type);
 };
