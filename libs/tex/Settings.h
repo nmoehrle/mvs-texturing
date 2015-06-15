@@ -19,12 +19,11 @@ const std::vector<std::string> choice_strings<DataTerm>() {
 
 /** Enum representing a smoothness term. */
 enum SmoothnessTerm {
-    POTTS = 0,
-    EDI = 1
+    POTTS = 0
 };
 template <> inline
 const std::vector<std::string> choice_strings<SmoothnessTerm>() {
-    return {"potts", "edi"};
+    return {"potts"};
 }
 
 /** Enum representing the choice of outlier removal. */
@@ -44,6 +43,18 @@ const std::string choice_string(T i) {
 }
 
 template <typename T> inline
+const std::string choices() {
+    const std::vector<std::string> strings = choice_strings<T>();
+    const std::size_t n = strings.size();
+    std::stringstream ss;
+    for (std::size_t i = 0; i < n; ++i) {
+        ss << strings[i];
+        if(i != n - 1) ss << ", ";
+    }
+    return ss.str();
+}
+
+template <typename T> inline
 T parse_choice(std::string s) {
     const std::vector<std::string> strings = choice_strings<T>();
     const std::size_t n = strings.size();
@@ -54,12 +65,8 @@ T parse_choice(std::string s) {
     }
 
     std::stringstream ss;
-    ss << "Invalid choice: " << s << " (Available choices:";
-    for (std::size_t i = 0; i < n; ++i) {
-        ss << " " << strings[i];
-        if(i != n - 1) ss << ",";
-    }
-    ss << ")";
+    ss << "Invalid choice: " << s << " (Available choices: ";
+    ss << choices<T>() << ")";
 
     throw std::invalid_argument(ss.str());
 }

@@ -37,28 +37,6 @@ potts(int s1, int s2, int l1, int l2) {
     return l1 == l2 && l1 != 0 && l2 != 0 ? 0 : 1 * MRF_MAX_ENERGYTERM;
 }
 
-/** Struct representing a non directed edge. */
-struct Edge {
-    std::size_t v1_id;
-    std::size_t v2_id;
-
-    Edge(std::size_t _v1_id, std::size_t _v2_id) {
-        if(_v1_id < _v2_id) {
-            v1_id = _v1_id;
-            v2_id = _v2_id;
-        } else {
-            v1_id = _v2_id;
-            v2_id = _v1_id;
-        }
-    }
-};
-
-/** Lexical comparison of non directed edges. */
-bool
-operator<(Edge const & edge1, Edge const & edge2) {
-    return edge1.v1_id < edge2.v1_id || (edge1.v1_id == edge2.v1_id && edge1.v2_id < edge2.v2_id);
-}
-
 struct FaceInfo {
     std::size_t component;
     std::size_t id;
@@ -146,36 +124,39 @@ optimize(mrf::Graph * mrf, bool verbose = false) {
 
     std::vector<mrf::ENERGY_TYPE> energies;
 
-    if (verbose) std::cout << "\tIteration\tEnergy\tRuntime" << std::endl;
     mrf::ENERGY_TYPE const zero = mrf::ENERGY_TYPE(0);
     mrf::ENERGY_TYPE last_energy = zero;
     mrf::ENERGY_TYPE energy = mrf->compute_energy();
     mrf::ENERGY_TYPE diff = last_energy - energy;
-
     unsigned int i = 0;
+
+    #pragma omp critical
+    if (verbose) std::cout << "\tIteration\tEnergy\t\tRuntime" << std::endl;
     while (diff != zero) {
+        #pragma omp critical
         if (verbose) {
-            std::cout << "\t" << i << "\t" << energy << "\t" << timer.get_elapsed_sec() << std::endl;
+            std::cout << "\t" << i << "\t\t" << energy
+                << "\t" << timer.get_elapsed_sec() << std::endl;
         }
         energies.push_back(energy);
         last_energy = energy;
         i++;
         energy = mrf->optimize(1);
         diff = last_energy - energy;
-        if (diff <= 0)
-            break;
+        if (diff <= 0) break;
     }
-    if (verbose) std::cout << "\t" << i << "\t" << energy << std::endl;
 
-    //if (conf.write_mrf_energies)
-    //    write_vector_to_csv(conf.out_prefix + "_mrf_energies.csv", energies, "Energy");
-
+    #pragma omp critical
     if (verbose) {
+        std::cout << "\t" << i << "\t\t" << energy << std::endl;
         if (diff == zero) std::cout << "\t" << "Converged" << std::endl;
         if (diff < zero) {
             std::cout << "\t" << "Increase of energy detected! Aborting..." << std::endl;
         }
     }
+    //if (conf.write_mrf_energies)
+    //    write_vector_to_csv(conf.out_prefix + "_mrf_energies.csv", energies, "Energy");
+
 }
 
 void
@@ -215,8 +196,6 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
     #endif
     for (std::size_t i = 0; i < components.size(); ++i) {
         switch (settings.smoothness_term) {
-            case EDI:
-                std::cerr << "\tThe smoothness term EDI has been removed - falling back to POTTS" << std::endl;
             case POTTS:
                 mrfs[i]->set_smooth_cost(*potts);
             break;

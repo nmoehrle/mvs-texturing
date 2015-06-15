@@ -43,11 +43,14 @@ Arguments parse_args(int argc, char **argv) {
     args.add_option('L',"labeling_file", true,
         "Skip view selection and use the labeling provided in the given file");
     args.add_option('d',"data_term", true,
-        "Data term: {area, gmi} [gmi]");
+        "Data term: {" +
+        choices<DataTerm>() + "} [" + choice_string<DataTerm>(GMI) + "]");
     args.add_option('s',"smoothness_term", true,
-        "Smoothness term: {potts, edi} [potts]");
+        "Smoothness term: {" +
+        choices<SmoothnessTerm>() + "} [" + choice_string<SmoothnessTerm>(POTTS) + "]");
     args.add_option('o',"outlier_removal", true,
-        "Photometric outlier (pedestrians etc.) removal method: {none, gauss_clamping, gauss_damping} [none]");
+        "Photometric outlier (pedestrians etc.) removal method: {" +
+        choices<OutlierRemoval>() +  "} [" + choice_string<OutlierRemoval>(NONE) + "]");
     args.add_option('v',"view_selection_model", false,
         "Write out view selection model [false]");
     args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false,
