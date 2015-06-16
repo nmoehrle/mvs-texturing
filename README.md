@@ -10,8 +10,11 @@ The algorithm was published in Sept. 2014 on the
 (http://www.gris.tu-darmstadt.de/projects/mvs-texturing)
 for the paper and further information.
 
+*Please be aware that while the interface of the `texrecon` application is relatively stable the interface of the `tex` library is currently subject to frequent changes.*
+
 
 #Dependencies
+
 The code and the build system have the following prerequisites:
 
 - cmake (>= 2.8)
@@ -32,19 +35,20 @@ dependencies (so there is nothing you need to do here):
     http://www.gris.informatik.tu-darmstadt.de/projects/multiview-environment/
 
 *The following is only downloaded if you use this software for research purposes and
-thus provide the ```-DRESEARCH=ON``` flag (see compilation section below).*
+thus provide the `-DRESEARCH=ON `flag (see compilation section below).*
 - multi-label graph cut optimization
     http://vision.csd.uwo.ca/code/
 
 
 #Compilation
-1.  ```git clone https://github.com/nmoehrle/mvs-texturing.git```
-2.  ```cd mvs-texturing```
-3.  ```mkdir build && cd build```
+
+1.  `git clone https://github.com/nmoehrle/mvs-texturing.git`
+2.  `cd mvs-texturing`
+3.  `mkdir build && cd build`
 4.  Generate make file
-    * ```cmake ..```
+    * `cmake ..`
     * **IMPORTANT**: For research purposes only you can use
-    ```cmake -DRESEARCH=ON ..```
+    `cmake -DRESEARCH=ON ..`
     instead. This downloads and links against Olga Veksler et al.'s multi-label
     graph cut optimization, which tends to find better optima and gives better
     texturing results. However, it is patented and can only be licensed for
@@ -52,7 +56,7 @@ thus provide the ```-DRESEARCH=ON``` flag (see compilation section below).*
     you have to stick to not using the RESEARCH flag. This will use Loopy Belief
     Propagation instead of Graph Cut Optimization. Also see the license section
     below for details.
-5.  ```make``` (or ```make -j``` for parallel compilation)
+5.  `make` (or `make -j` for parallel compilation)
 
 If something goes wrong during compilation you should check the output of the
 cmake step. CMake checks all dependencies and reports if anything is missing.
@@ -85,16 +89,18 @@ description of the expected file formats and optional parameters.
 
 
 #Troubleshooting
+
 When you encounter errors or unexpected behavior please make sure to switch
-the build type to debug e.g. ```cmake -DCMAKE_BUILD_TYPE=DEBUG ..```, recompile
+the build type to debug e.g. `cmake -DCMAKE_BUILD_TYPE=DEBUG ..`, recompile
 and rerun the application. The default build type is release in which assertions
 are ignored, they could however give valuable insight in failure cases.
+
 
 #License, Patents and Citing
 Our software is licensed as described in the COPYING.txt file which is in the
 same folder as this README.md file.
 
-**IMPORTANT**: Using the ```-DRESEARCH=ON``` flag during compilation (see above) must
+**IMPORTANT**: Using the `-DRESEARCH=ON` flag during compilation (see above) must
 not be used if this software is used for other purposes than research. This
 flag automatically downloads, compiles and links against multi-label graph cut
 optimization which
