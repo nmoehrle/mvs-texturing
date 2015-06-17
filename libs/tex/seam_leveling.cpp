@@ -1,5 +1,7 @@
 #include "seam_leveling.h"
 
+TEX_NAMESPACE_BEGIN
+
 void
 find_seam_edges(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     std::vector<MeshEdge> * seam_edges) {
@@ -77,3 +79,4 @@ find_mesh_edge_projections(
     projected_edge_infos->insert(projected_edge_infos->end(), projected_edge_infos_set.begin(), projected_edge_infos_set.end());
 }
 
+TEX_NAMESPACE_END

@@ -3,7 +3,11 @@
 
 #include <mve/mesh.h>
 
+#include "defines.h"
+
 #include "UniGraph.h"
+
+TEX_NAMESPACE_BEGIN
 
 struct VertexProjectionInfo {
     std::size_t texture_patch_id;
@@ -34,3 +38,5 @@ void
 find_mesh_edge_projections(
     std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
     MeshEdge mesh_edge, std::vector<ProjectedEdgeInfo> * projected_edge_infos);
+
+TEX_NAMESPACE_END

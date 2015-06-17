@@ -22,6 +22,7 @@
 
 #include "util.h"
 
+#include "defines.h"
 #include "Settings.h"
 #include "RectangularBin.h"
 #include "ObjModel.h"
@@ -37,12 +38,21 @@
 
 typedef SparseTable<std::uint32_t, std::uint16_t, float> ST;
 
+TEX_NAMESPACE_BEGIN
+
+typedef std::vector<TextureView> TextureViews;
+typedef std::vector<TexturePatch> TexturePatches;
+typedef ObjModel Model;
+typedef UniGraph Graph;
+typedef ST DataCosts;
+typedef std::vector<std::vector<VertexProjectionInfo> > VertexProjectionInfos;
 /**
-  * Loads the mesh given by filename,
-  * removes duplicated faces and ensures normals (face and vertex).
+  * prepares the mesh for texturing
+  *  -removes duplicated faces
+  *  -ensures normals (face and vertex)
   */
-mve::TriangleMesh::Ptr
-load_and_prepare_mesh(const std::string & filename);
+void
+prepare_mesh(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr mesh);
 
 /**
   * Generates TextureViews from the in_scene.
@@ -76,7 +86,7 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
 void generate_texture_patches(UniGraph const & graph,
     std::vector<TextureView> const & texture_views,
     mve::TriangleMesh::ConstPtr mesh,
-    std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos,
+    VertexProjectionInfos * vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 
 /**
@@ -86,19 +96,20 @@ void generate_texture_patches(UniGraph const & graph,
 void
 global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
-    std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
+    VertexProjectionInfos const & vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
-    std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
+    VertexProjectionInfos const & vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 
 /**
-  * Builds up an obj_model for the mesh by constructing materials and
+  * Builds up an model for the mesh by constructing materials and
   * texture atlases form the texture_patches
   */
 void
-build_obj_model(mve::TriangleMesh::ConstPtr mesh,
-    std::vector<TexturePatch> const & texture_patches, ObjModel * obj_model);
+build_model(mve::TriangleMesh::ConstPtr mesh,
+    std::vector<TexturePatch> const & texture_patches, Model * model);
 
+TEX_NAMESPACE_END

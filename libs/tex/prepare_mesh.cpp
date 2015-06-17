@@ -1,23 +1,13 @@
 #include "texturing.h"
-#include "mve/mesh_io_ply.h"
 
-mve::TriangleMesh::Ptr
-load_and_prepare_mesh(const std::string & filename) {
-    mve::TriangleMesh::Ptr mesh;
-    try {
-        mesh = mve::geom::load_ply_mesh(filename);
-    } catch (std::exception& e) {
-        std::cerr << "\tCould not load mesh: "<< e.what() << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
+TEX_NAMESPACE_BEGIN
 
-    mve::VertexInfoList::Ptr vertex_infos = mve::VertexInfoList::create(mesh);
-
-    /* Remove redundant faces. */
-    int num_redundant = 0;
+std::size_t remove_redundant_faces(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr mesh) {
     mve::TriangleMesh::FaceList & faces = mesh->get_faces();
     mve::TriangleMesh::FaceList new_faces;
     new_faces.reserve(faces.size());
+
+    std::size_t num_redundant = 0;
     for (std::size_t i = 0; i < faces.size(); i += 3) {
         std::size_t face_id = i / 3;
         bool redundant = false;
@@ -43,19 +33,27 @@ load_and_prepare_mesh(const std::string & filename) {
             }
         }
 
-        if (redundant)
+        if (redundant) {
             ++num_redundant;
-        else
+        } else {
             new_faces.insert(new_faces.end(), &faces[i], &faces[i + 3]);
+        }
     }
 
     faces.swap(new_faces);
 
-    if (num_redundant > 0)
+    return num_redundant;
+}
+
+void
+prepare_mesh(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr mesh) {
+    std::size_t num_redundant = remove_redundant_faces(vertex_infos, mesh);
+    if (num_redundant > 0) {
         std::cout << "\tRemoved " << num_redundant << " redundant faces." << std::endl;
+    }
 
     /* Ensure face and vertex normals. */
     mesh->ensure_normals(true, true);
-
-    return mesh;
 }
+
+TEX_NAMESPACE_END

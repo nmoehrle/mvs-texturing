@@ -37,29 +37,36 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "Load and prepare mesh: " << std::endl;
-    mve::TriangleMesh::ConstPtr mesh = load_and_prepare_mesh(conf.in_mesh);
+    mve::TriangleMesh::Ptr mesh;
+    try {
+        mesh = mve::geom::load_ply_mesh(conf.in_mesh);
+    } catch (std::exception& e) {
+        std::cerr << "\tCould not load mesh: "<< e.what() << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
     mve::VertexInfoList::ConstPtr vertex_infos = mve::VertexInfoList::create(mesh);
+    tex::prepare_mesh(vertex_infos, mesh);
 
     std::size_t const num_faces = mesh->get_faces().size() / 3;
 
     std::cout << "Generating texture views: " << std::endl;
-    std::vector<TextureView> texture_views;
-    generate_texture_views(conf.in_scene, &texture_views);
+    tex::TextureViews texture_views;
+    tex::generate_texture_views(conf.in_scene, &texture_views);
 
     write_string_to_file(conf.out_prefix + ".conf", conf.to_string());
     timer.measure("Loading");
 
     std::cout << "Building adjacency graph: " << std::endl;
-    UniGraph graph(num_faces);
-    build_adjacency_graph(mesh, vertex_infos, &graph);
+    tex::Graph graph(num_faces);
+    tex::build_adjacency_graph(mesh, vertex_infos, &graph);
 
     wtimer.reset();
     if (conf.labeling_file.empty()) {
         std::cout << "View selection:" << std::endl;
 
-        ST data_costs;
+        tex::DataCosts data_costs;
         if (conf.data_cost_file.empty()) {
-            data_costs = calculate_data_costs(mesh, texture_views, conf.settings);
+            data_costs = tex::calculate_data_costs(mesh, texture_views, conf.settings);
 
             if (conf.write_intermediate_results) {
                 std::cout << "\tWriting data cost file... " << std::flush;
@@ -79,7 +86,7 @@ int main(int argc, char **argv) {
         }
         timer.measure("Calculating data costs");
 
-        view_selection(data_costs, &graph, conf.settings);
+        tex::view_selection(data_costs, &graph, conf.settings);
         timer.measure("Running MRF optimization");
 
         /* Write labeling to file. */
@@ -115,18 +122,18 @@ int main(int argc, char **argv) {
     std::cout << "\tTook: " << wtimer.get_elapsed_sec() << "s" << std::endl;
 
     /* Create texture patches and adjust them. */
-    std::vector<TexturePatch> texture_patches;
+    tex::TexturePatches texture_patches;
     {
-        std::vector<std::vector<VertexProjectionInfo> > vertex_projection_infos;
+        tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
-        generate_texture_patches(graph, texture_views, mesh, &vertex_projection_infos, &texture_patches);
+        tex::generate_texture_patches(graph, texture_views, mesh, &vertex_projection_infos, &texture_patches);
         for (TextureView & texture_view : texture_views) {
             texture_view.release_image();
         }
 
         if (conf.settings.global_seam_leveling) {
             std::cout << "Running global seam leveling:" << std::endl;
-            global_seam_leveling(graph, mesh, vertex_infos, vertex_projection_infos, &texture_patches);
+            tex::global_seam_leveling(graph, mesh, vertex_infos, vertex_projection_infos, &texture_patches);
             timer.measure("Running global seam leveling");
         } else {
             ProgressCounter texture_patch_counter("Calculating validity masks for texture patches", texture_patches.size());
@@ -143,21 +150,20 @@ int main(int argc, char **argv) {
 
         if (conf.settings.local_seam_leveling) {
             std::cout << "Running local seam leveling:" << std::endl;
-            local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches);
+            tex::local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches);
         }
         timer.measure("Running local seam leveling");
     }
 
     /* Create and write out obj model. */
     {
-        ObjModel obj_model;
         std::cout << "Building objmodel:" << std::endl;
-
-        build_obj_model(mesh, texture_patches, &obj_model);
+        tex::Model model;
+        tex::build_model(mesh, texture_patches, &model);
         timer.measure("Building OBJ model");
 
-        std::cout << "\tWriting files... " << std::flush;
-        obj_model.save_to_files(conf.out_prefix);
+        std::cout << "\tSaving model... " << std::flush;
+        tex::Model::save(model, conf.out_prefix);
         std::cout << "done." << std::endl;
         timer.measure("Saving");
     }
@@ -173,16 +179,16 @@ int main(int argc, char **argv) {
         {
             texture_patches.clear();
             generate_debug_embeddings(&texture_views);
-            std::vector<std::vector<VertexProjectionInfo> > vertex_projection_infos; // Will only be written
-            generate_texture_patches(graph, texture_views, mesh, &vertex_projection_infos, &texture_patches);
+            tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
+            tex::generate_texture_patches(graph, texture_views, mesh, &vertex_projection_infos, &texture_patches);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;
         {
-            ObjModel obj_model;
-            build_obj_model(mesh, texture_patches, &obj_model);
-            std::cout << "\tWriting files... " << std::flush;
-            obj_model.save_to_files(conf.out_prefix + "_view_selection");
+            tex::Model model;
+            tex::build_model(mesh, texture_patches, &model);
+            std::cout << "\tSaving model... " << std::flush;
+            tex::Model::save(model, conf.out_prefix + "_view_selection");
             std::cout << "done." << std::endl;
         }
     }

@@ -7,6 +7,8 @@
 #include "SparseTable.h"
 #include "Histogram.h"
 
+TEX_NAMESPACE_BEGIN
+
 /**
  * Dampens the quality of all views in which the face's projection
  * has a much different color than in the majority of views.
@@ -304,3 +306,5 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
     return data_costs;
 }
+
+TEX_NAMESPACE_END

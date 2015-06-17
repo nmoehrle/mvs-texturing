@@ -2,6 +2,8 @@
 #include "texturing.h"
 #include <set>
 
+TEX_NAMESPACE_BEGIN
+
 /**
   * Heuristic to calculate an appropriate texture atlas size.
   * @warning asserts that no texture patch exceeds the dimensions
@@ -197,7 +199,7 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
 
 
 void
-build_obj_model(mve::TriangleMesh::ConstPtr mesh,
+build_model(mve::TriangleMesh::ConstPtr mesh,
     std::vector<TexturePatch> const & _texture_patches, ObjModel * obj_model)  {
 
     mve::TriangleMesh::VertexList const & mesh_vertices = mesh->get_vertices();
@@ -349,4 +351,4 @@ build_obj_model(mve::TriangleMesh::ConstPtr mesh,
     }
 }
 
-
+TEX_NAMESPACE_END

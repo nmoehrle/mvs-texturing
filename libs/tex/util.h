@@ -20,11 +20,11 @@
  * Converts an MVE matrix into an Eigen matrix.
  */
 template <typename T, int M, int N> Eigen::Matrix<T,M,N>
-mve_to_eigen(math::Matrix<T,M,N> const & mat) {
-    Eigen::Matrix<T,M,N> ret;
+mve_to_eigen(math::Matrix<T, M, N> const & mat) {
+    Eigen::Matrix<T, M, N> ret;
     for (int m = 0; m < M; ++m)
         for (int n = 0; n < N; ++n)
-            ret(m,n) = mat(m,n);
+            ret(m, n) = mat(m, n);
     return ret;
 }
 
@@ -33,45 +33,9 @@ mve_to_eigen(math::Matrix<T,M,N> const & mat) {
  */
 template <typename T, int N> Eigen::Matrix<T,1,N>
 mve_to_eigen(math::Vector<T,N> const & vec) {
-    Eigen::Matrix<T,1,N> ret;
+    Eigen::Matrix<T, 1, N> ret;
     for (int n = 0; n < N; ++n)
         ret(0, n) = vec(n);
-    return ret;
-}
-
-
-/**
-  * @return vector's median.
-  * @warning the vector will be sorted.
-  */
-template <typename T> T
-median(std::vector<T> & vec) {
-    std::sort(vec.begin(), vec.end());
-    std::size_t n = vec.size();
-    assert(n > 0);
-
-    if (n % 2 == 1) {
-        return vec.at((n + 1) / 2 - 1);
-    } else {
-        return (vec.at(n / 2 - 1) + vec.at(n / 2)) / T(2);
-    }
-}
-
-/**
-  * @param mat is an Eigen matrix (each row is an observation).
-  * @param N the number of columns (variables).
-  *
-  * @return an Eigen row vector containing the median of each column of the matrix.
-  */
-template <typename T, int N> Eigen::Matrix<T,1,N>
-colwise_median(Eigen::Matrix<T,Eigen::Dynamic,N> const & mat) {
-    Eigen::Matrix<T,1,N> ret;
-    std::vector<T> values(mat.rows());
-    for (std::size_t var = 0; var < N; ++var) {
-        for (std::size_t observation = 0; observation < mat.rows(); ++observation)
-            values[observation] = mat(observation,var);
-        ret(var) = median(values);
-    }
     return ret;
 }
 

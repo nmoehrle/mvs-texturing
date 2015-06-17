@@ -10,7 +10,7 @@ MaterialLib::add_material(std::string const & name, Material material) {
 }
 
 void
-MaterialLib::save_to_files(std::string const & prefix) {
+MaterialLib::save_to_files(std::string const & prefix) const {
     std::string filename = prefix + ".mtl";
     std::ofstream out(filename.c_str());
     if (!out.good())

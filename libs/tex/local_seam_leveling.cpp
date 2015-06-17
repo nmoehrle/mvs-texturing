@@ -1,6 +1,8 @@
 #include "texturing.h"
 #include "seam_leveling.h"
 
+TEX_NAMESPACE_BEGIN
+
 #define STRIP_SIZE 20
 
 math::Vec3f
@@ -69,7 +71,7 @@ draw_line(math::Vec2f p1, math::Vec2f p2, std::vector<ProjectedEdgeInfo> const &
 
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
-    std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
+    VertexProjectionInfos const & vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches) {
 
     std::vector<TexturePatch> orig_texture_patches(*texture_patches);
@@ -125,3 +127,5 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         texture_patch_counter.inc();
     }
 }
+
+TEX_NAMESPACE_END

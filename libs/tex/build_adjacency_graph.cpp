@@ -1,5 +1,7 @@
 #include "texturing.h"
 
+TEX_NAMESPACE_BEGIN
+
 void
 build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos, UniGraph * graph)  {
@@ -38,3 +40,5 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
 
     std::cout << "\t" << graph->num_edges() << " total edges." << std::endl;
 }
+
+TEX_NAMESPACE_END

@@ -5,6 +5,8 @@
 #include <set>
 #include "util/timer.h"
 
+TEX_NAMESPACE_BEGIN
+
 typedef Eigen::SparseMatrix<float> SpMat;
 
 math::Vec3f
@@ -68,7 +70,7 @@ find_seam_edges_for_vertex_label_combination(UniGraph const & graph, mve::Triang
 }
 
 math::Vec3f
-calculate_difference(std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
+calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
     mve::TriangleMesh::ConstPtr & mesh, std::vector<TexturePatch> const &  texture_patches,
     std::vector<MeshEdge> const & seam_edges, int label1, int label2) {
 
@@ -297,3 +299,5 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         texture_patch_counter.inc();
     }
 }
+
+TEX_NAMESPACE_END

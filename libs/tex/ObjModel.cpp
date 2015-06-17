@@ -1,10 +1,16 @@
 #include "ObjModel.h"
 
-ObjModel::ObjModel() {
+#define OBJ_INDEX_OFFSET 1
+
+ObjModel::ObjModel() {}
+
+void
+ObjModel::save(ObjModel const & model, std::string const & prefix) {
+    model.save_to_files(prefix);
 }
 
 void
-ObjModel::save_to_files(std::string const & prefix) {
+ObjModel::save_to_files(std::string const & prefix) const {
     material_lib.save_to_files(prefix);
 
     std::string name = util::fs::basename(prefix);
@@ -35,7 +41,7 @@ ObjModel::save_to_files(std::string const & prefix) {
     for (std::size_t i = 0; i < groups.size(); ++i) {
         out << "usemtl " << groups[i].material_name << std::endl;
         for (std::size_t j = 0; j < groups[i].faces.size(); ++j) {
-            Face & face =  groups[i].faces[j];
+            Face const & face =  groups[i].faces[j];
             out << "f";
             for (std::size_t k = 0; k < 3; ++k) {
                 out << " " << face.vertices[k]  + OBJ_INDEX_OFFSET

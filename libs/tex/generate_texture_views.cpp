@@ -4,6 +4,8 @@
 #include <mve/image_tools.h>
 #include <mve/bundle_io.h>
 
+TEX_NAMESPACE_BEGIN
+
 void
 from_mve_scene(std::string const & scene_dir, std::string const & embedding_name,
     std::vector<TextureView> * texture_views) {
@@ -206,3 +208,5 @@ generate_texture_views(std::string in_scene, std::vector<TextureView> * texture_
         exit(EXIT_FAILURE);
     }
 }
+
+TEX_NAMESPACE_END

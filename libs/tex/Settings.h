@@ -71,7 +71,6 @@ T parse_choice(std::string s) {
     throw std::invalid_argument(ss.str());
 }
 
-//TEX_NAMESPACE_BEGIN
 struct Settings {
     bool verbose;
 
@@ -83,5 +82,3 @@ struct Settings {
     bool global_seam_leveling;
     bool local_seam_leveling;
 };
-//TEX_NAMESPACE_END
-

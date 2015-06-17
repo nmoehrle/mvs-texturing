@@ -1,5 +1,7 @@
 #include "texturing.h"
 
+TEX_NAMESPACE_BEGIN
+
 void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos) {
     /* Merge vertex infos within the same texture patch. */
     #pragma omp parallel for
@@ -167,3 +169,5 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
     std::cout << "done. (Took " << timer.get_elapsed_sec() << "s)" << std::endl;
     std::cout << "\t" << num_patches << " texture patches." << std::endl;
 }
+
+TEX_NAMESPACE_END

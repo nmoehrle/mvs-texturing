@@ -1,6 +1,8 @@
 #include "texturing.h"
 #include "util.h"
 
+TEX_NAMESPACE_BEGIN
+
 void
 fix_holes(UniGraph * graph) {
     /* Fix holes due to geometric inaccuracies. */
@@ -211,3 +213,5 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
         }
     }
 }
+
+TEX_NAMESPACE_END

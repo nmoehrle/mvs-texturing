@@ -27,7 +27,7 @@ class MaterialLib {
         /** Saves the material lib to an .mtl file and all textures of its
           * materials with the given prefix.
           */
-        void save_to_files(std::string const & prefix);
+        void save_to_files(std::string const & prefix) const;
 };
 
 inline std::size_t
