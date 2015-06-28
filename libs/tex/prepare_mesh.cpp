@@ -46,7 +46,7 @@ std::size_t remove_redundant_faces(mve::VertexInfoList::ConstPtr vertex_infos, m
 }
 
 void
-prepare_mesh(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr mesh) {
+prepare_mesh(mve::VertexInfoList::Ptr vertex_infos, mve::TriangleMesh::Ptr mesh) {
     std::size_t num_redundant = remove_redundant_faces(vertex_infos, mesh);
     if (num_redundant > 0) {
         std::cout << "\tRemoved " << num_redundant << " redundant faces." << std::endl;
@@ -54,6 +54,9 @@ prepare_mesh(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr 
 
     /* Ensure face and vertex normals. */
     mesh->ensure_normals(true, true);
+
+    /* Update vertex infos. */
+    vertex_infos->calculate(mesh);
 }
 
 TEX_NAMESPACE_END

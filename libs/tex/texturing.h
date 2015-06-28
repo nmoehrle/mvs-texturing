@@ -52,7 +52,7 @@ typedef std::vector<std::vector<VertexProjectionInfo> > VertexProjectionInfos;
   *  -ensures normals (face and vertex)
   */
 void
-prepare_mesh(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr mesh);
+prepare_mesh(mve::VertexInfoList::Ptr vertex_infos, mve::TriangleMesh::Ptr mesh);
 
 /**
   * Generates TextureViews from the in_scene.

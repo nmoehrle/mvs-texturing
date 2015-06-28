@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         std::cerr << "\tCould not load mesh: "<< e.what() << std::endl;
         std::exit(EXIT_FAILURE);
     }
-    mve::VertexInfoList::ConstPtr vertex_infos = mve::VertexInfoList::create(mesh);
+    mve::VertexInfoList::Ptr vertex_infos = mve::VertexInfoList::create(mesh);
     tex::prepare_mesh(vertex_infos, mesh);
 
     std::size_t const num_faces = mesh->get_faces().size() / 3;
