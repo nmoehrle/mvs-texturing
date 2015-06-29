@@ -70,10 +70,11 @@ generate_candidate(int label, TextureView const & texture_view,
     int const width = max_x - min_x;
     int const height = max_y - min_y;
 
-    /* Check for erronous labeling files. */
-    assert(min_x >= 0 && min_y >= 0);
-    assert(width <= view_image->width());
-    assert(height <= view_image->height());
+    /* Check for valid projections/erroneous labeling files. */
+    assert(min_x >= 0 - texture_patch_border);
+    assert(min_y >= 0 - texture_patch_border);
+    assert(max_x < view_image->width() + texture_patch_border);
+    assert(max_y < view_image->height() + texture_patch_border);
 
     mve::ByteImage::Ptr image;
     image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vec3uc(255, 0, 255));
