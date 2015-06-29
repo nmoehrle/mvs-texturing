@@ -3,7 +3,6 @@
 #include "Graph.h"
 
 #ifdef RESEARCH
-#define GCO_ENERGYTYPE float
 #include "GCoptimization.h"
 
 MRF_NAMESPACE_BEGIN

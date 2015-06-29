@@ -66,6 +66,7 @@ link_directories(
 )
 
 if(RESEARCH)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCO_ENERGYTYPE=double -DGCO_ENERGYTERMTYPE=float")
     include_directories(${CMAKE_SOURCE_DIR}/elibs/gco)
     link_directories(${CMAKE_BINARY_DIR}/elibs/gco/src/ext_gco-build)
 endif()
