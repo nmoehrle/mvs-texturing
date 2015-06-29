@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(GraphCutOptimization)
 
+set(CMAKE_BUILD_TYPE Release)
+
 set(SOURCES
     GCoptimization.cpp
     graph.cpp
@@ -9,6 +11,5 @@ set(SOURCES
     maxflow.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCO_ENERGYTYPE=float")
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCO_ENERGYTYPE=double -DGCO_ENERGYTERMTYPE=float")
 add_library(gco STATIC ${SOURCES})

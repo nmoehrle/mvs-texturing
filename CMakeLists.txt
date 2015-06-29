@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 2.8)
 project(Texturing)
 include(ExternalProject)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE RELEASE)
+endif()
+
 set(RESEARCH "OFF" CACHE BOOL "Use the gco library for Multi-Label Optimization, which is licensed only for research purposes!")
 
 include(CheckCXXCompilerFlag)
@@ -62,9 +66,13 @@ link_directories(
 )
 
 if(RESEARCH)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGCO_ENERGYTYPE=double -DGCO_ENERGYTERMTYPE=float")
     include_directories(${CMAKE_SOURCE_DIR}/elibs/gco)
     link_directories(${CMAKE_BINARY_DIR}/elibs/gco/src/ext_gco-build)
 endif()
+
+include_directories(${CMAKE_SOURCE_DIR}/elibs/fixmrf/CPU)
+link_directories(${CMAKE_BINARY_DIR}/elibs/fixmrf/src/ext_fixmrf-build)
 
 add_subdirectory(libs)
 add_subdirectory(apps)
@@ -77,8 +85,4 @@ if(RESEARCH)
  for research purposes only. Please pay special attention to the gco license.
 ******************************************************************************
 ")
-endif()
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE RELEASE)
 endif()
