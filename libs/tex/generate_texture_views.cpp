@@ -7,7 +7,7 @@
 TEX_NAMESPACE_BEGIN
 
 void
-from_mve_scene(std::string const & scene_dir, std::string const & embedding_name,
+from_mve_scene(std::string const & scene_dir, std::string const & image_name,
     std::vector<TextureView> * texture_views) {
 
     mve::Scene::Ptr scene;
@@ -30,22 +30,22 @@ from_mve_scene(std::string const & scene_dir, std::string const & embedding_name
             continue;
         }
 
-        if (!view->has_embedding(embedding_name)) {
-            std::cout << "Warning: View " << view->get_name() << " has no embedding "
-                << embedding_name << std::endl;
+        if (!view->has_image(image_name)) {
+            std::cout << "Warning: View " << view->get_name() << " has no image "
+                << image_name << std::endl;
             continue;
         }
 
-        mve::ByteImage::Ptr image = view->get_byte_image(embedding_name);
+        mve::ByteImage::Ptr image = view->get_byte_image(image_name);
 
         if (image == NULL) {
-            std::cerr << "Embedding " << embedding_name << " of view " <<
+            std::cerr << "Image " << image_name << " of view " <<
                 view->get_name() << " is not a byte embedding!" << std::endl;
             exit(EXIT_FAILURE);
         }
 
         if (image->channels() < 3) {
-            std::cerr << "Embedding " << embedding_name << " of view " <<
+            std::cerr << "Image " << image_name << " of view " <<
                 view->get_name() << " is not a color image!" << std::endl;
             exit(EXIT_FAILURE);
         }
@@ -124,8 +124,21 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
 
         /* Create cam_info and eventually undistort image. */
         mve::CameraInfo cam_info;
-        cam_info.from_ext_string(cam_ext_str);
-        cam_info.from_int_string(cam_int_str);
+        cam_info.set_translation_from_string(tok_ext.concat(0, 3));
+        cam_info.set_rotation_from_string(tok_ext.concat(3, 0));
+
+        std::stringstream ss(cam_int_str);
+        ss >> cam_info.flen;
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.dist[0];
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.dist[1];
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.paspect;
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.ppoint[0];
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.ppoint[1];
 
         mve::ByteImage::Ptr undist;
         if (cam_info.dist[0] != 0.0f) {
