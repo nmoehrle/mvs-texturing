@@ -4,7 +4,7 @@
 
 MRF_NAMESPACE_BEGIN
 
-ICMGraph::ICMGraph(int num_sites, int num_labels) :
+ICMGraph::ICMGraph(int num_sites, int) :
     sites(num_sites) {}
 
 ENERGY_TYPE ICMGraph::compute_energy() {

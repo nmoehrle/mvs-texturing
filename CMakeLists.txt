@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 2.8)
 project(Texturing)
 include(ExternalProject)
 
+if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "Setting build type to 'Release' as none was specified.")
+    set(CMAKE_BUILD_TYPE RELEASE)
+endif()
+
 set(RESEARCH "OFF" CACHE BOOL "Use the gco library for Multi-Label Optimization, which is licensed only for research purposes!")
 
 include(CheckCXXCompilerFlag)
@@ -77,8 +82,4 @@ if(RESEARCH)
  for research purposes only. Please pay special attention to the gco license.
 ******************************************************************************
 ")
-endif()
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE RELEASE)
 endif()
