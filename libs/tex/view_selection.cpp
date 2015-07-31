@@ -33,9 +33,7 @@ bool IGNORE_LUMINANCE = false;
 
 /** Potts model */
 float
-potts(int s1, int s2, int l1, int l2) {
-    /* Suppress compiler warning because of unused variable. */
-    (void) s1; (void) s2;
+potts(int, int, int l1, int l2) {
     return l1 == l2 && l1 != 0 && l2 != 0 ? 0 : 1 * MRF_MAX_ENERGYTERM;
 }
 
