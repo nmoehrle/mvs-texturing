@@ -146,7 +146,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     CollisionModel3D* model = newCollisionModel3D(true);
     if (settings.geometric_visibility_test) {
         /* Build up acceleration structure for the visibility test. */
-        ProgressCounter face_counter("\tBuilding collision model for visibility tests", num_faces);
+        ProgressCounter face_counter("\tBuilding collision model", num_faces);
         model->setTriangleNumber(num_faces);
         for (std::size_t i = 0; i < faces.size(); i += 3) {
             face_counter.progress<SIMPLE>();

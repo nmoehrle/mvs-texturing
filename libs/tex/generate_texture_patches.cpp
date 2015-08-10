@@ -267,11 +267,11 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
             if (!disk_topology) continue;
             if (num_border_vertices == 0) {
-                //std::cerr << "Isolated object" << std::endl;
+                //std::cerr << "Genus zero topology" << std::endl;
                 continue;
             }
 
-            std::vector<std::size_t> border; border.reserve(num_vertices);
+            std::vector<std::size_t> border; border.reserve(num_border_vertices);
             std::size_t prev = seed;
             std::size_t curr = seed;
             while (prev == seed || curr != seed) {
@@ -281,6 +281,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                     if (is_border[g2l[adj_vert]]
                         && adj_vert != prev && adj_vert != curr) {
                         next = adj_vert;
+                        break;
                     }
                 }
                 if (next != std::numeric_limits<std::size_t>::max()) {
@@ -289,12 +290,20 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                     border.push_back(next);
                 } else {
                     //std::cerr << "No new border vertex" << std::endl;
+                    border.clear();
+                    break;
+                }
+
+                if (border.size() > num_border_vertices) {
+                    //std::cerr << "Loop in within border" << std::endl;
                     break;
                 }
             }
 
             if (border.size() != num_border_vertices) {
-                //std::cerr << "Unclosed border" << std::endl;
+                if (border.size() < num_border_vertices) {
+                    //std::cerr << "Unclosed border" << std::endl;
+                }
                 continue;
             }
 
@@ -305,10 +314,10 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                 total_length += (v0 - v1).norm();
             }
             float length = 0.0f;
-            std::vector<math::Vec2f> projection(num_vertices);
+            std::vector<math::Vec2f> projections(num_vertices);
             for (std::size_t j = 0; j < border.size(); ++j) {
                 float angle = 2.0f * MATH_PI * length / total_length;
-                projection[g2l[border[j]]] = math::Vec2f(std::cos(angle), std::sin(angle));
+                projections[g2l[border[j]]] = math::Vec2f(std::cos(angle), std::sin(angle));
                 math::Vec3f const & v0 = vertices[border[j]];
                 math::Vec3f const & v1 = vertices[border[(j + 1) % border.size()]];
                 length += (v0 - v1).norm();
@@ -359,8 +368,8 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                     for (it = weights.begin(); it != weights.end(); ++it) {
                         if (is_border[it->first]) {
                             std::size_t border_vertex_id = border[idx[it->first]];
-                            bx[idx[j]] += projection[g2l[border_vertex_id]][0] * it->second;
-                            by[idx[j]] += projection[g2l[border_vertex_id]][1] * it->second;
+                            bx[idx[j]] += projections[g2l[border_vertex_id]][0] * it->second;
+                            by[idx[j]] += projections[g2l[border_vertex_id]][1] * it->second;
                         } else {
                             coeff.push_back(Triplet(idx[j], idx[it->first], -it->second));
                         }
@@ -385,10 +394,10 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
             int scale = image_size / 2 - texture_patch_border;
             for (std::size_t j = 0, k = 0; j < num_vertices; ++j) {
                 if (!is_border[j]) {
-                    projection[j] = math::Vec2f(xx[k], xy[k]) * scale + image_size / 2;
+                    projections[j] = math::Vec2f(xx[k], xy[k]) * scale + image_size / 2;
                     ++k;
                 } else {
-                    projection[j] = projection[j] * scale + image_size / 2;
+                    projections[j] = projections[j] * scale + image_size / 2;
                 }
             }
 
@@ -397,7 +406,8 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
             for (std::size_t const face_id : subgraph) {
                 for (std::size_t j = 0; j < 3; ++j) {
                     std::size_t const vertex_id = mesh_faces[face_id * 3 + j];
-                    texcoords.push_back(projection[g2l[vertex_id]]);
+                    math::Vec2f const & projection = projections[g2l[vertex_id]];
+                    texcoords.push_back(projection);
                 }
             }
             TexturePatch texture_patch(0, subgraph, texcoords, image);
@@ -419,7 +429,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                         faces.push_back(adj_face);
                     }
                 }
-                VertexProjectionInfo info = {texture_patch_id, projection[j], faces};
+                VertexProjectionInfo info = {texture_patch_id, projections[j], faces};
                 #pragma omp critical
                 vertex_projection_infos->at(vertex_id).push_back(info);
             }
