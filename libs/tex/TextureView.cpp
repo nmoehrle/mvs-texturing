@@ -4,7 +4,6 @@ TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
     mve::ByteImage::Ptr image)
     : id(id), image(image) {
 
-    //mve::image::gamma_correct(this->image, 2.2f);
     width = image->width();
     height = image->height();
 

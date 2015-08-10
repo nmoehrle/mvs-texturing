@@ -31,8 +31,8 @@ mve_to_eigen(math::Matrix<T, M, N> const & mat) {
 /**
  * Converts an MVE vector into an Eigen row vector.
  */
-template <typename T, int N> Eigen::Matrix<T,1,N>
-mve_to_eigen(math::Vector<T,N> const & vec) {
+template <typename T, int N> Eigen::Matrix<T, 1, N>
+mve_to_eigen(math::Vector<T, N> const & vec) {
     Eigen::Matrix<T, 1, N> ret;
     for (int n = 0; n < N; ++n)
         ret(0, n) = vec(n);
@@ -48,8 +48,10 @@ mve_to_eigen(math::Vector<T,N> const & vec) {
  * @return \f$\exp(-\frac{1}{2} (X-\mbox{mu})^T \cdot \mbox{covariance\_inv} \cdot (X-\mbox{mu}))\f$
  */
 template <typename T, int N> T const
-multi_gauss_unnormalized(Eigen::Matrix<T,1,N> const & X, Eigen::Matrix<T,1,N> const & mu, Eigen::Matrix<T,N,N> const & covariance_inv) {
-    Eigen::Matrix<T,1,N> mean_removed = X - mu;
+multi_gauss_unnormalized(Eigen::Matrix<T, 1, N> const & X, Eigen::Matrix<T, 1, N> const & mu,
+    Eigen::Matrix<T, N, N> const & covariance_inv) {
+
+    Eigen::Matrix<T, 1, N> mean_removed = X - mu;
     return std::exp(T(-0.5) * mean_removed * covariance_inv * mean_removed.adjoint());
 }
 

@@ -3,21 +3,23 @@
 TexturePatch::TexturePatch(int _label, std::vector<std::size_t> const & _faces,
     std::vector<math::Vec2f>  const & _texcoords, mve::ByteImage::Ptr _image)
     : label(_label), faces(_faces.begin(), _faces.end()),
-    texcoords(_texcoords.begin(), _texcoords.end()), image(_image) {
+    texcoords(_texcoords.begin(), _texcoords.end()) {
+
+    image = mve::image::byte_to_float_image(_image);
 
     validity_mask = mve::ByteImage::create(get_width(), get_height(), 1);
     validity_mask->fill(255);
     blending_mask = mve::ByteImage::create(get_width(), get_height(), 1);
 }
 
-TexturePatch::TexturePatch(TexturePatch const & _texture_patch) {
-    label = _texture_patch.get_label();
-    faces = std::vector<std::size_t>(_texture_patch.get_faces());
-    texcoords = std::vector<math::Vec2f>(_texture_patch.get_texcoords());
-    image = mve::ByteImage::create(*(_texture_patch.get_image()));
-    validity_mask = mve::ByteImage::create(*(_texture_patch.get_validity_mask()));
-    if (_texture_patch.blending_mask != NULL) {
-        blending_mask = mve::ByteImage::create(*(_texture_patch.get_blending_mask()));
+TexturePatch::TexturePatch(TexturePatch const & texture_patch) {
+    label = texture_patch.label;
+    faces = std::vector<std::size_t>(texture_patch.faces);
+    texcoords = std::vector<math::Vec2f>(texture_patch.texcoords);
+    image = texture_patch.image->duplicate();
+    validity_mask = texture_patch.validity_mask->duplicate();
+    if (texture_patch.blending_mask != NULL) {
+        blending_mask = texture_patch.blending_mask->duplicate();
     }
 }
 
@@ -85,19 +87,16 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
         }
     }
 
-    mve::FloatImage::Ptr adjusted_image = mve::FloatImage::create(this->get_width(), this->get_height(), 3);
-    adjusted_image = mve::image::byte_to_float_image(image);
-    for (int i = 0; i < adjusted_image->get_pixel_amount(); ++i)
+    for (int i = 0; i < image->get_pixel_amount(); ++i) {
         if (validity_mask->at(i, 0) != 0){
             for (int c = 0; c < 3; ++c)
-                adjusted_image->at(i, c) += iadjust_values->at(i, c);
+                image->at(i, c) += iadjust_values->at(i, c);
         } else {
-            adjusted_image->at(i, 0) = 1.0f;
-            adjusted_image->at(i, 1) = 0.0f;
-            adjusted_image->at(i, 2) = 1.0f;
+            image->at(i, 0) = 1.0f;
+            image->at(i, 1) = 0.0f;
+            image->at(i, 2) = 1.0f;
         }
-
-    image = mve::image::float_to_byte_image(adjusted_image);
+    }
 }
 
 bool TexturePatch::valid_pixel(math::Vec2f pixel) const {
@@ -148,9 +147,9 @@ math::Vec3f
 TexturePatch::get_pixel_value(math::Vec2f pixel) const {
     assert(valid_pixel(pixel));
 
-    math::Vec3uc color;
+    math::Vec3f color;
     image->linear_at(pixel[0], pixel[1], *color);
-    return math::Vec3f(color) / 255.0f;
+    return color;
 }
 
 void
@@ -158,15 +157,12 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     assert(blending_mask != NULL);
     assert(valid_pixel(pixel));
 
-    for (int c = 0; c < 3; ++c) {
-        image->at(pixel[0], pixel[1], c) = color[c] * 255.0f;
-    }
+    std::copy(color.begin(), color.end(), &image->at(pixel[0], pixel[1], 0));
     blending_mask->at(pixel[0], pixel[1], 0) = 126;
 }
 
 void
-TexturePatch::blend(mve::ByteImage::ConstPtr _orig) {
-    mve::ByteImage::Ptr orig = mve::ByteImage::create(*_orig);
+TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     poisson_blend(orig, blending_mask, image, 1.0f);
 }
 

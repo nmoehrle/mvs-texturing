@@ -35,7 +35,7 @@ class TexturePatch {
         int label;
         Faces faces;
         Texcoords texcoords;
-        mve::ByteImage::Ptr image;
+        mve::FloatImage::Ptr image;
         mve::ByteImage::Ptr validity_mask;
         mve::ByteImage::Ptr blending_mask;
 
@@ -43,7 +43,7 @@ class TexturePatch {
         /** Constructs a texture patch. */
         TexturePatch(int _label, std::vector<std::size_t> const & _faces,
             std::vector<math::Vec2f>  const & _texcoords, mve::ByteImage::Ptr _image);
-        TexturePatch(TexturePatch const & _texture_patch);
+        TexturePatch(TexturePatch const & texture_patch);
 
         /** Adjust the image colors and update validity mask. */
         void adjust_colors(std::vector<math::Vec3f> const & adjust_values);
@@ -62,17 +62,18 @@ class TexturePatch {
         std::vector<math::Vec2f> & get_texcoords(void);
         std::vector<math::Vec2f> const & get_texcoords(void) const;
 
-        mve::ByteImage::ConstPtr get_image(void) const;
+        mve::FloatImage::ConstPtr get_image(void) const;
         mve::ByteImage::ConstPtr get_validity_mask(void) const;
         mve::ByteImage::ConstPtr get_blending_mask(void) const;
+
+        std::pair<float, float> get_min_max(void) const;
 
         void release_blending_mask(void);
         void prepare_blending_mask(std::size_t strip_width);
 
         void erode_validity_mask(void);
-        void correct_gamma(void);
 
-        void blend(mve::ByteImage::ConstPtr coarse);
+        void blend(mve::FloatImage::ConstPtr orig);
 
         int get_label(void) const;
         int get_width(void) const;
@@ -95,7 +96,7 @@ TexturePatch::get_height(void) const {
     return image->height();
 }
 
-inline mve::ByteImage::ConstPtr
+inline mve::FloatImage::ConstPtr
 TexturePatch::get_image(void) const {
     return image;
 }
@@ -115,11 +116,6 @@ inline void
 TexturePatch::release_blending_mask(void) {
     assert(blending_mask != NULL);
     blending_mask.reset();
-}
-
-inline void
-TexturePatch::correct_gamma(void) {
-    mve::image::gamma_correct(this->image, 1.0f / 2.2f);
 }
 
 inline std::vector<math::Vec2f> &

@@ -1,6 +1,10 @@
-#define MAX_TEXTURE_SIZE (8*1024)
-#include "texturing.h"
 #include <set>
+
+#include "texturing.h"
+
+#include "Histogram.h"
+
+#define MAX_TEXTURE_SIZE (8*1024)
 
 TEX_NAMESPACE_BEGIN
 
@@ -198,6 +202,35 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
     }
 }
 
+std::pair<float, float>
+calculate_mapping_function(std::vector<TexturePatch> const & texture_patches) {
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::lowest();
+    for (TexturePatch const & texture_patch : texture_patches) {
+        mve::FloatImage::ConstPtr image = texture_patch.get_image();
+        mve::ByteImage::ConstPtr validity_mask = texture_patch.get_validity_mask();
+        for (int i = 0; i < image->get_value_amount(); ++i) {
+            if (validity_mask->at(i / 3) == 0) continue;
+
+            min = std::min(min, image->at(i));
+            max = std::max(max, image->at(i));
+        }
+    }
+    Histogram hist(min, max, 10000);
+    for (TexturePatch const & texture_patch : texture_patches) {
+        mve::FloatImage::ConstPtr image = texture_patch.get_image();
+        mve::ByteImage::ConstPtr validity_mask = texture_patch.get_validity_mask();
+        for (int i = 0; i < image->get_value_amount(); ++i) {
+            if (validity_mask->at(i / 3) == 0) continue;
+
+            hist.add_value(image->at(i));
+        }
+    }
+    min = hist.get_approx_percentile(0.005f);
+    max = hist.get_approx_percentile(0.995f);
+
+    return std::pair<float, float>(min, max);
+}
 
 void
 build_model(mve::TriangleMesh::ConstPtr mesh,
@@ -220,6 +253,10 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
     MaterialLib & material_lib = obj_model->get_material_lib();
 
     std::size_t num_new_faces = 0;
+
+    /* Determine (tone) mapping function. */
+    float vmin, vmax;
+    std::tie(vmin, vmax) = calculate_mapping_function(_texture_patches);
 
     std::list<TexturePatch> texture_patches(_texture_patches.begin(), _texture_patches.end());
 
@@ -271,7 +308,9 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
             Rect<int> rect(0, 0, width, height);
             if (bin.insert(&rect)) {
                 /* Update texture atlas and its validity mask. */
-                mve::ByteImage::ConstPtr patch_image = texture_patch.get_image();
+                mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
+                    texture_patch.get_image(), vmin, vmax);
+                mve::image::gamma_correct(patch_image, 1.0f / 2.2f);
 
                 copy_into(patch_image, rect.min_x, rect.min_y, texture, padding);
                 mve::ByteImage::ConstPtr patch_validity_mask = texture_patch.get_validity_mask();

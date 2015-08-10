@@ -37,8 +37,8 @@ bool valid_mask(mve::ByteImage::ConstPtr mask){
 }
 
 void
-poisson_blend(mve::ByteImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
-    mve::ByteImage::Ptr dest, float alpha) {
+poisson_blend(mve::FloatImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
+    mve::FloatImage::Ptr dest, float alpha) {
 
     assert(src->width() == mask->width() && mask->width() == dest->width());
     assert(src->height() == mask->height() && mask->height() == dest->height());
@@ -50,9 +50,6 @@ poisson_blend(mve::ByteImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
     const int width = dest->width();
     const int height = dest->height();
     const int channels = dest->channels();
-
-    mve::FloatImage::Ptr fdest = mve::image::byte_to_float_image(dest);
-    mve::FloatImage::Ptr fsrc = mve::image::byte_to_float_image(src);
 
     mve::Image<int>::Ptr indices = mve::Image<int>::create(width, height, 1);
     indices->fill(-1);
@@ -77,7 +74,7 @@ poisson_blend(mve::ByteImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
             Eigen::Triplet<float, int> t(row, row, 1.0f);
             coefficients_A.push_back(t);
 
-            coefficients_b[row] = math::Vec3f(&fdest->at(i, 0));
+            coefficients_b[row] = math::Vec3f(&dest->at(i, 0));
         }
 
         if (mask->at(i) == 255) {
@@ -102,8 +99,8 @@ poisson_blend(mve::ByteImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
 
             coefficients_A.insert(coefficients_A.end(), triplets, triplets + 5);
 
-            math::Vec3f l_d = simple_laplacian(i, fdest);
-            math::Vec3f l_s = simple_laplacian(i, fsrc);
+            math::Vec3f l_d = simple_laplacian(i, dest);
+            math::Vec3f l_s = simple_laplacian(i, src);
 
             coefficients_b[row] = (alpha * l_s + (1.0f - alpha) * l_d);
         }
@@ -125,7 +122,7 @@ poisson_blend(mve::ByteImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
 
         for (int i = 0; i < n; ++i) {
             int index = indices->at(i);
-            if (index != -1) dest->at(i, channel) = std::max(0.0f, std::min(255.0f, x[index] * 255.0f));
+            if (index != -1) dest->at(i, channel) = x[index];
         }
     }
 }

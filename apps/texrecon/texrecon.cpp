@@ -153,10 +153,6 @@ int main(int argc, char **argv) {
             tex::local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches);
         }
         timer.measure("Running local seam leveling");
-
-        //for (TexturePatch & texture_patch : texture_patches) {
-        //    texture_patch.correct_gamma();
-        //}
     }
 
     /* Create and write out obj model. */

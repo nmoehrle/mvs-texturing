@@ -16,7 +16,7 @@
   */
 class Histogram {
     private:
-        std::vector<int> bins;
+        std::vector<unsigned int> bins;
         float min;
         float max;
         int num_values;
@@ -37,5 +37,5 @@ class Histogram {
         /**
           * Returns the approximate permille.
           */
-        float get_approximate_permille(float permille) const;
+        float get_approx_percentile(float percentile) const;
 };

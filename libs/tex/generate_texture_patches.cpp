@@ -82,6 +82,7 @@ generate_candidate(int label, TextureView const & texture_view,
 
     mve::ByteImage::Ptr image;
     image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vec3uc(255, 0, 255));
+    mve::image::gamma_correct(image, 2.2f);
 
     TexturePatchCandidate texture_patch_candidate =
         {Rect<int>(min_x, min_y, max_x, max_y), TexturePatch(label, faces, texcoords, image)};
@@ -266,7 +267,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
             if (!disk_topology) continue;
             if (num_border_vertices == 0) {
-                std::cerr << "Isolated object" << std::endl;
+                //std::cerr << "Isolated object" << std::endl;
                 continue;
             }
 
@@ -287,13 +288,13 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                     curr = next;
                     border.push_back(next);
                 } else {
-                    std::cerr << "No new border vertex" << std::endl;
+                    //std::cerr << "No new border vertex" << std::endl;
                     break;
                 }
             }
 
             if (border.size() != num_border_vertices) {
-                std::cerr << "Unclosed border" << std::endl;
+                //std::cerr << "Unclosed border" << std::endl;
                 continue;
             }
 

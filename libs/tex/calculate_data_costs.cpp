@@ -12,18 +12,19 @@ TEX_NAMESPACE_BEGIN
 /**
  * Dampens the quality of all views in which the face's projection
  * has a much different color than in the majority of views.
+ * Returns whether the outlier removal was successfull.
  *
- * @param infos Contains information about one face seen from several views
- * @param conf The program configuration.
+ * @param infos contains information about one face seen from several views
+ * @param settings runtime configuration.
  */
-void
+bool
 photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings const & settings) {
-    if (settings.outlier_removal == NONE) return;
-    if (infos.size() == 0) return;
+    if (infos.size() == 0) return true;
 
     /* Configuration variables. */
 
     double const gauss_rejection_threshold = 6e-3;
+
     /* If all covariances drop below this we stop outlier detection. */
     double const minimal_covariance = 5e-4;
 
@@ -32,7 +33,7 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
 
     float outlier_removal_factor = std::numeric_limits<float>::signaling_NaN();
     switch (settings.outlier_removal) {
-        case NONE: return;
+        case NONE: return true;
         case GAUSS_CLAMPING:
             outlier_removal_factor = 1.0f;
         break;
@@ -42,26 +43,19 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
     }
 
     Eigen::MatrixX3d inliers(infos.size(), 3);
-    std::vector<std::uint32_t> is_inlier(infos.size());
+    std::vector<std::uint32_t> is_inlier(infos.size(), 1);
     for (std::size_t row = 0; row < infos.size(); ++row) {
-        inliers.row(row) = mve_to_eigen(infos.at(row).mean_color).cast<double>();
-        is_inlier.at(row) = 1;
+        inliers.row(row) = mve_to_eigen(infos[row].mean_color).cast<double>();
     }
 
     Eigen::RowVector3d var_mean;
     Eigen::Matrix3d covariance;
     Eigen::Matrix3d covariance_inv;
 
-    /* This variable indicates whether something went wrong in the outlier detection
-     * (number of inliers below threshold or inverting the covariance goes wrong).
-     * In this case no outlier removal is done afterwards. */
-    bool bad_outlier_detection = false;
-
-    for (int outlier_detection_it = 0; outlier_detection_it < outlier_detection_iterations; ++outlier_detection_it) {
+    for (int i = 0; i < outlier_detection_iterations; ++i) {
 
         if (inliers.rows() < minimal_num_inliers) {
-            bad_outlier_detection = true;
-            break;
+            return false;
         }
 
         /* Calculate the inliers' mean color and color covariance. */
@@ -70,45 +64,35 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
         covariance = (centered.adjoint() * centered) / double(inliers.rows() - 1);
 
         /* If all covariances are very small we stop outlier detection
-         * (this does not mean it went wrong so we don't set the variable). */
-        if (covariance.array().abs().maxCoeff() < minimal_covariance)
-            break;
+         * and only keep the inliers (set quality of outliers to zero). */
+        if (covariance.array().abs().maxCoeff() < minimal_covariance) {
+            for (std::size_t row = 0; row < infos.size(); ++row) {
+                if (!is_inlier[row]) infos[row].quality = 0.0f;
+            }
+            return true;
+        }
 
         /* Invert the covariance. FullPivLU is not the fastest way but
          * it gives feedback about numerical stability during inversion. */
         Eigen::FullPivLU<Eigen::Matrix3d> lu(covariance);
         if (!lu.isInvertible()) {
-            bad_outlier_detection = true;
-            break;
+            return false;
         }
         covariance_inv = lu.inverse();
 
         /* Compute new number of inliers (all views with a gauss value above a threshold). */
         for (std::size_t row = 0; row < infos.size(); ++row) {
-            Eigen::RowVector3d color = mve_to_eigen(infos.at(row).mean_color).cast<double>();
+            Eigen::RowVector3d color = mve_to_eigen(infos[row].mean_color).cast<double>();
             double gauss_value = multi_gauss_unnormalized(color, var_mean, covariance_inv);
-            is_inlier.at(row) = (gauss_value >= gauss_rejection_threshold ? 1 : 0);
+            is_inlier[row] = (gauss_value >= gauss_rejection_threshold ? 1 : 0);
         }
         /* Resize Eigen matrix accordingly and fill with new inliers. */
         inliers.resize(std::accumulate(is_inlier.begin(), is_inlier.end(), 0), Eigen::NoChange);
         for (std::size_t row = 0, inlier_row = 0; row < infos.size(); ++row) {
-            if (is_inlier.at(row)) {
-                inliers.row(inlier_row) = mve_to_eigen(infos.at(row).mean_color).cast<double>();
-                inlier_row++;
+            if (is_inlier[row]) {
+                inliers.row(inlier_row++) = mve_to_eigen(infos[row].mean_color).cast<double>();
             }
         }
-    }
-
-    /* If something went wrong during outlier detection we don't do any removal. */
-    if(bad_outlier_detection)
-        return;
-
-    /* If the covariance is very very small we only keep the inliers
-     * no matter which detection method has been chosen. */
-    if (covariance.array().abs().maxCoeff() < minimal_covariance) {
-        for (std::size_t row = 0; row < infos.size(); ++row)
-            if (is_inlier.at(row)) infos.at(row).quality = 0.0f;
-        return;
     }
 
     covariance_inv *= outlier_removal_factor;
@@ -117,15 +101,16 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
         double gauss_value = multi_gauss_unnormalized(color, var_mean, covariance_inv);
         assert(0.0 <= gauss_value && gauss_value <= 1.0);
         switch(settings.outlier_removal) {
-            case NONE: return;
+            case NONE: return true;
             case GAUSS_DAMPING:
                 info.quality *= gauss_value;
             break;
             case GAUSS_CLAMPING:
-                if (gauss_value < gauss_rejection_threshold) info.quality = 0;
+                if (gauss_value < gauss_rejection_threshold) info.quality = 0.0f;
             break;
         }
     }
+    return true;
 }
 
 ST
@@ -245,7 +230,9 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 infos.push_back(info);
             }
 
-            photometric_outlier_detection(infos, settings);
+            if (settings.outlier_removal != NONE) {
+                photometric_outlier_detection(infos, settings);
+            }
 
             reduced_projected_face_infos[face_id].reserve(infos.size());
             for (ProjectedFaceInfo const & info : infos) {
@@ -265,12 +252,12 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         for (std::size_t j = 0; j < reduced_projected_face_infos[i].size(); ++j)
             max_quality = std::max(max_quality, reduced_projected_face_infos[i][j].quality);
 
-    Histogram hist_qualities(0.0f, max_quality, 1000);
+    Histogram hist_qualities(0.0f, max_quality, 10000);
     for (std::size_t i = 0; i < reduced_projected_face_infos.size(); ++i)
         for (std::size_t j = 0; j < reduced_projected_face_infos[i].size(); ++j)
             hist_qualities.add_value(reduced_projected_face_infos[i][j].quality);
 
-    float permille_999 = hist_qualities.get_approximate_permille(0.999f);
+    float percentile = hist_qualities.get_approx_percentile(0.995f);
 
     /* Calculate the costs. */
     assert(num_faces < std::numeric_limits<std::uint32_t>::max());
@@ -283,7 +270,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
             reduced_projected_face_infos[i].pop_back();
 
             /* Clamp to percentile and normalize. */
-            float normalized_quality = std::min(1.0f, info.quality / permille_999);
+            float normalized_quality = std::min(1.0f, info.quality / percentile);
             float data_cost = (1.0f - normalized_quality) * MRF_MAX_ENERGYTERM;
             data_costs.set_value(i, info.view_id, data_cost);
         }
@@ -294,7 +281,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     }
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
-    std::cout << "\tClamping qualities to " << permille_999 << " within normalization." << std::endl;
+    std::cout << "\tClamping qualities to " << percentile << " within normalization." << std::endl;
 
     /* Release superfluous embeddings. */
     for (TextureView & texture_view : texture_views) {
