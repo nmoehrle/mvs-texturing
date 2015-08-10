@@ -13,8 +13,10 @@ mean_color_of_edge_point(std::vector<ProjectedEdgeInfo> projected_edge_infos,
     math::Accum<math::Vec3f> color_accum(math::Vec3f(0.0f));
 
     for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
+        TexturePatch const & texture_patch = texture_patches[projected_edge_info.texture_patch_id];
+        if (texture_patch.get_label() == 0) continue;
         math::Vec2f pixel = projected_edge_info.p1 * t + (1.0f - t) * projected_edge_info.p2;
-        math::Vec3f color = texture_patches[projected_edge_info.texture_patch_id].get_pixel_value(pixel);
+        math::Vec3f color = texture_patch.get_pixel_value(pixel);
         color_accum.add(color, 1.0f);
     }
 
@@ -101,6 +103,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         for (std::size_t j = 0; j < projection_infos.size(); ++j) {
             VertexProjectionInfo const & projection_info = projection_infos[j];
             TexturePatch const & original_texture_patch = orig_texture_patches[projection_info.texture_patch_id];
+            if (original_texture_patch.get_label() == 0) continue;
             math::Vec3f color = original_texture_patch.get_pixel_value(projection_info.projection);
             color_accum.add(color, 1.0f);
         }
@@ -120,7 +123,12 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     for (std::size_t i = 0; i < texture_patches->size(); ++i) {
         TexturePatch * texture_patch = &texture_patches->at(i);
         texture_patch_counter.progress<SIMPLE>();
-        texture_patch->prepare_blending_mask(STRIP_SIZE);
+
+        /* Only alter a small strip of texture patches originating from input images. */
+        if (texture_patch->get_label() != 0) {
+            texture_patch->prepare_blending_mask(STRIP_SIZE);
+        }
+
         texture_patch->blend(orig_texture_patches[i].get_image());
         texture_patch->release_blending_mask();
         texture_patch->erode_validity_mask();

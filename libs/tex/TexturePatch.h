@@ -70,6 +70,7 @@ class TexturePatch {
         void prepare_blending_mask(std::size_t strip_width);
 
         void erode_validity_mask(void);
+        void correct_gamma(void);
 
         void blend(mve::ByteImage::ConstPtr coarse);
 
@@ -114,6 +115,11 @@ inline void
 TexturePatch::release_blending_mask(void) {
     assert(blending_mask != NULL);
     blending_mask.reset();
+}
+
+inline void
+TexturePatch::correct_gamma(void) {
+    mve::image::gamma_correct(this->image, 1.0f / 2.2f);
 }
 
 inline std::vector<math::Vec2f> &

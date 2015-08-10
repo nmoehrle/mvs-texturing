@@ -66,10 +66,7 @@ class UniGraph {
           */
         void get_subgraphs(std::size_t label, std::vector<std::vector<std::size_t> > * subgraphs) const;
 
-        std::vector<std::size_t> get_adj_nodes(std::size_t node) const;
-
-        void get_adj_labels(std::vector<std::size_t> const & nodes, std::set<std::size_t> * adj_labels) const;
-        std::size_t get_min_conn(std::vector<std::size_t> const & nodes) const;
+        std::vector<std::size_t> const & get_adj_nodes(std::size_t node) const;
 };
 
 inline void
@@ -131,7 +128,7 @@ UniGraph::get_label(std::size_t n) const {
     return labels[n];
 }
 
-inline std::vector<std::size_t>
+inline std::vector<std::size_t> const &
 UniGraph::get_adj_nodes(std::size_t node) const {
     assert(node < num_nodes());
     return adj_lists[node];

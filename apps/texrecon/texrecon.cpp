@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     {
         tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
-        tex::generate_texture_patches(graph, texture_views, mesh, &vertex_projection_infos, &texture_patches);
+        tex::generate_texture_patches(graph, texture_views, mesh, vertex_infos, &vertex_projection_infos, &texture_patches);
         for (TextureView & texture_view : texture_views) {
             texture_view.release_image();
         }
@@ -153,6 +153,10 @@ int main(int argc, char **argv) {
             tex::local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches);
         }
         timer.measure("Running local seam leveling");
+
+        //for (TexturePatch & texture_patch : texture_patches) {
+        //    texture_patch.correct_gamma();
+        //}
     }
 
     /* Create and write out obj model. */
@@ -180,7 +184,7 @@ int main(int argc, char **argv) {
             texture_patches.clear();
             generate_debug_embeddings(&texture_views);
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
-            tex::generate_texture_patches(graph, texture_views, mesh, &vertex_projection_infos, &texture_patches);
+            tex::generate_texture_patches(graph, texture_views, mesh, vertex_infos, &vertex_projection_infos, &texture_patches);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;

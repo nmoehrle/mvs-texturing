@@ -158,15 +158,16 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     assert(blending_mask != NULL);
     assert(valid_pixel(pixel));
 
-    for (int c = 0; c < 3; ++c)
+    for (int c = 0; c < 3; ++c) {
         image->at(pixel[0], pixel[1], c) = color[c] * 255.0f;
+    }
     blending_mask->at(pixel[0], pixel[1], 0) = 126;
 }
 
 void
-TexturePatch::blend(mve::ByteImage::ConstPtr coarse) {
-    mve::ByteImage::Ptr fine = mve::ByteImage::create(*coarse);
-    poisson_blend(fine, blending_mask, image, 1.0f);
+TexturePatch::blend(mve::ByteImage::ConstPtr _orig) {
+    mve::ByteImage::Ptr orig = mve::ByteImage::create(*_orig);
+    poisson_blend(orig, blending_mask, image, 1.0f);
 }
 
 void

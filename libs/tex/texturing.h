@@ -86,6 +86,7 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
 void generate_texture_patches(UniGraph const & graph,
     std::vector<TextureView> const & texture_views,
     mve::TriangleMesh::ConstPtr mesh,
+    mve::VertexInfoList::ConstPtr vertex_infos,
     VertexProjectionInfos * vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 

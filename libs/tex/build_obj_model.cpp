@@ -1,4 +1,4 @@
-#define MAX_TEXTURE_SIZE (4*1024)
+#define MAX_TEXTURE_SIZE (8*1024)
 #include "texturing.h"
 #include <set>
 
@@ -49,14 +49,15 @@ calculate_texture_size(std::list<TexturePatch> & texture_patches) {
 }
 
 /**
-  * Copies the given src image into the dest image at the given position,
+  * Copies the src image into the dest image at the given position,
   * optionally adding a border.
   * @warning asserts that the given src image fits into the given dest image.
   */
 void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
     mve::ByteImage::Ptr dest, int border = 0) {
-    assert(x >= 0 && x + src->width() + 2 * border <= dest->width() &&
-        y >= 0 && y + src->height() + 2 * border <= dest->height());
+
+    assert(x >= 0 && x + src->width() + 2 * border <= dest->width());
+    assert(y >= 0 && y + src->height() + 2 * border <= dest->height());
 
     for (int i = 0; i < src->width() + 2 * border; ++i) {
         for(int j = 0; j < src->height() + 2 * border; j++) {
@@ -81,6 +82,7 @@ void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
   */
 void
 dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask) {
+
     assert(image->width() == validity_mask->width());
     assert(image->height() == validity_mask->height());
     assert(image->channels() == 3);
@@ -100,22 +102,22 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
     PixelSet invalid_border_pixels;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (validity_mask->at(x, y, 0) == 0) {
-                /* Check the direct neighbourhood of all invalid pixels. */
-                bool at_border = false;
-                for (int j = -1; j <= 1 && !at_border; ++j) {
-                    for (int i = -1; i <= 1 && !at_border; ++i) {
-                        int nx = x + i;
-                        int ny = y + j;
-                        /* If the invalid pixel has a valid neighbour: */
-                        if (0 <= nx && nx < width &&
-                            0 <= ny && ny < height &&
-                            validity_mask->at(nx, ny, 0) == 255) {
+            if (validity_mask->at(x, y, 0) == 255) continue;
 
-                            /* Add the pixel to the set of invalid border pixels. */
-                            invalid_border_pixels.insert(std::pair<int, int>(x, y));
-                            at_border = true;
-                        }
+            /* Check the direct neighbourhood of all invalid pixels. */
+            bool at_border = false;
+            for (int j = -1; j <= 1 && !at_border; ++j) {
+                for (int i = -1; i <= 1 && !at_border; ++i) {
+                    int nx = x + i;
+                    int ny = y + j;
+                    /* If the invalid pixel has a valid neighbour: */
+                    if (0 <= nx && nx < width &&
+                        0 <= ny && ny < height &&
+                        validity_mask->at(nx, ny, 0) == 255) {
+
+                        /* Add the pixel to the set of invalid border pixels. */
+                        invalid_border_pixels.insert(std::pair<int, int>(x, y));
+                        at_border = true;
                     }
                 }
             }
@@ -124,8 +126,6 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
 
     mve::ByteImage::Ptr new_validity_mask = validity_mask->duplicate();
 
-    ///* Iteratively dilate all border pixels until no more pixel are invalid. */
-    //while (!invalid_border_pixels.empty()) {
     /* Iteratively dilate border pixels until padding constants are reached. */
     for (int n = 0; n < (size >> 7); ++n) {
         PixelVector new_valid_pixels;
@@ -162,8 +162,9 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
                 image->at(x, y, c) = (value / norm) * 255.0f;
             }
 
-            if (now_valid)
+            if (now_valid) {
                 new_valid_pixels.push_back(*it);
+            }
         }
 
         invalid_border_pixels.clear();

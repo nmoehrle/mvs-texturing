@@ -97,7 +97,7 @@ calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
         for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
             TexturePatch const & texture_patch = texture_patches[projected_edge_info.texture_patch_id];
             const int texture_patch_label = texture_patch.get_label();
-            if (texture_patch_label == label1 || texture_patch_label == label2){
+            if (texture_patch_label == label1 || texture_patch_label == label2) {
                 if (texture_patch_label == label1)
                     color1_accum.add(sample_edge(texture_patch, projected_edge_info.p1, projected_edge_info.p2), length);
 
@@ -151,6 +151,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
         for (it = label_set.begin(); it != label_set.end(); ++it) {
             std::size_t label = *it;
+            if (label == 0) continue;
             vertlabel2row[i][label] = x_row;
             labels[i].push_back(label);
             ++x_row;
@@ -173,7 +174,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
                 for (std::size_t l = 0; l < labels[adj_vertex].size(); ++l) {
                     std::size_t label = labels[i][j];
                     std::size_t adj_vertex_label = labels[adj_vertex][l];
-                    if (label != 0 && i < adj_vertex && label == adj_vertex_label) {
+                    if (i < adj_vertex && label == adj_vertex_label) {
                         Eigen::Triplet<float, int> t1(Gamma_row, vertlabel2row[i][label], lambda);
                         Eigen::Triplet<float, int> t2(Gamma_row, vertlabel2row[adj_vertex][adj_vertex_label], -lambda);
                         coefficients_Gamma.push_back(t1);
@@ -199,7 +200,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
             for (std::size_t k = 0; k < labels[i].size(); ++k) {
                 std::size_t label1 = labels[i][j];
                 std::size_t label2 = labels[i][k];
-                if (label1 != 0 && label2 != 0 && label1 < label2) {
+                if (label1 < label2) {
 
                     std::vector<MeshEdge> seam_edges;
                     find_seam_edges_for_vertex_label_combination(graph, mesh, vertex_infos, i, label1, label2, &seam_edges);
@@ -273,7 +274,6 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     }
     std::cout << "\t\tTook " << timer.get_elapsed_sec() << " seconds" << std::endl;
 
-
     mve::TriangleMesh::FaceList const & mesh_faces = mesh->get_faces();
 
     ProgressCounter texture_patch_counter("\tAdjusting texture patches", texture_patches->size());
@@ -285,8 +285,15 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
         int label = texture_patch->get_label();
         std::vector<std::size_t> const & faces = texture_patch->get_faces();
+        std::vector<math::Vec3f> patch_adjust_values(faces.size() * 3, math::Vec3f(0.0f));
 
-        std::vector<math::Vec3f> patch_adjust_values(faces.size() * 3);
+        /* Only adjust texture_patches originating form input images. */
+        if (label == 0) {
+            texture_patch->adjust_colors(patch_adjust_values);
+            texture_patch_counter.inc();
+            continue;
+        };
+
         for (std::size_t j = 0; j < faces.size(); ++j) {
             for (std::size_t k = 0; k < 3; ++k) {
                 std::size_t face_pos = faces[j] * 3 + k;
