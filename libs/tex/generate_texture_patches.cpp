@@ -172,30 +172,33 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
 
     std::size_t num_holes = 0;
+    std::size_t num_hole_faces = 0;
 
     //if (!settings.skip_hole_filling) {
     {
         std::vector<std::vector<std::size_t> > subgraphs;
         graph.get_subgraphs(0, &subgraphs);
 
-        #pragma omp parallel for
+        #pragma omp parallel for schedule(dynamic)
         for (std::size_t i = 0; i < subgraphs.size(); ++i) {
             std::vector<std::size_t> const & subgraph = subgraphs[i];
 
             std::map<std::size_t, std::set<std::size_t> > tmp;
-
             for (std::size_t const face_id : subgraph) {
                 std::size_t const v0 = mesh_faces[face_id * 3];
                 std::size_t const v1 = mesh_faces[face_id * 3 + 1];
                 std::size_t const v2 = mesh_faces[face_id * 3 + 2];
-                tmp[v0].insert({v1, v2});
-                tmp[v1].insert({v0, v2});
-                tmp[v2].insert({v0, v1});
+                tmp[v0].insert(face_id);
+                tmp[v1].insert(face_id);
+                tmp[v2].insert(face_id);
             }
 
             std::size_t const num_vertices = tmp.size();
             /* Only fill small holes. */
-            if (num_vertices > 100) continue;
+            if (num_vertices > 100) {
+                //std::cerr << "Hole to large" << std::endl;
+                continue;
+            }
 
 
             /* Calculate 2D parameterization using the technique from libremesh/patch2d,
@@ -207,7 +210,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
             std::size_t seed = -1;
             std::vector<bool> is_border(num_vertices, false);
-            std::vector<std::vector<std::size_t> > new_adj_verts(num_vertices);
+            std::vector<std::vector<std::size_t> > adj_verts_via_border(num_vertices);
             /* Index structures to map from local <-> global vertex id. */
             std::map<std::size_t, std::size_t> g2l;
             std::vector<std::size_t> l2g(num_vertices);
@@ -222,19 +225,22 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                 std::size_t vertex_id = it->first;
                 g2l[vertex_id] = j;
                 l2g[j] = vertex_id;
-                new_adj_verts[j] = std::vector<std::size_t>(it->second.begin(), it->second.end());
 
                 /* Check topology in original mesh. */
                 if (vertex_infos->at(vertex_id).vclass != mve::VERTEX_CLASS_SIMPLE) {
+                    //std::cerr << "Complex/Border vertex in original mesh" << std::endl;
                     disk_topology = false;
                     break;
                 }
 
                 /* Check new topology and determine if vertex is now at the border. */
                 std::vector<std::size_t> const & adj_faces = vertex_infos->at(vertex_id).faces;
+                std::set<std::size_t> const & adj_hole_faces = it->second;
                 std::vector<std::pair<std::size_t, std::size_t> > fan;
                 for (std::size_t k = 0; k < adj_faces.size(); ++k) {
-                    if (graph.get_label(adj_faces[k]) == 0) {
+                    std::size_t adj_face = adj_faces[k];
+                    if (graph.get_label(adj_faces[k]) == 0 &&
+                        adj_hole_faces.find(adj_face) != adj_hole_faces.end()) {
                         std::size_t curr = adj_faces[k];
                         std::size_t next = adj_faces[(k + 1) % adj_faces.size()];
                         std::pair<std::size_t, std::size_t> pair(curr, next);
@@ -244,8 +250,21 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
                 std::size_t gaps = 0;
                 for (std::size_t k = 0; k < fan.size(); k++) {
-                    if (fan[k].second != fan[(k + 1) % fan.size()].first) {
+                    std::size_t curr = fan[k].first;
+                    std::size_t next = fan[(k + 1) % fan.size()].first;
+                    if (fan[k].second != next) {
                         ++gaps;
+
+                        for (std::size_t l = 0; l < 3; ++l) {
+                            if(mesh_faces[curr * 3 + l] == vertex_id) {
+                                std::size_t second = mesh_faces[curr * 3 + (l + 2) % 3];
+                                adj_verts_via_border[j].push_back(second);
+                            }
+                            if(mesh_faces[next * 3 + l] == vertex_id) {
+                                std::size_t first = mesh_faces[next * 3 + (l + 1) % 3];
+                                adj_verts_via_border[j].push_back(first);
+                            }
+                        }
                     }
                 }
 
@@ -253,6 +272,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
                 /* Check if vertex is now complex. */
                 if (gaps > 1) {
+                    //std::cerr << "Complex vertex in hole" << std::endl;
                     disk_topology = false;
                     break;
                 }
@@ -264,6 +284,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                     idx[j] = j - num_border_vertices;
                 }
             }
+            tmp.clear();
 
             if (!disk_topology) continue;
             if (num_border_vertices == 0) {
@@ -276,10 +297,10 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
             std::size_t curr = seed;
             while (prev == seed || curr != seed) {
                 std::size_t next = std::numeric_limits<std::size_t>::max();
-                std::vector<std::size_t> const & adj_verts = new_adj_verts[g2l[curr]];
+                std::vector<std::size_t> const & adj_verts = adj_verts_via_border[g2l[curr]];
                 for (std::size_t adj_vert : adj_verts) {
-                    if (is_border[g2l[adj_vert]]
-                        && adj_vert != prev && adj_vert != curr) {
+                    assert(is_border[g2l[adj_vert]]);
+                    if (adj_vert != prev && adj_vert != curr) {
                         next = adj_vert;
                         break;
                     }
@@ -295,15 +316,12 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                 }
 
                 if (border.size() > num_border_vertices) {
-                    //std::cerr << "Loop in within border" << std::endl;
+                    //std::cerr << "Loop within border" << std::endl;
                     break;
                 }
             }
 
             if (border.size() != num_border_vertices) {
-                if (border.size() < num_border_vertices) {
-                    //std::cerr << "Unclosed border" << std::endl;
-                }
                 continue;
             }
 
@@ -416,9 +434,10 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
             {
                 texture_patches->push_back(texture_patch);
                 texture_patch_id = num_patches++;
-            }
 
-            ++num_holes;
+                num_hole_faces += subgraph.size();
+                ++num_holes;
+            }
 
             for (std::size_t j = 0; j < num_vertices; ++j) {
                 std::size_t const vertex_id = l2g[j];
@@ -440,7 +459,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
     std::cout << "done. (Took " << timer.get_elapsed_sec() << "s)" << std::endl;
     std::cout << "\t" << num_patches << " texture patches." << std::endl;
-    std::cout << "\t" << num_holes << " holes." << std::endl;
+    std::cout << "\t" << num_holes << " holes (" << num_hole_faces << " faces)." << std::endl;
 }
 
 TEX_NAMESPACE_END
