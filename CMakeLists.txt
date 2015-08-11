@@ -51,12 +51,15 @@ endif()
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(TIFF REQUIRED)
-add_subdirectory(elibs)
 
-include_directories(
+add_subdirectory(elibs)
+include_directories(SYSTEM
     ${CMAKE_SOURCE_DIR}/elibs/coldet/src
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs
     ${CMAKE_SOURCE_DIR}/elibs/eigen
+)
+
+include_directories(
     libs
 )
 
@@ -67,7 +70,7 @@ link_directories(
 )
 
 if(RESEARCH)
-    include_directories(${CMAKE_SOURCE_DIR}/elibs/gco)
+    include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/elibs/gco)
     link_directories(${CMAKE_BINARY_DIR}/elibs/gco/src/ext_gco-build)
 endif()
 
