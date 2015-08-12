@@ -71,7 +71,7 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::VertexInfoList::Con
  * if the face is visible within the texture view.
  */
 ST
-calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> & texture_views,
+calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
     Settings const & settings);
 
 /**
@@ -84,9 +84,9 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
   * Generates texture patches using the graph to determine adjacent faces with the same label.
   */
 void generate_texture_patches(UniGraph const & graph,
-    std::vector<TextureView> const & texture_views,
     mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
+    std::vector<TextureView> * texture_views,
     VertexProjectionInfos * vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 

@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 
         tex::DataCosts data_costs;
         if (conf.data_cost_file.empty()) {
-            data_costs = tex::calculate_data_costs(mesh, texture_views, conf.settings);
+            data_costs = tex::calculate_data_costs(mesh, &texture_views, conf.settings);
 
             if (conf.write_intermediate_results) {
                 std::cout << "\tWriting data cost file... " << std::flush;
@@ -126,10 +126,7 @@ int main(int argc, char **argv) {
     {
         tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
-        tex::generate_texture_patches(graph, texture_views, mesh, vertex_infos, &vertex_projection_infos, &texture_patches);
-        for (TextureView & texture_view : texture_views) {
-            texture_view.release_image();
-        }
+        tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
 
         if (conf.settings.global_seam_leveling) {
             std::cout << "Running global seam leveling:" << std::endl;
@@ -180,7 +177,7 @@ int main(int argc, char **argv) {
             texture_patches.clear();
             generate_debug_embeddings(&texture_views);
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
-            tex::generate_texture_patches(graph, texture_views, mesh, vertex_infos, &vertex_projection_infos, &texture_patches);
+            tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;

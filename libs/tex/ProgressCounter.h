@@ -35,14 +35,15 @@ ProgressCounter::ProgressCounter(std::string const & _task, std::size_t _max)
 
 inline void
 ProgressCounter::inc(void) {
-    #pragma omp atomic
-    ++count;
+    std::size_t tmp;
+    #pragma omp atomic capture
+    tmp = ++count;
 
-    if(count >= max) {
+    if(tmp == max) {
         std::stringstream ss;
         ss << clear << task << " 100%... done. (Took "
             << timer.get_elapsed_sec() << "s)";
-        #pragma omp critical
+        #pragma omp critical(progress_counter_inc)
         std::cout << ss.rdbuf() << std::endl;
     }
 }
@@ -56,10 +57,9 @@ ProgressCounter::reset(std::string const & _task) {
 
 template <ProgressCounterStyle T> void
 ProgressCounter::progress(void) {
-    if (max <= 100 || (max > 100 && count % (max / 100) == 0)) {
+    if ((max > 100 && count % (max / 100) == 0) || max <= 100) {
         float percent = static_cast<float>(count) / max;
         int ipercent = std::floor(percent * 100.0f + 0.5f);
-
 
         std::stringstream ss;
         ss << clear << task << " " << ipercent << "%...";
@@ -70,7 +70,7 @@ ProgressCounter::progress(void) {
             ss << " eta ~ " << eta << " s";
         }
 
-        #pragma omp critical
+        #pragma omp critical(progress_counter_progress)
         tty << ss.rdbuf() << std::flush;
     }
 }
