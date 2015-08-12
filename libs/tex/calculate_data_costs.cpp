@@ -114,7 +114,7 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
 }
 
 ST
-calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> & texture_views,
+calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
     Settings const & settings) {
 
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
@@ -122,26 +122,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     mve::TriangleMesh::NormalList const & face_normals = mesh->get_face_normals();
 
     std::size_t const num_faces = faces.size() / 3;
-    std::size_t const num_views = texture_views.size();
-
-    ProgressCounter view_counter("\tGenerating validity masks", num_views);
-    #pragma omp parallel for
-    for (std::size_t i = 0; i < num_views; ++i) {
-        view_counter.progress<SIMPLE>();
-        texture_views[i].generate_validity_mask();
-        view_counter.inc();
-    }
-
-    if (settings.data_term == GMI) {
-        view_counter.reset("\tCalculating gradient magnitude");
-        #pragma omp parallel for
-        for (std::size_t i = 0; i < num_views; ++i) {
-            view_counter.progress<SIMPLE>();
-            texture_views[i].generate_gradient_magnitude();
-            texture_views[i].erode_validity_mask();
-            view_counter.inc();
-        }
-    }
+    std::size_t const num_views = texture_views->size();
 
     CollisionModel3D* model = newCollisionModel3D(true);
     if (settings.geometric_visibility_test) {
@@ -158,32 +139,39 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         }
         model->finalize();
     }
-    std::vector<std::vector<ReducedProjectedFaceInfo> > reduced_projected_face_infos(num_faces);
+    std::vector<std::vector<ProjectedFaceInfo> > projected_face_infos(num_faces);
 
-    ProgressCounter face_counter("\tCalculating face qualities", num_faces);
+    ProgressCounter view_counter("\tCalculating face qualities", num_views);
     #pragma omp parallel
     {
-        std::vector<ProjectedFaceInfo> infos;
-        infos.reserve(num_views);
+        std::vector<std::pair<std::size_t, ProjectedFaceInfo> > projected_face_view_infos;
 
         #pragma omp for schedule(dynamic)
-        for (std::size_t i = 0; i < faces.size(); i += 3) {
-            std::size_t face_id = i / 3;
+        for (std::uint16_t j = 0; j < texture_views->size(); ++j) {
+            view_counter.progress<SIMPLE>();
 
-            face_counter.progress<ETA>();
-            infos.clear();
-            infos.reserve(num_views);
+            TextureView * texture_view = &texture_views->at(j);
+            texture_view->load_image();
+            texture_view->generate_validity_mask();
 
-            math::Vec3f const & v1 = vertices[faces[i]];
-            math::Vec3f const & v2 = vertices[faces[i + 1]];
-            math::Vec3f const & v3 = vertices[faces[i + 2]];
-            math::Vec3f const & face_normal = face_normals[face_id];
-            math::Vec3f const face_center = (v1 + v2 + v3) / 3;
+            if (settings.data_term == GMI) {
+                texture_view->generate_gradient_magnitude();
+                texture_view->erode_validity_mask();
+            }
 
-            /* Check visibility and compute quality of each face in each texture view. */
-            for (std::uint16_t j = 0; j < texture_views.size(); ++j) {
-                math::Vec3f const & view_pos = texture_views[j].get_pos();
-                math::Vec3f const & viewing_direction = texture_views[j].get_viewing_direction();
+            math::Vec3f const & view_pos = texture_view->get_pos();
+            math::Vec3f const & viewing_direction = texture_view->get_viewing_direction();
+
+            for (std::size_t i = 0; i < faces.size(); i += 3) {
+                std::size_t face_id = i / 3;
+
+                math::Vec3f const & v1 = vertices[faces[i]];
+                math::Vec3f const & v2 = vertices[faces[i + 1]];
+                math::Vec3f const & v3 = vertices[faces[i + 2]];
+                math::Vec3f const & face_normal = face_normals[face_id];
+                math::Vec3f const face_center = (v1 + v2 + v3) / 3;
+
+                /* Check visibility and compute quality */
 
                 math::Vec3f view_to_face_vec = (face_center - view_pos).normalized();
                 math::Vec3f face_to_view_vec = (view_pos - face_center).normalized();
@@ -193,8 +181,11 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 if (viewing_angle < 0.0f || viewing_direction.dot(view_to_face_vec) < 0.0f)
                     continue;
 
+                if (std::acos(viewing_angle) > MATH_DEG2RAD(75.0f))
+                    continue;
+
                 /* Projects into the valid part of the TextureView? */
-                if (!texture_views[j].inside(v1, v2, v3))
+                if (!texture_view->inside(v1, v2, v3))
                     continue;
 
                 if (settings.geometric_visibility_test) {
@@ -220,27 +211,64 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
                 ProjectedFaceInfo info = {j, 0.0f, math::Vec3f(0.0f, 0.0f, 0.0f)};
 
                 /* Calculate quality. */
-                texture_views[j].get_face_info(v1, v2, v3, &info, settings);
+                texture_view->get_face_info(v1, v2, v3, &info, settings);
 
                 if (info.quality == 0.0) continue;
 
                 /* Change color space. */
                 mve::image::color_rgb_to_ycbcr(*(info.mean_color));
 
-                infos.push_back(info);
+                std::pair<std::size_t, ProjectedFaceInfo> pair(face_id, info);
+                projected_face_view_infos.push_back(pair);
             }
 
-            if (settings.outlier_removal != NONE) {
-                photometric_outlier_detection(infos, settings);
+            texture_view->release_image();
+            texture_view->release_validity_mask();
+            if (settings.data_term == GMI) {
+                texture_view->release_gradient_magnitude();
             }
-
-            reduced_projected_face_infos[face_id].reserve(infos.size());
-            for (ProjectedFaceInfo const & info : infos) {
-                reduced_projected_face_infos[face_id].push_back(reduce(info));
-            }
-
-            face_counter.inc();
+            view_counter.inc();
         }
+
+        //std::sort(projected_face_view_infos.begin(), projected_face_view_infos.end());
+
+        std::size_t num_threads = 1;
+        #ifdef _OPENMP
+        num_threads = omp_get_num_threads();
+        #endif
+        ProgressCounter thread_counter("\tMerging face infos", num_threads);
+        #pragma omp critical
+        {
+            thread_counter.progress<SIMPLE>();
+            for (std::size_t i = projected_face_view_infos.size(); 0 < i; --i) {
+                std::size_t face_id = projected_face_view_infos[i - 1].first;
+                ProjectedFaceInfo const & info = projected_face_view_infos[i - 1].second;
+                projected_face_infos[face_id].push_back(info);
+            }
+            projected_face_view_infos.clear();
+            thread_counter.inc();
+        }
+
+    }
+
+    ProgressCounter face_counter("\tPostprocessing face infos", num_faces);
+    std::vector<std::vector<ReducedProjectedFaceInfo> > reduced_projected_face_infos(num_faces);
+    #pragma omp parallel for schedule(dynamic)
+    for (std::size_t i = 0; i < projected_face_infos.size(); ++i) {
+        face_counter.progress<SIMPLE>();
+        std::vector<ProjectedFaceInfo> & infos = projected_face_infos[i];
+        std::sort(infos.begin(), infos.end());
+        if (settings.outlier_removal != NONE) {
+            photometric_outlier_detection(infos, settings);
+        }
+        reduced_projected_face_infos[i].reserve(infos.size());
+        for (ProjectedFaceInfo const & info : infos) {
+            if (info.quality == 0.0) continue;
+            reduced_projected_face_infos[i].push_back(reduce(info));
+        }
+        infos.clear();
+
+        face_counter.inc();
     }
 
     delete model;
@@ -282,14 +310,6 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
     std::cout << "\tClamping qualities to " << percentile << " within normalization." << std::endl;
-
-    /* Release superfluous embeddings. */
-    for (TextureView & texture_view : texture_views) {
-        texture_view.release_validity_mask();
-        if (settings.data_term == GMI) {
-            texture_view.release_gradient_magnitude();
-        }
-    }
 
     return data_costs;
 }

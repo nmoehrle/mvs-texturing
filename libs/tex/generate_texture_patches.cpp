@@ -90,8 +90,9 @@ generate_candidate(int label, TextureView const & texture_view,
 }
 
 void
-generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const & texture_views,
-    mve::TriangleMesh::ConstPtr mesh, mve::VertexInfoList::ConstPtr vertex_infos,
+generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
+    mve::VertexInfoList::ConstPtr vertex_infos,
+    std::vector<TextureView> * texture_views,
     std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches) {
 
@@ -105,16 +106,19 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
 
     std::cout << "\tRunning... " << std::flush;
     #pragma omp parallel for schedule(dynamic)
-    for (std::size_t i = 0; i < texture_views.size(); ++i) {
+    for (std::size_t i = 0; i < texture_views->size(); ++i) {
 
         std::vector<std::vector<std::size_t> > subgraphs;
         int const label = i + 1;
         graph.get_subgraphs(label, &subgraphs);
 
+        TextureView * texture_view = &texture_views->at(i);
+        texture_view->load_image();
         std::list<TexturePatchCandidate> candidates;
         for (std::size_t j = 0; j < subgraphs.size(); ++j) {
-            candidates.push_back(generate_candidate(label, texture_views[i], subgraphs[j], mesh));
+            candidates.push_back(generate_candidate(label, *texture_view, subgraphs[j], mesh));
         }
+        texture_view->release_image();
 
         /* Merge candidates which contain the same image content. */
         std::list<TexturePatchCandidate>::iterator it, sit;

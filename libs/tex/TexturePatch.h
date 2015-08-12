@@ -144,6 +144,6 @@ TexturePatch::get_size(void) const {
 }
 
 inline bool
-TexturePatch::operator<(TexturePatch const & texture_patch) const {
-    return get_size() < texture_patch.get_size();
+TexturePatch::operator<(TexturePatch const & other) const {
+    return get_size() < other.get_size();
 }

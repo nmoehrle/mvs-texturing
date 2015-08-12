@@ -7,7 +7,7 @@
 #include "math/vector.h"
 #include "math/matrix.h"
 
-#include "mve/view.h"
+#include "mve/camera.h"
 #include "mve/image_tools.h"
 #include "mve/image_io.h"
 
@@ -20,6 +20,10 @@ struct ProjectedFaceInfo {
     std::uint16_t view_id;
     float quality;
     math::Vec3f mean_color;
+
+    bool operator<(ProjectedFaceInfo const & other) const {
+        return view_id < other.view_id;
+    }
 };
 
 /** Struct containing the quality of a face within a view. */
@@ -48,6 +52,7 @@ class TextureView {
         math::Matrix4f world_to_cam;
         int width;
         int height;
+        std::string image_file;
         mve::ByteImage::Ptr image;
         mve::ByteImage::Ptr gradient_magnitude;
         std::vector<bool> validity_mask;
@@ -75,22 +80,24 @@ class TextureView {
         math::Vec3f get_pixel_values(math::Vec2f const & pixel) const;
 
         /** Constructs a TextureView from the give mve::CameraInfo containing the given image. */
-        TextureView(std::size_t id, mve::CameraInfo const & camera, mve::ByteImage::Ptr image);
+        TextureView(std::size_t id, mve::CameraInfo const & camera, std::string const & image_file);
 
         /** Returns the position. */
         math::Vec3f get_pos(void) const;
         /** Returns the viewing direction. */
         math::Vec3f get_viewing_direction(void) const;
-        /** Returns the width of the encapsulated image. */
+        /** Returns the width of the corresponding image. */
         int get_width(void) const;
-        /** Returns the height of the encapsulated image. */
+        /** Returns the height of the corresponding image. */
         int get_height(void) const;
-        /** Returns a reference pointer to the encapsulated image. */
+        /** Returns a reference pointer to the corresponding image. */
         mve::ByteImage::Ptr get_image(void) const;
 
         /** Exchange encapsulated image. */
         void bind_image(mve::ByteImage::Ptr new_image);
 
+        /** Loads the corresponding image. */
+        void load_image(void);
         /** Generates the validity mask. */
         void generate_validity_mask(void);
         /** Generates the gradient magnitude image for the encapsulated image. */
@@ -100,7 +107,7 @@ class TextureView {
         void release_validity_mask(void);
         /** Releases the gradient magnitude image. */
         void release_gradient_magnitude(void);
-        /** Releases the encapsulated image. */
+        /** Releases the corresponding image. */
         void release_image(void);
 
         /** Erodes the validity mask by one pixel. */
@@ -141,6 +148,11 @@ TextureView::get_width(void) const {
 inline int
 TextureView::get_height(void) const {
     return height;
+}
+
+inline void
+TextureView::load_image(void) {
+    image = mve::image::load_file(image_file);
 }
 
 inline mve::ByteImage::Ptr
