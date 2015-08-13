@@ -26,19 +26,6 @@ struct ProjectedFaceInfo {
     }
 };
 
-/** Struct containing the quality of a face within a view. */
-struct ReducedProjectedFaceInfo {
-    std::uint16_t view_id;
-    float quality;
-};
-
-inline
-ReducedProjectedFaceInfo reduce(ProjectedFaceInfo info) {
-    ReducedProjectedFaceInfo reduced = {info.view_id, info.quality};
-    return reduced;
-}
-
-
 /**
   * Class representing a view with specialized functions for texturing.
   */
