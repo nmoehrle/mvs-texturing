@@ -93,7 +93,7 @@ isolate_unseen_faces(UniGraph * graph, ST const & data_costs) {
 }
 
 void
-optimize(mrf::Graph * mrf, bool verbose = false) {
+optimize(mrf::Graph * mrf, std::size_t component, bool verbose = false) {
     util::WallTimer timer;
 
     std::vector<mrf::ENERGY_TYPE> energies;
@@ -104,12 +104,23 @@ optimize(mrf::Graph * mrf, bool verbose = false) {
     mrf::ENERGY_TYPE diff = last_energy - energy;
     unsigned int i = 0;
 
-    #pragma omp critical
-    if (verbose) std::cout << "\tIteration\tEnergy\t\tRuntime" << std::endl;
+    #ifdef RESEARCH
+    #ifdef _OPENMP
+    if (component == 0) {
+        std::cout << "\t" << "Parallel optimization with " <<
+            omp_get_num_threads() << " threads" << std::endl;
+        std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
+    }
+    #else
+    if (verbose) std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
+    #endif
+    #else
+    if (verbose) std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
+    #endif
     while (diff != zero) {
         #pragma omp critical
         if (verbose) {
-            std::cout << "\t" << i << "\t\t" << energy
+            std::cout << "\t" << component << "\t" << i << "\t" << energy
                 << "\t" << timer.get_elapsed_sec() << std::endl;
         }
         energies.push_back(energy);
@@ -122,10 +133,13 @@ optimize(mrf::Graph * mrf, bool verbose = false) {
 
     #pragma omp critical
     if (verbose) {
-        std::cout << "\t" << i << "\t\t" << energy << std::endl;
-        if (diff == zero) std::cout << "\t" << "Converged" << std::endl;
+        std::cout << "\t" << component << "\t" << i << "\t" << energy << std::endl;
+        if (diff == zero) {
+            std::cout << "\t" << component << "\t" << "Converged" << std::endl;
+        }
         if (diff < zero) {
-            std::cout << "\t" << "Increase of energy detected! Aborting..." << std::endl;
+            std::cout << "\t" << component << "\t"
+                << "Increase of energy detected! Aborting..." << std::endl;
         }
     }
     //if (conf.write_mrf_energies)
@@ -153,7 +167,7 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
     mrf::SOLVER_TYPE solver_type = mrf::LBP;
     #endif
 
-    /*Label 0 is undefined */
+    /* Label 0 is undefined. */
     const std::size_t num_labels = data_costs.rows() + 1;
     std::vector<mrf::Graph::Ptr> mrfs(components.size());
     for (std::size_t i = 0; i < components.size(); ++i) {
@@ -166,7 +180,7 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
     set_data_costs(face_infos, data_costs, mrfs);
 
     #ifdef RESEARCH
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     #endif
     for (std::size_t i = 0; i < components.size(); ++i) {
         switch (settings.smoothness_term) {
@@ -175,7 +189,7 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
             break;
         }
 
-        optimize(mrfs[i].get(), mrfs[i]->num_sites() > 10000);
+        optimize(mrfs[i].get(), i, mrfs[i]->num_sites() > 10000);
 
         /* Extract resulting labeling from MRF. */
         for (std::size_t j = 0; j < components[i].size(); ++j) {
