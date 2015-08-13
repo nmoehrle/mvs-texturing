@@ -251,39 +251,37 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
     }
 
+    delete model;
+    model = NULL;
+
     ProgressCounter face_counter("\tPostprocessing face infos", num_faces);
-    std::vector<std::vector<ReducedProjectedFaceInfo> > reduced_projected_face_infos(num_faces);
     #pragma omp parallel for schedule(dynamic)
     for (std::size_t i = 0; i < projected_face_infos.size(); ++i) {
         face_counter.progress<SIMPLE>();
+
         std::vector<ProjectedFaceInfo> & infos = projected_face_infos[i];
-        std::sort(infos.begin(), infos.end());
         if (settings.outlier_removal != NONE) {
             photometric_outlier_detection(infos, settings);
+
+            infos.erase(std::remove_if(infos.begin(), infos.end(),
+                [](ProjectedFaceInfo const & info) -> bool {return info.quality == 0.0f;}),
+                infos.end());
         }
-        reduced_projected_face_infos[i].reserve(infos.size());
-        for (ProjectedFaceInfo const & info : infos) {
-            if (info.quality == 0.0) continue;
-            reduced_projected_face_infos[i].push_back(reduce(info));
-        }
-        infos.clear();
+        std::sort(infos.begin(), infos.end());
 
         face_counter.inc();
     }
 
-    delete model;
-    model = NULL;
-
     /* Determine the function for the normlization. */
     float max_quality = 0.0f;
-    for (std::size_t i = 0; i < reduced_projected_face_infos.size(); ++i)
-        for (std::size_t j = 0; j < reduced_projected_face_infos[i].size(); ++j)
-            max_quality = std::max(max_quality, reduced_projected_face_infos[i][j].quality);
+    for (std::size_t i = 0; i < projected_face_infos.size(); ++i)
+        for (std::size_t j = 0; j < projected_face_infos[i].size(); ++j)
+            max_quality = std::max(max_quality, projected_face_infos[i][j].quality);
 
     Histogram hist_qualities(0.0f, max_quality, 10000);
-    for (std::size_t i = 0; i < reduced_projected_face_infos.size(); ++i)
-        for (std::size_t j = 0; j < reduced_projected_face_infos[i].size(); ++j)
-            hist_qualities.add_value(reduced_projected_face_infos[i][j].quality);
+    for (std::size_t i = 0; i < projected_face_infos.size(); ++i)
+        for (std::size_t j = 0; j < projected_face_infos[i].size(); ++j)
+            hist_qualities.add_value(projected_face_infos[i][j].quality);
 
     float percentile = hist_qualities.get_approx_percentile(0.995f);
 
@@ -292,10 +290,9 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     assert(num_views < std::numeric_limits<std::uint16_t>::max());
     assert(MRF_MAX_ENERGYTERM < std::numeric_limits<float>::max());
     ST data_costs(num_faces, num_views);
-    for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(reduced_projected_face_infos.size()); ++i) {
-        while(!reduced_projected_face_infos[i].empty()) {
-            ReducedProjectedFaceInfo info = reduced_projected_face_infos[i].back();
-            reduced_projected_face_infos[i].pop_back();
+    for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(projected_face_infos.size()); ++i) {
+        for (std::size_t j = 0; j < projected_face_infos[i].size(); ++j) {
+            ProjectedFaceInfo const & info = projected_face_infos[i][j];
 
             /* Clamp to percentile and normalize. */
             float normalized_quality = std::min(1.0f, info.quality / percentile);
@@ -304,8 +301,8 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         }
 
         /* Ensure that all memory is freeed. */
-        reduced_projected_face_infos[i].clear();
-        reduced_projected_face_infos[i].shrink_to_fit();
+        projected_face_infos[i].clear();
+        projected_face_infos[i].shrink_to_fit();
     }
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
