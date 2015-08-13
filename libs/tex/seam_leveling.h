@@ -13,6 +13,10 @@ struct VertexProjectionInfo {
     std::size_t texture_patch_id;
     math::Vec2f projection;
     std::vector<std::size_t> faces;
+
+    bool operator<(VertexProjectionInfo const & other) const {
+        return texture_patch_id < other.texture_patch_id;
+    }
 };
 
 struct ProjectedEdgeInfo {
@@ -20,8 +24,8 @@ struct ProjectedEdgeInfo {
     math::Vec2f p1;
     math::Vec2f p2;
 
-    bool operator<(ProjectedEdgeInfo const & projected_edge_info) const {
-        return texture_patch_id < projected_edge_info.texture_patch_id;
+    bool operator<(ProjectedEdgeInfo const & other) const {
+        return texture_patch_id < other.texture_patch_id;
     }
 };
 

@@ -29,7 +29,12 @@ void GCOGraph::set_data_costs(int label, std::vector<SparseDataCost> const & cos
         gcocosts[i] = {costs[i].site, costs[i].cost};
     }
     std::sort(gcocosts.begin(), gcocosts.end(), comp_spd_site);
-    gco.setDataCost(label, gcocosts.data(), gcocosts.size());
+    try {
+        gco.setDataCost(label, gcocosts.data(), gcocosts.size());
+    } catch (GCException e) {
+        std::cerr << e.message << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 ENERGY_TYPE GCOGraph::compute_energy() {

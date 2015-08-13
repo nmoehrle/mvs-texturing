@@ -7,12 +7,12 @@ void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo>
     /* Merge vertex infos within the same texture patch. */
     #pragma omp parallel for
     for (std::size_t i = 0; i < vertex_projection_infos->size(); ++i) {
-        std::vector<VertexProjectionInfo> * infos = &(vertex_projection_infos->at(i));
+        std::vector<VertexProjectionInfo> & infos = vertex_projection_infos->at(i);
 
         std::map<std::size_t, VertexProjectionInfo> info_map;
         std::map<std::size_t, VertexProjectionInfo>::iterator it;
 
-        for (VertexProjectionInfo const & info : *infos) {
+        for (VertexProjectionInfo const & info : infos) {
             std::size_t texture_patch_id = info.texture_patch_id;
             if((it = info_map.find(texture_patch_id)) == info_map.end()) {
                 info_map[texture_patch_id] = info;
@@ -22,10 +22,10 @@ void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo>
             }
         }
 
-        infos->clear();
-        infos->reserve(info_map.size());
+        infos.clear();
+        infos.reserve(info_map.size());
         for (it = info_map.begin(); it != info_map.end(); ++it) {
-            infos->push_back(it->second);
+            infos.push_back(it->second);
         }
     }
 }
@@ -170,6 +170,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
         }
     }
 
+    merge_vertex_projection_infos(vertex_projection_infos);
 
     std::size_t num_holes = 0;
     std::size_t num_hole_faces = 0;
@@ -326,15 +327,37 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
             }
 
             float total_length = 0.0f;
+            float total_projection_length = 0.0f;
             for (std::size_t j = 0; j < border.size(); ++j) {
-                math::Vec3f const & v0 = vertices[border[j]];
-                math::Vec3f const & v1 = vertices[border[(j + 1) % border.size()]];
+                std::size_t vi0 = border[j];
+                std::size_t vi1 = border[(j + 1) % border.size()];
+                std::vector<VertexProjectionInfo> const & vpi0 = vertex_projection_infos->at(vi0);
+                std::vector<VertexProjectionInfo> const & vpi1 = vertex_projection_infos->at(vi0);
+                /* According to the previous checks (vertex class within the origial
+                 * mesh and boundary) there already has to be at least one projection
+                 * of each border vertex. */
+                assert(!vpi0.empty() && !vpi1.empty());
+                math::Vec2f vp0(0.0f), vp1(0.0f);
+                for (VertexProjectionInfo const & info0 : vpi0) {
+                    for (VertexProjectionInfo const & info1 : vpi1) {
+                        if (info0.texture_patch_id == info1.texture_patch_id) {
+                            vp0 = info0.projection;
+                            vp1 = info1.projection;
+                            break;
+                        }
+                    }
+                }
+                total_projection_length += (vp0 - vp1).norm();
+                math::Vec3f const & v0 = vertices[vi0];
+                math::Vec3f const & v1 = vertices[vi1];
                 total_length += (v0 - v1).norm();
             }
+            float radius = total_projection_length / (2.0f * MATH_PI);
+
             float length = 0.0f;
             std::vector<math::Vec2f> projections(num_vertices);
             for (std::size_t j = 0; j < border.size(); ++j) {
-                float angle = 2.0f * MATH_PI * length / total_length;
+                float angle = 2.0f * MATH_PI * (length / total_length);
                 projections[g2l[border[j]]] = math::Vec2f(std::cos(angle), std::sin(angle));
                 math::Vec3f const & v0 = vertices[border[j]];
                 math::Vec3f const & v1 = vertices[border[(j + 1) % border.size()]];
@@ -408,7 +431,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
                 xy = solver.solve(by);
             }
 
-            int image_size = 100; //TODO better estimate
+            int image_size = std::floor(radius * 1.1f) * 2 + 4;
             int scale = image_size / 2 - texture_patch_border;
             for (std::size_t j = 0, k = 0; j < num_vertices; ++j) {
                 if (!is_border[j]) {
@@ -420,6 +443,7 @@ generate_texture_patches(UniGraph const & graph, std::vector<TextureView> const 
             }
 
             mve::ByteImage::Ptr image = mve::ByteImage::create(image_size, image_size, 3);
+            //DEBUG image->fill_color(*math::Vec4uc(0, 255, 0, 255));
             std::vector<math::Vec2f> texcoords; texcoords.reserve(subgraph.size());
             for (std::size_t const face_id : subgraph) {
                 for (std::size_t j = 0; j < 3; ++j) {

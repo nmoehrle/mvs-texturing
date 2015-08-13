@@ -35,7 +35,7 @@ calculate_texture_size(std::list<TexturePatch> & texture_patches) {
 
     /* Heuristic to determine a proper texture size. */
     /* Approximate area which will be needed */
-    double approx_area = 1.4 * area;
+    double approx_area = 1.5 * area;
 
     /* Probably fits into a single texture atlas. */
     if (approx_area < MAX_TEXTURE_SIZE * MAX_TEXTURE_SIZE) {
@@ -71,8 +71,9 @@ void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
             if (sx < 0 || sx >= src->width() || sy < 0 || sy >= src->height())
                 continue;
 
-            for (int c = 0; c < src->channels(); ++c)
+            for (int c = 0; c < src->channels(); ++c) {
                 dest->at(x + i, y + j, c) = src->at(sx, sy, c);
+            }
         }
     }
 }
@@ -131,7 +132,7 @@ dilate_valid_pixel(mve::ByteImage::Ptr image, mve::ByteImage::Ptr validity_mask)
     mve::ByteImage::Ptr new_validity_mask = validity_mask->duplicate();
 
     /* Iteratively dilate border pixels until padding constants are reached. */
-    for (int n = 0; n < (size >> 7); ++n) {
+    for (int n = 0; n <= (size >> 7); ++n) {
         PixelVector new_valid_pixels;
 
         PixelSet::iterator it = invalid_border_pixels.begin();

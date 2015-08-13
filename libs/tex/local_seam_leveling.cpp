@@ -131,7 +131,6 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
         texture_patch->blend(orig_texture_patches[i].get_image());
         texture_patch->release_blending_mask();
-        texture_patch->erode_validity_mask();
         texture_patch_counter.inc();
     }
 }

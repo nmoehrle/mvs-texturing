@@ -57,10 +57,11 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                 bool inside = bcoords.minimum() >= 0.0f;
                 if (inside) {
                     assert(x != 0 && y != 0);
-                    for (int c = 0; c < 3; ++c)
+                    for (int c = 0; c < 3; ++c) {
                         iadjust_values->at(x, y, c) = math::interpolate(
                             adjust_values[i][c], adjust_values[i + 1][c], adjust_values[i + 2][c],
                             bcoords[0], bcoords[1], bcoords[2]);
+                    }
                     validity_mask->at(x, y, 0) = 255;
                     blending_mask->at(x, y, 0) = 255;
                 } else {
@@ -76,10 +77,11 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                     if (ha > sqrt_2 || hb > sqrt_2 || hc > sqrt_2)
                         continue;
 
-                    for (int c = 0; c < 3; ++c)
+                    for (int c = 0; c < 3; ++c) {
                         iadjust_values->at(x, y, c) = math::interpolate(
                             adjust_values[i][c], adjust_values[i + 1][c], adjust_values[i + 2][c],
                             bcoords[0], bcoords[1], bcoords[2]);
+                    }
                     validity_mask->at(x, y, 0) = 255;
                     blending_mask->at(x, y, 0) = 128;
                 }
@@ -89,12 +91,13 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
 
     for (int i = 0; i < image->get_pixel_amount(); ++i) {
         if (validity_mask->at(i, 0) != 0){
-            for (int c = 0; c < 3; ++c)
+            for (int c = 0; c < 3; ++c) {
                 image->at(i, c) += iadjust_values->at(i, c);
+            }
         } else {
-            image->at(i, 0) = 1.0f;
-            image->at(i, 1) = 0.0f;
-            image->at(i, 2) = 1.0f;
+            math::Vec3f color(0.0f, 0.0f, 0.0f);
+            //DEBUG math::Vec3f color(1.0f, 0.0f, 1.0f);
+            std::copy(color.begin(), color.end(), &image->at(i, 0));
         }
     }
 }
@@ -164,6 +167,15 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
 void
 TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     poisson_blend(orig, blending_mask, image, 1.0f);
+
+    /* Invalidate all pixels outside of the boundary. */
+    for (int y = 0; y < blending_mask->height(); ++y) {
+        for (int x = 0; x < blending_mask->width(); ++x) {
+            if (blending_mask->at(x, y, 0) == 128) {
+                validity_mask->at(x, y, 0) = 0;
+            }
+        }
+    }
 }
 
 void
@@ -250,38 +262,6 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
          int x = it->first;
          int y = it->second;
 
-         blending_mask->at(x, y, 0) = 128;
+         blending_mask->at(x, y, 0) = 126;
     }
-}
-
-void
-TexturePatch::erode_validity_mask(void) {
-
-    int const width = validity_mask->width();
-    int const height = validity_mask->height();
-
-    mve::ByteImage::Ptr eroded_validity_mask = validity_mask->duplicate();
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
-                eroded_validity_mask->at(x, y, 0) = 0;
-
-            bool invalid = validity_mask->at(x, y, 0) == 0;
-            for (int j = -1; j <= 1 && !invalid; ++j) {
-                for (int i = -1; i <= 1 && !invalid; ++i) {
-                    int nx = x + i;
-                    int ny = y + j;
-                    if (0 <= nx && nx < width &&
-                        0 <= ny && ny < height &&
-                        validity_mask->at(nx, ny, 0) == 0) {
-                        eroded_validity_mask->at(x, y, 0) = 0;
-                        invalid = true;
-                    }
-                }
-            }
-        }
-    }
-
-    validity_mask.swap(eroded_validity_mask);
 }
