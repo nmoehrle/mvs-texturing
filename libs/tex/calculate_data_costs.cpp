@@ -18,8 +18,8 @@ TEX_NAMESPACE_BEGIN
  * @param settings runtime configuration.
  */
 bool
-photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings const & settings) {
-    if (infos.size() == 0) return true;
+photometric_outlier_detection(std::vector<ProjectedFaceInfo> * infos, Settings const & settings) {
+    if (infos->size() == 0) return true;
 
     /* Configuration variables. */
 
@@ -42,10 +42,10 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
         break;
     }
 
-    Eigen::MatrixX3d inliers(infos.size(), 3);
-    std::vector<std::uint32_t> is_inlier(infos.size(), 1);
-    for (std::size_t row = 0; row < infos.size(); ++row) {
-        inliers.row(row) = mve_to_eigen(infos[row].mean_color).cast<double>();
+    Eigen::MatrixX3d inliers(infos->size(), 3);
+    std::vector<std::uint32_t> is_inlier(infos->size(), 1);
+    for (std::size_t row = 0; row < infos->size(); ++row) {
+        inliers.row(row) = mve_to_eigen(infos->at(row).mean_color).cast<double>();
     }
 
     Eigen::RowVector3d var_mean;
@@ -66,8 +66,8 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
         /* If all covariances are very small we stop outlier detection
          * and only keep the inliers (set quality of outliers to zero). */
         if (covariance.array().abs().maxCoeff() < minimal_covariance) {
-            for (std::size_t row = 0; row < infos.size(); ++row) {
-                if (!is_inlier[row]) infos[row].quality = 0.0f;
+            for (std::size_t row = 0; row < infos->size(); ++row) {
+                if (!is_inlier[row]) infos->at(row).quality = 0.0f;
             }
             return true;
         }
@@ -81,22 +81,22 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
         covariance_inv = lu.inverse();
 
         /* Compute new number of inliers (all views with a gauss value above a threshold). */
-        for (std::size_t row = 0; row < infos.size(); ++row) {
-            Eigen::RowVector3d color = mve_to_eigen(infos[row].mean_color).cast<double>();
+        for (std::size_t row = 0; row < infos->size(); ++row) {
+            Eigen::RowVector3d color = mve_to_eigen(infos->at(row).mean_color).cast<double>();
             double gauss_value = multi_gauss_unnormalized(color, var_mean, covariance_inv);
             is_inlier[row] = (gauss_value >= gauss_rejection_threshold ? 1 : 0);
         }
         /* Resize Eigen matrix accordingly and fill with new inliers. */
         inliers.resize(std::accumulate(is_inlier.begin(), is_inlier.end(), 0), Eigen::NoChange);
-        for (std::size_t row = 0, inlier_row = 0; row < infos.size(); ++row) {
+        for (std::size_t row = 0, inlier_row = 0; row < infos->size(); ++row) {
             if (is_inlier[row]) {
-                inliers.row(inlier_row++) = mve_to_eigen(infos[row].mean_color).cast<double>();
+                inliers.row(inlier_row++) = mve_to_eigen(infos->at(row).mean_color).cast<double>();
             }
         }
     }
 
     covariance_inv *= outlier_removal_factor;
-    for (ProjectedFaceInfo & info : infos) {
+    for (ProjectedFaceInfo & info : *infos) {
         Eigen::RowVector3d color = mve_to_eigen(info.mean_color).cast<double>();
         double gauss_value = multi_gauss_unnormalized(color, var_mean, covariance_inv);
         assert(0.0 <= gauss_value && gauss_value <= 1.0);
@@ -113,9 +113,9 @@ photometric_outlier_detection(std::vector<ProjectedFaceInfo> & infos, Settings c
     return true;
 }
 
-ST
+void
 calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
-    Settings const & settings) {
+    Settings const & settings, ST * data_costs) {
 
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
     mve::TriangleMesh::VertexList const & vertices = mesh->get_vertices();
@@ -232,23 +232,15 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
         //std::sort(projected_face_view_infos.begin(), projected_face_view_infos.end());
 
-        std::size_t num_threads = 1;
-        #ifdef _OPENMP
-        num_threads = omp_get_num_threads();
-        #endif
-        ProgressCounter thread_counter("\tMerging face infos", num_threads);
         #pragma omp critical
         {
-            thread_counter.progress<SIMPLE>();
             for (std::size_t i = projected_face_view_infos.size(); 0 < i; --i) {
                 std::size_t face_id = projected_face_view_infos[i - 1].first;
                 ProjectedFaceInfo const & info = projected_face_view_infos[i - 1].second;
                 projected_face_infos[face_id].push_back(info);
             }
             projected_face_view_infos.clear();
-            thread_counter.inc();
         }
-
     }
 
     delete model;
@@ -261,7 +253,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
         std::vector<ProjectedFaceInfo> & infos = projected_face_infos[i];
         if (settings.outlier_removal != NONE) {
-            photometric_outlier_detection(infos, settings);
+            photometric_outlier_detection(&infos, settings);
 
             infos.erase(std::remove_if(infos.begin(), infos.end(),
                 [](ProjectedFaceInfo const & info) -> bool {return info.quality == 0.0f;}),
@@ -289,7 +281,6 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     assert(num_faces < std::numeric_limits<std::uint32_t>::max());
     assert(num_views < std::numeric_limits<std::uint16_t>::max());
     assert(MRF_MAX_ENERGYTERM < std::numeric_limits<float>::max());
-    ST data_costs(num_faces, num_views);
     for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(projected_face_infos.size()); ++i) {
         for (std::size_t j = 0; j < projected_face_infos[i].size(); ++j) {
             ProjectedFaceInfo const & info = projected_face_infos[i][j];
@@ -297,7 +288,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
             /* Clamp to percentile and normalize. */
             float normalized_quality = std::min(1.0f, info.quality / percentile);
             float data_cost = (1.0f - normalized_quality) * MRF_MAX_ENERGYTERM;
-            data_costs.set_value(i, info.view_id, data_cost);
+            data_costs->set_value(i, info.view_id, data_cost);
         }
 
         /* Ensure that all memory is freeed. */
@@ -307,8 +298,6 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
     std::cout << "\tClamping qualities to " << percentile << " within normalization." << std::endl;
-
-    return data_costs;
 }
 
 TEX_NAMESPACE_END

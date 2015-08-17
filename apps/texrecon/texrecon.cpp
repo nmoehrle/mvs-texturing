@@ -64,9 +64,10 @@ int main(int argc, char **argv) {
     if (conf.labeling_file.empty()) {
         std::cout << "View selection:" << std::endl;
 
-        tex::DataCosts data_costs;
+        std::size_t const num_faces = mesh->get_faces().size() / 3;
+        tex::DataCosts data_costs(num_faces, texture_views.size());
         if (conf.data_cost_file.empty()) {
-            data_costs = tex::calculate_data_costs(mesh, &texture_views, conf.settings);
+            tex::calculate_data_costs(mesh, &texture_views, conf.settings, &data_costs);
 
             if (conf.write_intermediate_results) {
                 std::cout << "\tWriting data cost file... " << std::flush;
@@ -75,11 +76,11 @@ int main(int argc, char **argv) {
             }
         } else {
             std::cout << "\tLoading data cost file... " << std::flush;
-            data_costs = ST::load_from_file(conf.data_cost_file);
-            std::size_t const num_faces = mesh->get_faces().size() / 3;
-            if (data_costs.rows() != texture_views.size() || data_costs.cols() != num_faces) {
+            try {
+                ST::load_from_file(conf.data_cost_file, &data_costs);
+            } catch (util::FileException e) {
                 std::cout << "failed!" << std::endl;
-                std::cerr << "Wrong datacost file for this mesh/scene combination... aborting!" << std::endl;
+                std::cerr << e.what() << std::endl;
                 std::exit(EXIT_FAILURE);
             }
             std::cout << "done." << std::endl;
