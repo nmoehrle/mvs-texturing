@@ -93,61 +93,6 @@ isolate_unseen_faces(UniGraph * graph, ST const & data_costs) {
 }
 
 void
-optimize(mrf::Graph * mrf, std::size_t component, bool verbose = false) {
-    util::WallTimer timer;
-
-    std::vector<mrf::ENERGY_TYPE> energies;
-
-    mrf::ENERGY_TYPE const zero = mrf::ENERGY_TYPE(0);
-    mrf::ENERGY_TYPE last_energy = zero;
-    mrf::ENERGY_TYPE energy = mrf->compute_energy();
-    mrf::ENERGY_TYPE diff = last_energy - energy;
-    unsigned int i = 0;
-
-    #ifdef RESEARCH
-    #ifdef _OPENMP
-    if (component == 0) {
-        std::cout << "\t" << "Parallel optimization with " <<
-            omp_get_num_threads() << " threads" << std::endl;
-        std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
-    }
-    #else
-    if (verbose) std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
-    #endif
-    #else
-    if (verbose) std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
-    #endif
-    while (diff != zero) {
-        #pragma omp critical
-        if (verbose) {
-            std::cout << "\t" << component << "\t" << i << "\t" << energy
-                << "\t" << timer.get_elapsed_sec() << std::endl;
-        }
-        energies.push_back(energy);
-        last_energy = energy;
-        i++;
-        energy = mrf->optimize(1);
-        diff = last_energy - energy;
-        if (diff <= 0) break;
-    }
-
-    #pragma omp critical
-    if (verbose) {
-        std::cout << "\t" << component << "\t" << i << "\t" << energy << std::endl;
-        if (diff == zero) {
-            std::cout << "\t" << component << "\t" << "Converged" << std::endl;
-        }
-        if (diff < zero) {
-            std::cout << "\t" << component << "\t"
-                << "Increase of energy detected! Aborting..." << std::endl;
-        }
-    }
-    //if (conf.write_mrf_energies)
-    //    write_vector_to_csv(conf.out_prefix + "_mrf_energies.csv", energies, "Energy");
-
-}
-
-void
 view_selection(ST const & data_costs, UniGraph * graph, Settings const & settings) {
     UniGraph mgraph(*graph);
     isolate_unseen_faces(&mgraph, data_costs);
@@ -179,6 +124,21 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
 
     set_data_costs(face_infos, data_costs, mrfs);
 
+    bool multiple_components_simultaneously = false;
+    #ifdef RESEARCH
+    multiple_components_simultaneously = true;
+    #endif
+    #ifndef _OPENMP
+    multiple_components_simultaneously = false;
+    #endif
+
+    if (multiple_components_simultaneously) {
+        if (components.size() > 0) {
+            std::cout << "\tOptimizing " << components.size()
+                << " components simultaneously." << std::endl;
+        }
+        std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
+    }
     #ifdef RESEARCH
     #pragma omp parallel for schedule(dynamic)
     #endif
@@ -189,7 +149,45 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
             break;
         }
 
-        optimize(mrfs[i].get(), i, mrfs[i]->num_sites() > 10000);
+        bool verbose = mrfs[i]->num_sites() > 10000;
+
+        util::WallTimer timer;
+
+        mrf::ENERGY_TYPE const zero = mrf::ENERGY_TYPE(0);
+        mrf::ENERGY_TYPE last_energy = zero;
+        mrf::ENERGY_TYPE energy = mrfs[i]->compute_energy();
+        mrf::ENERGY_TYPE diff = last_energy - energy;
+        unsigned int iter = 0;
+
+        std::string const comp = util::string::get_filled(i, 4);
+
+        if (verbose && !multiple_components_simultaneously) {
+            std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;
+        }
+        while (diff != zero) {
+            #pragma omp critical
+            if (verbose) {
+                std::cout << "\t" << comp << "\t" << iter << "\t" << energy
+                    << "\t" << timer.get_elapsed_sec() << std::endl;
+            }
+            last_energy = energy;
+            ++iter;
+            energy = mrfs[i]->optimize(1);
+            diff = last_energy - energy;
+            if (diff <= zero) break;
+        }
+
+        #pragma omp critical
+        if (verbose) {
+            std::cout << "\t" << comp << "\t" << iter << "\t" << energy << std::endl;
+            if (diff == zero) {
+                std::cout << "\t" << comp << "\t" << "Converged" << std::endl;
+            }
+            if (diff < zero) {
+                std::cout << "\t" << comp << "\t"
+                    << "Increase of energy - stopping optimization" << std::endl;
+            }
+        }
 
         /* Extract resulting labeling from MRF. */
         for (std::size_t j = 0; j < components[i].size(); ++j) {
