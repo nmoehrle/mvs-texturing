@@ -70,9 +70,9 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::VertexInfoList::Con
  * Calculates the data costs for each face and texture view combination,
  * if the face is visible within the texture view.
  */
-ST
+void
 calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
-    Settings const & settings);
+    Settings const & settings, ST * data_costs);
 
 /**
  * Runs the view selection procedure and saves the labeling in the graph
