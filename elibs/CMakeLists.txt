@@ -1,7 +1,7 @@
 if(RESEARCH)
     externalproject_add(ext_gco
         PREFIX          gco
-        URL             https://vision.csd.uwo.ca/code/gco-v3.0.zip
+        URL             http://vision.csd.uwo.ca/code/gco-v3.0.zip
         URL_MD5         10e071892c38f076d30a91ca5351a847
         UPDATE_COMMAND  ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/elibs/CMakeLists/gco.txt CMakeLists.txt
         SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/gco
