@@ -1,5 +1,7 @@
 #include "texturing.h"
 
+#include "ProgressCounter.h"
+
 TEX_NAMESPACE_BEGIN
 
 void

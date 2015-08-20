@@ -2,13 +2,6 @@
 
 #include <vector>
 #include <string>
-#include <fstream>
-#include <cstring>
-#include <cerrno>
-#include <math.h>
-
-#include "util/exception.h"
-#include "util/file_system.h"
 
 /**
   * Class representing a histogram with a fixed number of bins

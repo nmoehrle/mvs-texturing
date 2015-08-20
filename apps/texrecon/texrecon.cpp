@@ -2,12 +2,17 @@
 #include <fstream>
 #include <vector>
 
-#include "util/timer.h"
-#include "util/file_system.h"
+#include <util/timer.h>
+#include <util/file_system.h>
+#include <mve/mesh_io_ply.h>
+
+#include "tex/util.h"
+#include "tex/Timer.h"
+#include "tex/debug.h"
+#include "tex/texturing.h"
+#include "tex/ProgressCounter.h"
 
 #include "Arguments.h"
-#include "tex/texturing.h"
-#include "tex/debug.h"
 
 int main(int argc, char **argv) {
 

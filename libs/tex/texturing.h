@@ -1,37 +1,18 @@
 #pragma once
 
-#include <map>
-#include <list>
 #include <vector>
-#include <iostream>
-#include <sstream>
 
-#include "mve/image.h"
-#include "mve/scene.h"
 #include "mve/mesh.h"
 #include "mve/mesh_info.h"
-#include "mve/image_io.h"
-#include "mve/image_drawing.h"
-
-#include "util/timer.h"
-#include "math/accum.h"
 
 #include "mrf/Graph.h"
 
-#include "coldet.h"
-
-#include "util.h"
-
 #include "defines.h"
 #include "Settings.h"
-#include "RectangularBin.h"
 #include "ObjModel.h"
 #include "TextureView.h"
 #include "UniGraph.h"
 #include "TexturePatch.h"
-#include "Tri.h"
-#include "Timer.h"
-#include "ProgressCounter.h"
 #include "SparseTable.h"
 
 #include "seam_leveling.h"

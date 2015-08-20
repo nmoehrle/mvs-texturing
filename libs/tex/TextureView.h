@@ -2,17 +2,11 @@
 
 #include <string>
 #include <vector>
-#include <list>
 
-#include "math/vector.h"
-#include "math/matrix.h"
-
-#include "mve/camera.h"
-#include "mve/image_tools.h"
-#include "mve/image_io.h"
+#include <math/vector.h>
+#include <mve/camera.h>
 
 #include "Tri.h"
-
 #include "Settings.h"
 
 /** Struct containing the quality and mean color of a face within a view. */
@@ -135,12 +129,6 @@ TextureView::get_width(void) const {
 inline int
 TextureView::get_height(void) const {
     return height;
-}
-
-inline void
-TextureView::load_image(void) {
-    if(image != NULL) return;
-    image = mve::image::load_file(image_file);
 }
 
 inline mve::ByteImage::Ptr

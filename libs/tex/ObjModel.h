@@ -1,13 +1,5 @@
 #pragma once
 
-#include <fstream>
-#include <cstring>
-#include <cerrno>
-
-#include "mve/mesh.h"
-#include "util/file_system.h"
-#include "util/exception.h"
-
 #include "MaterialLib.h"
 
 /**
