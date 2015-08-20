@@ -139,6 +139,7 @@ TextureView::get_height(void) const {
 
 inline void
 TextureView::load_image(void) {
+    if(image != NULL) return;
     image = mve::image::load_file(image_file);
 }
 
