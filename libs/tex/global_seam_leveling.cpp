@@ -1,9 +1,14 @@
-#include "texturing.h"
-#include "seam_leveling.h"
-#include <Eigen/Sparse>
 #include <map>
 #include <set>
-#include "util/timer.h"
+
+#include <util/timer.h>
+#include <math/accum.h>
+#include <Eigen/SparseCore>
+#include <Eigen/IterativeLinearSolvers>
+
+#include "texturing.h"
+#include "seam_leveling.h"
+#include "ProgressCounter.h"
 
 TEX_NAMESPACE_BEGIN
 

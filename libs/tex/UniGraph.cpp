@@ -1,5 +1,7 @@
-#include "UniGraph.h"
 #include <limits>
+#include <list>
+
+#include "UniGraph.h"
 
 UniGraph::UniGraph(std::size_t nodes) {
     adj_lists.resize(nodes);

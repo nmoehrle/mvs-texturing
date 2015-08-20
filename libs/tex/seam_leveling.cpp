@@ -1,3 +1,5 @@
+#include <set>
+
 #include "seam_leveling.h"
 
 TEX_NAMESPACE_BEGIN

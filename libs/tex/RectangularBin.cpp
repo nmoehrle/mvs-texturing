@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "RectangularBin.h"
 
 RectangularBin::RectangularBin(int width, int height)

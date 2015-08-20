@@ -1,9 +1,13 @@
+#include <numeric>
+
+#include <mve/image_color.h>
+#include <coldet.h>
 #include <Eigen/Core>
 #include <Eigen/LU>
 
-#include <numeric>
-
+#include "util.h"
 #include "texturing.h"
+#include "ProgressCounter.h"
 #include "SparseTable.h"
 #include "Histogram.h"
 

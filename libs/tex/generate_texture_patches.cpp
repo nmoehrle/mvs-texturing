@@ -1,5 +1,13 @@
+#include <set>
+#include <list>
+
+#include <util/timer.h>
+#include <mve/image_tools.h>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+
+
 #include "texturing.h"
-#include <Eigen/Sparse>
 
 TEX_NAMESPACE_BEGIN
 

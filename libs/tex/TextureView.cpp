@@ -1,3 +1,9 @@
+#include <list>
+
+#include <math/matrix.h>
+#include <mve/image_io.h>
+#include <mve/image_tools.h>
+
 #include "TextureView.h"
 
 TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
@@ -74,6 +80,12 @@ TextureView::generate_validity_mask(void) {
             }
         }
     }
+}
+
+void
+TextureView::load_image(void) {
+    if(image != NULL) return;
+    image = mve::image::load_file(image_file);
 }
 
 void

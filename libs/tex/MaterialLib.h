@@ -1,14 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <fstream>
-#include <cstring>
-#include <cerrno>
 
-#include "util/exception.h"
-#include "util/file_system.h"
-#include "mve/image.h"
-#include "mve/image_io.h"
 #include "Material.h"
 
 /**

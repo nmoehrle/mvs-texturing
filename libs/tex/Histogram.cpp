@@ -1,6 +1,13 @@
-#include "Histogram.h"
 #include <algorithm>
 #include <cassert>
+#include <fstream>
+#include <cstring>
+#include <cerrno>
+
+#include <util/file_system.h>
+#include <util/exception.h>
+
+#include "Histogram.h"
 
 Histogram::Histogram(float _min, float _max, std::size_t num_bins)
     :min(_min), max(_max), num_values(0) {

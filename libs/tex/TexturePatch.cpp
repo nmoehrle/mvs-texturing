@@ -1,3 +1,10 @@
+#include <set>
+
+#include <math/functions.h>
+#include <mve/image_color.h>
+#include <mve/image_tools.h>
+#include <mve/mesh_io_ply.h>
+
 #include "TexturePatch.h"
 
 TexturePatch::TexturePatch(int _label, std::vector<std::size_t> const & _faces,
@@ -177,6 +184,9 @@ TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
         }
     }
 }
+
+typedef std::vector<std::pair<int, int> > PixelVector;
+typedef std::set<std::pair<int, int> > PixelSet;
 
 void
 TexturePatch::prepare_blending_mask(std::size_t strip_width){

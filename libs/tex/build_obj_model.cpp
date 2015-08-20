@@ -1,8 +1,11 @@
 #include <set>
 
-#include "texturing.h"
+#include <util/timer.h>
+#include <mve/image_tools.h>
 
+#include "texturing.h"
 #include "Histogram.h"
+#include "RectangularBin.h"
 
 #define MAX_TEXTURE_SIZE (8*1024)
 
@@ -77,6 +80,9 @@ void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
         }
     }
 }
+
+typedef std::vector<std::pair<int, int> > PixelVector;
+typedef std::set<std::pair<int, int> > PixelSet;
 
 /**
   * Iteratively dilates all valid pixels using a 3x3 gaussian kernel,

@@ -1,8 +1,12 @@
-#include "texturing.h"
+#include <util/timer.h>
 #include <util/tokenizer.h>
 #include <mve/image_io.h>
 #include <mve/image_tools.h>
 #include <mve/bundle_io.h>
+#include <mve/scene.h>
+
+#include "ProgressCounter.h"
+#include "texturing.h"
 
 TEX_NAMESPACE_BEGIN
 
