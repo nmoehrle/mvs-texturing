@@ -33,6 +33,7 @@ externalproject_add(ext_mve
     PREFIX          mve
     UPDATE_COMMAND  ""
     GIT_REPOSITORY  https://github.com/simonfuhrmann/mve.git
+    GIT_TAG         fa918609cb38c20d13d389610fca63b660e1f61b
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/mve
     CONFIGURE_COMMAND ""
     BUILD_COMMAND   make -C libs/mve && make -C libs/util #not platform independent
