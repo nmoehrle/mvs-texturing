@@ -1,8 +1,12 @@
-#include "texturing.h"
+#include <util/timer.h>
 #include <util/tokenizer.h>
 #include <mve/image_io.h>
 #include <mve/image_tools.h>
 #include <mve/bundle_io.h>
+#include <mve/scene.h>
+
+#include "ProgressCounter.h"
+#include "texturing.h"
 
 TEX_NAMESPACE_BEGIN
 
@@ -30,27 +34,23 @@ from_mve_scene(std::string const & scene_dir, std::string const & image_name,
             continue;
         }
 
-        if (!view->has_image(image_name)) {
-            std::cout << "Warning: View " << view->get_name() << " has no image "
+        if (!view->has_image(image_name, mve::IMAGE_TYPE_UINT8)) {
+            std::cout << "Warning: View " << view->get_name() << " has no byte image "
                 << image_name << std::endl;
             continue;
         }
 
-        mve::ByteImage::Ptr image = view->get_byte_image(image_name);
+        mve::View::ImageProxy const * image_proxy = view->get_image_proxy(image_name);
 
-        if (image == NULL) {
-            std::cerr << "Image " << image_name << " of view " <<
-                view->get_name() << " is not a byte embedding!" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
-        if (image->channels() < 3) {
+        if (image_proxy->channels < 3) {
             std::cerr << "Image " << image_name << " of view " <<
                 view->get_name() << " is not a color image!" << std::endl;
             exit(EXIT_FAILURE);
         }
 
-        texture_views->push_back(TextureView(view->get_id(), view->get_camera(), image));
+        texture_views->push_back(
+            TextureView(view->get_id(), view->get_camera(), util::fs::abspath(
+            util::fs::join_path(view->get_directory(), image_proxy->filename))));
         view_counter.inc();
     }
 }
@@ -104,8 +104,6 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
         std::string cam_file = files[i];
         std::string img_file = files[i + 1];
 
-        mve::ByteImage::Ptr image = mve::image::load_file(img_file);
-
         /* Read CAM file. */
         std::ifstream infile(cam_file.c_str(), std::ios::binary);
         if (!infile.good())
@@ -140,23 +138,22 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
         if (ss.peek() && !ss.eof())
             ss >> cam_info.ppoint[1];
 
-        mve::ByteImage::Ptr undist;
+        std::string image_file = util::fs::abspath(util::fs::join_path(path, img_file));
         if (cam_info.dist[0] != 0.0f) {
+            mve::ByteImage::Ptr image = mve::image::load_file(img_file);
             if (cam_info.dist[1] != 0.0f) {
-                undist = mve::image::image_undistort_bundler<uint8_t>(image,
+                image = mve::image::image_undistort_bundler<uint8_t>(image,
                     cam_info.flen, cam_info.dist[0], cam_info.dist[1]);
             } else {
-                undist = mve::image::image_undistort_vsfm<uint8_t>(image,
+                image = mve::image::image_undistort_vsfm<uint8_t>(image,
                     cam_info.flen, cam_info.dist[0]);
             }
-        } else {
-            undist = image;
+
+            image_file = std::string("/tmp/") + util::fs::basename(img_file);
+            mve::image::save_png_file(image, image_file);
         }
-
-        mve::image::save_png_file(undist, std::string("/tmp/") + util::fs::basename(img_file));
-
         #pragma omp critical
-        texture_views->push_back(TextureView(i / 2, cam_info, undist));
+        texture_views->push_back(TextureView(i / 2, cam_info, image_file));
         view_counter.inc();
     }
 }
@@ -182,7 +179,10 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
         image = mve::image::image_undistort_vsfm<uint8_t>
             (image, mve_cam.flen, nvm_cam.radial_distortion);
 
-        texture_views->push_back(TextureView(i, mve_cam, image));
+        std::string image_file = std::string("/tmp/") + util::fs::basename(nvm_cam.filename);
+        mve::image::save_png_file(image, image_file);
+
+        texture_views->push_back(TextureView(i, mve_cam, image_file));
         view_counter.inc();
     }
 }

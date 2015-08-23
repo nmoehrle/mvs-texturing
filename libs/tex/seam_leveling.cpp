@@ -1,3 +1,5 @@
+#include <set>
+
 #include "seam_leveling.h"
 
 TEX_NAMESPACE_BEGIN
@@ -20,7 +22,6 @@ find_seam_edges(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
             int label1 = graph.get_label(node);
             int label2 = graph.get_label(adj_node);
             /* Add only seam edges. */
-            //if (label1 == 0 || label2 == 0 || label1 == label2) continue;
             if (label1 == label2) continue;
 
             /* Find shared edge of the faces. */

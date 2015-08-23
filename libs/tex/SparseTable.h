@@ -52,7 +52,7 @@ class SparseTable {
           * Loads a SparseTable from the file given by filename.
           * @throws util::FileException if the file does not exist or if the header does not matches.
           */
-        static SparseTable load_from_file(std::string const & filename);
+        static void load_from_file(std::string const & filename, SparseTable * sparse_table);
 };
 
 template <typename C, typename R, typename T> std::size_t
@@ -125,8 +125,8 @@ SparseTable<C, R, T>::save_to_file(SparseTable const & sparse_table, const std::
     out.close();
 }
 
-template <typename C, typename R, typename T> SparseTable<C, R, T>
-SparseTable<C, R, T>::load_from_file(const std::string & filename) {
+template <typename C, typename R, typename T> void
+SparseTable<C, R, T>::load_from_file(const std::string & filename, SparseTable<C, R, T> * sparse_table) {
     std::ifstream in(filename.c_str());
     if (!in.good())
         throw util::FileException(filename, std::strerror(errno));
@@ -153,12 +153,16 @@ SparseTable<C, R, T>::load_from_file(const std::string & filename) {
     std::size_t nnz;
     in >> cols >> rows >> nnz;
 
+    if (cols != sparse_table->cols() || rows != sparse_table->rows()) {
+        in.close();
+        throw util::FileException(filename, "SparseTable has different dimension!");
+    }
+
     std::string buffer;
 
     /* Discard the rest of the line. */
     std::getline(in, buffer);
 
-    SparseTable sparse_table(cols, rows);
     C col;
     R row;
     T value;
@@ -166,9 +170,8 @@ SparseTable<C, R, T>::load_from_file(const std::string & filename) {
         in.read((char*)&col, sizeof(C));
         in.read((char*)&row, sizeof(R));
         in.read((char*)&value, sizeof(T));
-        sparse_table.set_value(col, row, value);
+        sparse_table->set_value(col, row, value);
     }
 
     in.close();
-    return sparse_table;
 }

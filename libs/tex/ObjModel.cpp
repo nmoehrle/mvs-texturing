@@ -1,3 +1,11 @@
+#include <fstream>
+#include <cstring>
+#include <cerrno>
+
+#include <mve/mesh.h>
+#include <util/exception.h>
+#include <util/file_system.h>
+
 #include "ObjModel.h"
 
 #define OBJ_INDEX_OFFSET 1

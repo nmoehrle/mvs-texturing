@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mve/image.h"
+#include <mve/image.h>
 
 /**
   * Class representing a lambertian material.

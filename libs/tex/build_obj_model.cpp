@@ -1,10 +1,15 @@
 #include <set>
 
+#include <util/timer.h>
+#include <mve/image_tools.h>
+
 #include "texturing.h"
-
 #include "Histogram.h"
+#include "RectangularBin.h"
 
-#define MAX_TEXTURE_SIZE (8*1024)
+#define MAX_TEXTURE_SIZE (8 * 1024)
+#define PREF_TEXTURE_SIZE (4 * 1024)
+#define MIN_TEXTURE_SIZE (256)
 
 TEX_NAMESPACE_BEGIN
 
@@ -13,42 +18,53 @@ TEX_NAMESPACE_BEGIN
   * @warning asserts that no texture patch exceeds the dimensions
   * of the maximal possible texture atlas size.
   */
-int
+std::size_t
 calculate_texture_size(std::list<TexturePatch> & texture_patches) {
-    double area = 0;
-    int max_width = 0;
-    int max_height = 0;
-    std::list<TexturePatch>::iterator it = texture_patches.begin();
-    for (; it != texture_patches.end(); it++) {
-        int const width = it->get_width();
-        int const height = it->get_height();
-        area += width * height;
-        max_width = std::max(max_width, width);
-        max_height = std::max(max_height, height);
-    }
+    std::size_t size = MAX_TEXTURE_SIZE;
 
-    /* A TexturePatch must fit into the largest possible texture. */
-    int const max_padding = MAX_TEXTURE_SIZE >> 7;
-    int const max_patch_size = MAX_TEXTURE_SIZE - 2 * max_padding;
-    (void) max_patch_size; //Suppress unused variable if -DNDEBUG
-    assert(max_patch_size >= max_width && max_patch_size >= max_height);
+    while (true) {
+        std::size_t total_area = 0;
+        std::size_t max_width = 0;
+        std::size_t max_height = 0;
+        std::size_t padding = size >> 7;
 
-    /* Heuristic to determine a proper texture size. */
-    /* Approximate area which will be needed */
-    double approx_area = 1.5 * area;
+        std::list<TexturePatch>::iterator it = texture_patches.begin();
+        for (; it != texture_patches.end(); it++) {
+            std::size_t width = it->get_width() + 2 * padding;
+            std::size_t height = it->get_height() + 2 * padding;
 
-    /* Probably fits into a single texture atlas. */
-    if (approx_area < MAX_TEXTURE_SIZE * MAX_TEXTURE_SIZE) {
-        /* Next larger power of two. */
-        int size = pow(2, ceil(log(sqrt(approx_area)) / log(2.0)));
+            max_width = std::max(max_width, width);
+            max_height = std::max(max_height, height);
 
-        while (size < max_width || size < max_height) {
-            size *= 2;
+            std::size_t area = width * height;
+            std::size_t waste = it->get_size() - area;
+
+            if (static_cast<double>(waste) / it->get_size() > 1.0) break;
+
+            total_area += area;
+        }
+
+        assert(max_width < MAX_TEXTURE_SIZE);
+        assert(max_height < MAX_TEXTURE_SIZE);
+        if (size > PREF_TEXTURE_SIZE &&
+            max_width < PREF_TEXTURE_SIZE &&
+            max_height < PREF_TEXTURE_SIZE &&
+            total_area / (PREF_TEXTURE_SIZE * PREF_TEXTURE_SIZE) < 8) {
+            size = PREF_TEXTURE_SIZE;
+            continue;
+        }
+
+        if (size <= MIN_TEXTURE_SIZE) {
+            return MIN_TEXTURE_SIZE;
+        }
+
+        if (max_height < size / 2 && max_width < size / 2 &&
+            static_cast<double>(total_area) / (size * size) < 0.2) {
+            size = size / 2;
+            continue;
         }
 
         return size;
-    } else {
-        return MAX_TEXTURE_SIZE;
     }
 }
 
@@ -77,6 +93,9 @@ void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
         }
     }
 }
+
+typedef std::vector<std::pair<int, int> > PixelVector;
+typedef std::set<std::pair<int, int> > PixelSet;
 
 /**
   * Iteratively dilates all valid pixels using a 3x3 gaussian kernel,

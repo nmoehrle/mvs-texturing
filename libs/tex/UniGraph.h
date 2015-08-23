@@ -1,10 +1,8 @@
 #pragma once
 
-#include <set>
 #include <vector>
-#include <list>
-#include <algorithm>
 #include <cassert>
+#include <algorithm>
 
 /**
   * Implementation of a unidirectional graph with fixed amount of nodes using adjacency lists.
