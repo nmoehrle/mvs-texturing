@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -7,12 +16,12 @@
 #include <mve/mesh_io_ply.h>
 
 #include "tex/util.h"
-#include "tex/Timer.h"
+#include "tex/timer.h"
 #include "tex/debug.h"
 #include "tex/texturing.h"
-#include "tex/ProgressCounter.h"
+#include "tex/progress_counter.h"
 
-#include "Arguments.h"
+#include "arguments.h"
 
 int main(int argc, char **argv) {
 

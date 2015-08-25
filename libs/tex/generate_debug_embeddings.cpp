@@ -1,5 +1,15 @@
-#include "debug.h"
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
 #include <math/vector.h>
+
+#include "debug.h"
 
 const bool font[] = {
     0,1,0, 0,1,0, 1,1,0, 1,1,0, 1,0,0, 1,1,1, 0,1,0, 1,1,1, 0,1,0 ,0,1,0,
