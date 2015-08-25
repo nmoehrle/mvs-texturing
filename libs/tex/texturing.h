@@ -1,38 +1,29 @@
-#pragma once
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
 
-#include <map>
-#include <list>
+#ifndef TEX_TEXTURING_HEADER
+#define TEX_TEXTURING_HEADER
+
 #include <vector>
-#include <iostream>
-#include <sstream>
 
-#include "mve/image.h"
-#include "mve/scene.h"
 #include "mve/mesh.h"
 #include "mve/mesh_info.h"
-#include "mve/image_io.h"
-#include "mve/image_drawing.h"
 
-#include "util/timer.h"
-#include "math/accum.h"
-
-#include "mrf/Graph.h"
-
-#include "coldet.h"
-
-#include "util.h"
+#include "mrf/graph.h"
 
 #include "defines.h"
-#include "Settings.h"
-#include "RectangularBin.h"
-#include "ObjModel.h"
-#include "TextureView.h"
-#include "UniGraph.h"
-#include "TexturePatch.h"
-#include "Tri.h"
-#include "Timer.h"
-#include "ProgressCounter.h"
-#include "SparseTable.h"
+#include "settings.h"
+#include "obj_model.h"
+#include "uni_graph.h"
+#include "texture_view.h"
+#include "texture_patch.h"
+#include "sparse_table.h"
 
 #include "seam_leveling.h"
 
@@ -70,9 +61,9 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::VertexInfoList::Con
  * Calculates the data costs for each face and texture view combination,
  * if the face is visible within the texture view.
  */
-ST
-calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> & texture_views,
-    Settings const & settings);
+void
+calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
+    Settings const & settings, ST * data_costs);
 
 /**
  * Runs the view selection procedure and saves the labeling in the graph
@@ -84,9 +75,9 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
   * Generates texture patches using the graph to determine adjacent faces with the same label.
   */
 void generate_texture_patches(UniGraph const & graph,
-    std::vector<TextureView> const & texture_views,
     mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
+    std::vector<TextureView> * texture_views,
     VertexProjectionInfos * vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 
@@ -114,3 +105,5 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
     std::vector<TexturePatch> const & texture_patches, Model * model);
 
 TEX_NAMESPACE_END
+
+#endif /* TEX_TEXTURING_HEADER */

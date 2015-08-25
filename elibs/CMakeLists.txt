@@ -11,7 +11,7 @@ endif()
 
 externalproject_add(ext_coldet
     PREFIX          coldet
-    URL             http://downloads.sourceforge.net/project/coldet/coldet/2.0/coldet20.zip
+    URL             https://downloads.sourceforge.net/project/coldet/coldet/2.0/coldet20.zip
     URL_MD5         37646a7dd046d9c81fca9d55346a108a
     UPDATE_COMMAND  ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/elibs/CMakeLists/coldet.txt CMakeLists.txt
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/coldet
@@ -21,8 +21,8 @@ externalproject_add(ext_coldet
 #find_package eigen
 externalproject_add(ext_eigen
     PREFIX          eigen
-    URL             http://bitbucket.org/eigen/eigen/get/3.2.1.tar.bz2
-    URL_MD5         ece1dbf64a49753218ce951624f4c487
+    URL             https://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2
+    URL_MD5         21a928f6e0f1c7f24b6f63ff823593f5
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/eigen
     CONFIGURE_COMMAND ""
     BUILD_COMMAND   ""
@@ -31,9 +31,8 @@ externalproject_add(ext_eigen
 
 externalproject_add(ext_mve
     PREFIX          mve
-    UPDATE_COMMAND  ""
     GIT_REPOSITORY  https://github.com/simonfuhrmann/mve.git
-    GIT_TAG         fa918609cb38c20d13d389610fca63b660e1f61b
+    UPDATE_COMMAND  ""
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/mve
     CONFIGURE_COMMAND ""
     BUILD_COMMAND   make -C libs/mve && make -C libs/util #not platform independent

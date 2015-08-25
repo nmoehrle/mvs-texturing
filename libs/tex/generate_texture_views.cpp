@@ -1,13 +1,26 @@
-#include "texturing.h"
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
+#include <util/timer.h>
 #include <util/tokenizer.h>
 #include <mve/image_io.h>
 #include <mve/image_tools.h>
 #include <mve/bundle_io.h>
+#include <mve/scene.h>
+
+#include "progress_counter.h"
+#include "texturing.h"
 
 TEX_NAMESPACE_BEGIN
 
 void
-from_mve_scene(std::string const & scene_dir, std::string const & embedding_name,
+from_mve_scene(std::string const & scene_dir, std::string const & image_name,
     std::vector<TextureView> * texture_views) {
 
     mve::Scene::Ptr scene;
@@ -30,27 +43,23 @@ from_mve_scene(std::string const & scene_dir, std::string const & embedding_name
             continue;
         }
 
-        if (!view->has_embedding(embedding_name)) {
-            std::cout << "Warning: View " << view->get_name() << " has no embedding "
-                << embedding_name << std::endl;
+        if (!view->has_image(image_name, mve::IMAGE_TYPE_UINT8)) {
+            std::cout << "Warning: View " << view->get_name() << " has no byte image "
+                << image_name << std::endl;
             continue;
         }
 
-        mve::ByteImage::Ptr image = view->get_byte_image(embedding_name);
+        mve::View::ImageProxy const * image_proxy = view->get_image_proxy(image_name);
 
-        if (image == NULL) {
-            std::cerr << "Embedding " << embedding_name << " of view " <<
-                view->get_name() << " is not a byte embedding!" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
-        if (image->channels() < 3) {
-            std::cerr << "Embedding " << embedding_name << " of view " <<
+        if (image_proxy->channels < 3) {
+            std::cerr << "Image " << image_name << " of view " <<
                 view->get_name() << " is not a color image!" << std::endl;
             exit(EXIT_FAILURE);
         }
 
-        texture_views->push_back(TextureView(view->get_id(), view->get_camera(), image));
+        texture_views->push_back(
+            TextureView(view->get_id(), view->get_camera(), util::fs::abspath(
+            util::fs::join_path(view->get_directory(), image_proxy->filename))));
         view_counter.inc();
     }
 }
@@ -104,8 +113,6 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
         std::string cam_file = files[i];
         std::string img_file = files[i + 1];
 
-        mve::ByteImage::Ptr image = mve::image::load_file(img_file);
-
         /* Read CAM file. */
         std::ifstream infile(cam_file.c_str(), std::ios::binary);
         if (!infile.good())
@@ -124,26 +131,38 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
 
         /* Create cam_info and eventually undistort image. */
         mve::CameraInfo cam_info;
-        cam_info.from_ext_string(cam_ext_str);
-        cam_info.from_int_string(cam_int_str);
+        cam_info.set_translation_from_string(tok_ext.concat(0, 3));
+        cam_info.set_rotation_from_string(tok_ext.concat(3, 0));
 
-        mve::ByteImage::Ptr undist;
+        std::stringstream ss(cam_int_str);
+        ss >> cam_info.flen;
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.dist[0];
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.dist[1];
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.paspect;
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.ppoint[0];
+        if (ss.peek() && !ss.eof())
+            ss >> cam_info.ppoint[1];
+
+        std::string image_file = util::fs::abspath(util::fs::join_path(path, img_file));
         if (cam_info.dist[0] != 0.0f) {
+            mve::ByteImage::Ptr image = mve::image::load_file(img_file);
             if (cam_info.dist[1] != 0.0f) {
-                undist = mve::image::image_undistort_bundler<uint8_t>(image,
+                image = mve::image::image_undistort_bundler<uint8_t>(image,
                     cam_info.flen, cam_info.dist[0], cam_info.dist[1]);
             } else {
-                undist = mve::image::image_undistort_vsfm<uint8_t>(image,
+                image = mve::image::image_undistort_vsfm<uint8_t>(image,
                     cam_info.flen, cam_info.dist[0]);
             }
-        } else {
-            undist = image;
+
+            image_file = std::string("/tmp/") + util::fs::basename(img_file);
+            mve::image::save_png_file(image, image_file);
         }
-
-        mve::image::save_png_file(undist, std::string("/tmp/") + util::fs::basename(img_file));
-
         #pragma omp critical
-        texture_views->push_back(TextureView(i / 2, cam_info, undist));
+        texture_views->push_back(TextureView(i / 2, cam_info, image_file));
         view_counter.inc();
     }
 }
@@ -169,7 +188,10 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
         image = mve::image::image_undistort_vsfm<uint8_t>
             (image, mve_cam.flen, nvm_cam.radial_distortion);
 
-        texture_views->push_back(TextureView(i, mve_cam, image));
+        std::string image_file = std::string("/tmp/") + util::fs::basename(nvm_cam.filename);
+        mve::image::save_png_file(image, image_file);
+
+        texture_views->push_back(TextureView(i, mve_cam, image_file));
         view_counter.inc();
     }
 }

@@ -1,4 +1,11 @@
-#include "UniGraph.h"
+/*
+ * Copyright (C) 2015, Michael Waechter
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
 
 #include <vector>
 #include <map>
@@ -7,6 +14,8 @@
 #include <cmath>
 #include <random>
 #include <iterator>
+
+#include "uni_graph.h"
 
 /**
  * Finds connected sets of vertices within the given graph and gives all connected vertices the same label.
