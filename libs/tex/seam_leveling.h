@@ -1,11 +1,21 @@
-#pragma once
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
+#ifndef TEX_SEAMLEVELING_HEADER
+#define TEX_SEAMLEVELING_HEADER
 
 #include <vector>
 
 #include <mve/mesh.h>
 
 #include "defines.h"
-#include "UniGraph.h"
+#include "uni_graph.h"
 
 TEX_NAMESPACE_BEGIN
 
@@ -44,3 +54,5 @@ find_mesh_edge_projections(
     MeshEdge mesh_edge, std::vector<ProjectedEdgeInfo> * projected_edge_infos);
 
 TEX_NAMESPACE_END
+
+#endif /* TEX_SEAMLEVELING_HEADER */

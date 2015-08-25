@@ -1,4 +1,5 @@
-#MVS-Texturing
+MVS-Texturing
+--------------------------------------------------------------------------------
 
 Welcome to our project that textures 3D reconstructions from images.
 This project focuses on 3D reconstructions generated using structure from
@@ -10,10 +11,13 @@ The algorithm was published in Sept. 2014 on the
 (http://www.gris.tu-darmstadt.de/projects/mvs-texturing)
 for the paper and further information.
 
-*Please be aware that while the interface of the `texrecon` application is relatively stable the interface of the `tex` library is currently subject to frequent changes.*
+*Please be aware that while the interface of the `texrecon` application is
+relatively stable the interface of the `tex` library is currently subject to
+frequent changes.*
 
 
-#Dependencies
+Dependencies
+--------------------------------------------------------------------------------
 
 The code and the build system have the following prerequisites:
 
@@ -40,7 +44,8 @@ thus provide the `-DRESEARCH=ON `flag (see compilation section below).*
     http://vision.csd.uwo.ca/code/
 
 
-#Compilation
+Compilation
+--------------------------------------------------------------------------------
 
 1.  `git clone https://github.com/nmoehrle/mvs-texturing.git`
 2.  `cd mvs-texturing`
@@ -69,7 +74,8 @@ we haven't checked it) and you feel like we should make minor fixes to support
 this better, you can also tell us.
 
 
-#Execution
+Execution
+--------------------------------------------------------------------------------
 
 As input our algorithm requires a triangulated 3D model and images that are
 registered against this model. One way to obtain this is to:
@@ -88,17 +94,21 @@ By starting the application without any parameters and you will get a
 description of the expected file formats and optional parameters.
 
 
-#Troubleshooting
+Troubleshooting
+--------------------------------------------------------------------------------
 
 When you encounter errors or unexpected behavior please make sure to switch
 the build type to debug e.g. `cmake -DCMAKE_BUILD_TYPE=DEBUG ..`, recompile
-and rerun the application. The default build type is release in which assertions
-are ignored, they could however give valuable insight in failure cases.
+and rerun the application. Because of the computational complexity the default
+build type is RELWITHDEBINFO which enables optimization but also ignores
+assertions. However, these assertions could give valuable insight in failure cases.
 
 
-#License, Patents and Citing
-Our software is licensed as described in the COPYING.txt file which is in the
-same folder as this README.md file.
+License, Patents and Citing
+--------------------------------------------------------------------------------
+
+Our software is licensed under the BSD 3-Clause license, for more details see
+the LICENSE.txt file.
 
 **IMPORTANT**: Using the `-DRESEARCH=ON` flag during compilation (see above) must
 not be used if this software is used for other purposes than research. This
@@ -106,7 +116,7 @@ flag automatically downloads, compiles and links against multi-label graph cut
 optimization which
 > can be used only for research purposes. For commercial
   purposes, be aware that there is a US patent on the main algorithm itself.
-  
+
 *Cited from the multi-label graph cut optimization README file. See that file
 for further information.*
 
@@ -122,10 +132,11 @@ If you use our texturing code for research purposes, please cite our paper:
 ```
 
 
-#Contact
-
+Contact
+--------------------------------------------------------------------------------
 If you have trouble compiling or using this software, if you found a bug or if
-you have an important feature request, please contact us using the mail address
-given in the paper or on the project web page:
+you have an important feature request, please use the issue tracker of github:
+https://github.com/nmoehrle/mvs-texturing
 
-http://www.gris.informatik.tu-darmstadt.de/projects/mvs-texturing
+For further questions you may contact us at
+mvs-texturing(at)gris.informatik.tu-darmstadt.de

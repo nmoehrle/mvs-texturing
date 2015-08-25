@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2015, Nils Moehrle, Michael Waechter
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
 #include <numeric>
 
 #include <mve/image_color.h>
@@ -6,10 +15,10 @@
 #include <Eigen/LU>
 
 #include "util.h"
+#include "histogram.h"
 #include "texturing.h"
-#include "ProgressCounter.h"
-#include "SparseTable.h"
-#include "Histogram.h"
+#include "sparse_table.h"
+#include "progress_counter.h"
 
 TEX_NAMESPACE_BEGIN
 

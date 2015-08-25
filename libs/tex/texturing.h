@@ -1,19 +1,29 @@
-#pragma once
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
+#ifndef TEX_TEXTURING_HEADER
+#define TEX_TEXTURING_HEADER
 
 #include <vector>
 
 #include "mve/mesh.h"
 #include "mve/mesh_info.h"
 
-#include "mrf/Graph.h"
+#include "mrf/graph.h"
 
 #include "defines.h"
-#include "Settings.h"
-#include "ObjModel.h"
-#include "TextureView.h"
-#include "UniGraph.h"
-#include "TexturePatch.h"
-#include "SparseTable.h"
+#include "settings.h"
+#include "obj_model.h"
+#include "uni_graph.h"
+#include "texture_view.h"
+#include "texture_patch.h"
+#include "sparse_table.h"
 
 #include "seam_leveling.h"
 
@@ -95,3 +105,5 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
     std::vector<TexturePatch> const & texture_patches, Model * model);
 
 TEX_NAMESPACE_END
+
+#endif /* TEX_TEXTURING_HEADER */
