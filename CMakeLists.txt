@@ -4,8 +4,8 @@ project(Texturing)
 include(ExternalProject)
 
 if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting build type to 'Release' as none was specified.")
-    set(CMAKE_BUILD_TYPE RELEASE)
+    message(STATUS "Setting build type to 'RELWITHDEBINFO' as none was specified.")
+    set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 endif()
 
 set(RESEARCH "OFF" CACHE BOOL "Use the gco library for Multi-Label Optimization, which is licensed only for research purposes!")
