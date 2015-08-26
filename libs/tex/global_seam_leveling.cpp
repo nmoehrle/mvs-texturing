@@ -1,9 +1,23 @@
-#include "texturing.h"
-#include "seam_leveling.h"
-#include <Eigen/Sparse>
+/*
+ * Copyright (C) 2015, Nils Moehrle
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
 #include <map>
 #include <set>
-#include "util/timer.h"
+
+#include <util/timer.h>
+#include <math/accum.h>
+#include <Eigen/SparseCore>
+#include <Eigen/IterativeLinearSolvers>
+
+#include "texturing.h"
+#include "seam_leveling.h"
+#include "progress_counter.h"
 
 TEX_NAMESPACE_BEGIN
 

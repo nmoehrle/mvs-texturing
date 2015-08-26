@@ -1,4 +1,14 @@
-#pragma once
+/*
+ * Copyright (C) 2015, Nils Moehrle, Michael Waechter
+ * TU Darmstadt - Graphics, Capture and Massively Parallel Computing
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the BSD 3-Clause license. See the LICENSE.txt file for details.
+ */
+
+#ifndef TEX_UTIL_HEADER
+#define TEX_UTIL_HEADER
 
 #include <string>
 #include <vector>
@@ -147,3 +157,5 @@ get_jet_color(float value) {
     float blue  = math::clamp(std::min(mvalue + 0.5f, -mvalue + 2.5f));
     return math::Vec4f(red, green, blue, 1.0f);
 }
+
+#endif /* TEX_UTIL_HEADER */
