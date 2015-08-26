@@ -1,23 +1,14 @@
 #pragma once
 
 #include <vector>
-#include <set>
 
-#include "math/vector.h"
-#include "math/functions.h"
+#include <math/vector.h>
+#include <mve/mesh.h>
 
-#include "mve/mesh.h"
-#include "mve/image_color.h"
-#include "mve/image_tools.h"
-#include "mve/mesh_io_ply.h"
 
-#include "TextureView.h"
 #include "Tri.h"
+#include "TextureView.h"
 #include "poisson_blending.h"
-
-typedef std::vector<std::pair<int, int> > PixelVector;
-typedef std::set<std::pair<int, int> > PixelSet;
-
 
 int const texture_patch_border = 1;
 
@@ -144,6 +135,6 @@ TexturePatch::get_size(void) const {
 }
 
 inline bool
-TexturePatch::operator<(TexturePatch const & texture_patch) const {
-    return get_size() < texture_patch.get_size();
+TexturePatch::operator<(TexturePatch const & other) const {
+    return get_size() < other.get_size();
 }

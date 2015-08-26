@@ -1,37 +1,18 @@
 #pragma once
 
-#include <map>
-#include <list>
 #include <vector>
-#include <iostream>
-#include <sstream>
 
-#include "mve/image.h"
-#include "mve/scene.h"
 #include "mve/mesh.h"
 #include "mve/mesh_info.h"
-#include "mve/image_io.h"
-#include "mve/image_drawing.h"
-
-#include "util/timer.h"
-#include "math/accum.h"
 
 #include "mrf/Graph.h"
 
-#include "coldet.h"
-
-#include "util.h"
-
 #include "defines.h"
 #include "Settings.h"
-#include "RectangularBin.h"
 #include "ObjModel.h"
 #include "TextureView.h"
 #include "UniGraph.h"
 #include "TexturePatch.h"
-#include "Tri.h"
-#include "Timer.h"
-#include "ProgressCounter.h"
 #include "SparseTable.h"
 
 #include "seam_leveling.h"
@@ -70,9 +51,9 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::VertexInfoList::Con
  * Calculates the data costs for each face and texture view combination,
  * if the face is visible within the texture view.
  */
-ST
-calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> & texture_views,
-    Settings const & settings);
+void
+calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
+    Settings const & settings, ST * data_costs);
 
 /**
  * Runs the view selection procedure and saves the labeling in the graph
@@ -84,9 +65,9 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
   * Generates texture patches using the graph to determine adjacent faces with the same label.
   */
 void generate_texture_patches(UniGraph const & graph,
-    std::vector<TextureView> const & texture_views,
     mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
+    std::vector<TextureView> * texture_views,
     VertexProjectionInfos * vertex_projection_infos,
     std::vector<TexturePatch> * texture_patches);
 

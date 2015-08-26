@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Rect.h"
 #include <list>
-#include <cmath>
+
+#include "Rect.h"
 
 /**
   * Implementation of the binpacking algorithm GUILLUTINE from

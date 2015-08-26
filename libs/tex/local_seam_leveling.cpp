@@ -1,3 +1,6 @@
+#include <math/accum.h>
+
+#include "ProgressCounter.h"
 #include "texturing.h"
 #include "seam_leveling.h"
 

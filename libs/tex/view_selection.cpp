@@ -1,5 +1,7 @@
-#include "texturing.h"
+#include <util/timer.h>
+
 #include "util.h"
+#include "texturing.h"
 
 TEX_NAMESPACE_BEGIN
 

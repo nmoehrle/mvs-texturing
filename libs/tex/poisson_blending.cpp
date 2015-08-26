@@ -1,10 +1,14 @@
-#include <Eigen/Sparse>
-#include "math/vector.h"
 #include <cstdint>
-#include "poisson_blending.h"
-#include "mve/image_io.h"
-#include "mve/image_tools.h"
 #include <iostream>
+
+#include <math/vector.h>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+#include <mve/image_io.h>
+#include <mve/image_tools.h>
+
+
+#include "poisson_blending.h"
 
 typedef Eigen::SparseMatrix<float> SpMat;
 

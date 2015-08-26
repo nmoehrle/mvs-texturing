@@ -2,12 +2,17 @@
 #include <fstream>
 #include <vector>
 
-#include "util/timer.h"
-#include "util/file_system.h"
+#include <util/timer.h>
+#include <util/file_system.h>
+#include <mve/mesh_io_ply.h>
+
+#include "tex/util.h"
+#include "tex/Timer.h"
+#include "tex/debug.h"
+#include "tex/texturing.h"
+#include "tex/ProgressCounter.h"
 
 #include "Arguments.h"
-#include "tex/texturing.h"
-#include "tex/debug.h"
 
 int main(int argc, char **argv) {
 
@@ -64,9 +69,10 @@ int main(int argc, char **argv) {
     if (conf.labeling_file.empty()) {
         std::cout << "View selection:" << std::endl;
 
-        tex::DataCosts data_costs;
+        std::size_t const num_faces = mesh->get_faces().size() / 3;
+        tex::DataCosts data_costs(num_faces, texture_views.size());
         if (conf.data_cost_file.empty()) {
-            data_costs = tex::calculate_data_costs(mesh, texture_views, conf.settings);
+            tex::calculate_data_costs(mesh, &texture_views, conf.settings, &data_costs);
 
             if (conf.write_intermediate_results) {
                 std::cout << "\tWriting data cost file... " << std::flush;
@@ -75,11 +81,11 @@ int main(int argc, char **argv) {
             }
         } else {
             std::cout << "\tLoading data cost file... " << std::flush;
-            data_costs = ST::load_from_file(conf.data_cost_file);
-            std::size_t const num_faces = mesh->get_faces().size() / 3;
-            if (data_costs.rows() != texture_views.size() || data_costs.cols() != num_faces) {
+            try {
+                ST::load_from_file(conf.data_cost_file, &data_costs);
+            } catch (util::FileException e) {
                 std::cout << "failed!" << std::endl;
-                std::cerr << "Wrong datacost file for this mesh/scene combination... aborting!" << std::endl;
+                std::cerr << e.what() << std::endl;
                 std::exit(EXIT_FAILURE);
             }
             std::cout << "done." << std::endl;
@@ -126,10 +132,7 @@ int main(int argc, char **argv) {
     {
         tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
-        tex::generate_texture_patches(graph, texture_views, mesh, vertex_infos, &vertex_projection_infos, &texture_patches);
-        for (TextureView & texture_view : texture_views) {
-            texture_view.release_image();
-        }
+        tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
 
         if (conf.settings.global_seam_leveling) {
             std::cout << "Running global seam leveling:" << std::endl;
@@ -180,7 +183,7 @@ int main(int argc, char **argv) {
             texture_patches.clear();
             generate_debug_embeddings(&texture_views);
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
-            tex::generate_texture_patches(graph, texture_views, mesh, vertex_infos, &vertex_projection_infos, &texture_patches);
+            tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;

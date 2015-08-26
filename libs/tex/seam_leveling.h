@@ -1,10 +1,10 @@
 #pragma once
+
 #include <vector>
 
 #include <mve/mesh.h>
 
 #include "defines.h"
-
 #include "UniGraph.h"
 
 TEX_NAMESPACE_BEGIN
