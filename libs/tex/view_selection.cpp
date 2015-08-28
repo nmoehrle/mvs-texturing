@@ -108,10 +108,13 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
     UniGraph mgraph(*graph);
     isolate_unseen_faces(&mgraph, data_costs);
 
+    unsigned int num_components = 0;
+
     std::vector<FaceInfo> face_infos(mgraph.num_nodes());
     std::vector<std::vector<std::size_t> > components;
     mgraph.get_subgraphs(0, &components);
     for (std::size_t i = 0; i < components.size(); ++i) {
+        if (components.size() > 1000) num_components += 1;
         for (std::size_t j = 0; j < components[i].size(); ++j) {
             face_infos[components[i][j]] = {i, j};
         }
@@ -144,8 +147,8 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
     #endif
 
     if (multiple_components_simultaneously) {
-        if (components.size() > 0) {
-            std::cout << "\tOptimizing " << components.size()
+        if (num_components > 0) {
+            std::cout << "\tOptimizing " << num_components
                 << " components simultaneously." << std::endl;
         }
         std::cout << "\tComp\tIter\tEnergy\t\tRuntime" << std::endl;

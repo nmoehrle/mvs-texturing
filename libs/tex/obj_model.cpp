@@ -46,7 +46,7 @@ ObjModel::save_to_files(std::string const & prefix) const {
 
     for (std::size_t i = 0; i < texcoords.size(); ++i) {
         out << "vt " << texcoords[i][0] << " "
-            << texcoords[i][1] << std::endl;
+            << 1.0f - texcoords[i][1] << std::endl;
     }
 
     for (std::size_t i = 0; i < normals.size(); ++i) {
@@ -61,9 +61,9 @@ ObjModel::save_to_files(std::string const & prefix) const {
             Face const & face =  groups[i].faces[j];
             out << "f";
             for (std::size_t k = 0; k < 3; ++k) {
-                out << " " << face.vertices[k]  + OBJ_INDEX_OFFSET
-                    << "/" << face.texcoords[k]  + OBJ_INDEX_OFFSET
-                    << "/" << face.normals[k]  + OBJ_INDEX_OFFSET;
+                out << " " << face.vertex_ids[k]  + OBJ_INDEX_OFFSET
+                    << "/" << face.texcoord_ids[k]  + OBJ_INDEX_OFFSET
+                    << "/" << face.normal_ids[k]  + OBJ_INDEX_OFFSET;
             }
             out << std::endl;
         }

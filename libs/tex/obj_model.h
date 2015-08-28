@@ -18,9 +18,9 @@
 class ObjModel {
 public:
     struct Face {
-        std::size_t vertices[3];
-        std::size_t texcoords[3];
-        std::size_t normals[3];
+        std::size_t vertex_ids[3];
+        std::size_t texcoord_ids[3];
+        std::size_t normal_ids[3];
     };
 
     struct Group {

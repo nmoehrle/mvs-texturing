@@ -24,7 +24,7 @@ TEX_NAMESPACE_BEGIN
 typedef Eigen::SparseMatrix<float> SpMat;
 
 math::Vec3f
-sample_edge(TexturePatch const & texture_patch, math::Vec2f p1, math::Vec2f p2) {
+sample_edge(TexturePatch::ConstPtr texture_patch, math::Vec2f p1, math::Vec2f p2) {
     math::Vec2f p12 = p2 - p1;
 
     std::size_t num_samples = std::max(p12.norm(), 1.0f) * 2.0f;
@@ -34,7 +34,7 @@ sample_edge(TexturePatch const & texture_patch, math::Vec2f p1, math::Vec2f p2) 
     for (std::size_t s = 0; s < num_samples; ++s) {
         float fraction = static_cast<float>(s) / (num_samples - 1);
         math::Vec2f sample_point = p1 + p12 * fraction;
-        math::Vec3f color(texture_patch.get_pixel_value(sample_point));
+        math::Vec3f color(texture_patch->get_pixel_value(sample_point));
 
         color_accum.add(color, 1.0f - fraction);
     }
@@ -85,7 +85,7 @@ find_seam_edges_for_vertex_label_combination(UniGraph const & graph, mve::Triang
 
 math::Vec3f
 calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
-    mve::TriangleMesh::ConstPtr & mesh, std::vector<TexturePatch> const &  texture_patches,
+    mve::TriangleMesh::ConstPtr & mesh, std::vector<TexturePatch::Ptr> const &  texture_patches,
     std::vector<MeshEdge> const & seam_edges, int label1, int label2) {
 
     assert(label1 != 0 && label2 != 0 && label1 < label2);
@@ -109,8 +109,8 @@ calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
         std::size_t num_samples = 0;
 
         for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
-            TexturePatch const & texture_patch = texture_patches[projected_edge_info.texture_patch_id];
-            const int texture_patch_label = texture_patch.get_label();
+            TexturePatch::Ptr texture_patch = texture_patches[projected_edge_info.texture_patch_id];
+            const int texture_patch_label = texture_patch->get_label();
             if (texture_patch_label == label1 || texture_patch_label == label2) {
                 if (texture_patch_label == label1)
                     color1_accum.add(sample_edge(texture_patch, projected_edge_info.p1, projected_edge_info.p2), length);
@@ -139,7 +139,7 @@ void
 global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
     std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
-    std::vector<TexturePatch> * texture_patches) {
+    std::vector<TexturePatch::Ptr> * texture_patches) {
 
     mve::TriangleMesh::VertexList const & vertices = mesh->get_vertices();
     std::size_t const num_vertices = vertices.size();
@@ -295,7 +295,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     for (std::size_t i = 0; i < texture_patches->size(); ++i) {
         texture_patch_counter.progress<SIMPLE>();
 
-        TexturePatch * texture_patch = &texture_patches->at(i);
+        TexturePatch::Ptr texture_patch = texture_patches->at(i);
 
         int label = texture_patch->get_label();
         std::vector<std::size_t> const & faces = texture_patch->get_faces();

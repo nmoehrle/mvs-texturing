@@ -11,21 +11,21 @@
 
 #include "rectangular_bin.h"
 
-RectangularBin::RectangularBin(int width, int height)
+RectangularBin::RectangularBin(unsigned int width, unsigned int height)
     : width(width), height(height) {
     rects.push_back(Rect<int>(0, 0, width, height));
 }
 
 bool RectangularBin::insert(Rect<int> * rect) {
     /* The best score is 0 so we initialize with the worst. */
-    int best_score = width * height;
+    unsigned int best_score = width * height;
     std::list<Rect<int> >::iterator best_rect_it = rects.end();
     std::list<Rect<int> >::iterator it = rects.begin();
     for (; it != rects.end(); ++it) {
         Rect<int> free_rect = *it;
         if (rect->width() <= free_rect.width()
             && rect->height() <= free_rect.height() ) {
-            int score = free_rect.size() - rect->size();
+            unsigned int score = free_rect.size() - rect->size();
             if (score < best_score){
                 best_score = score;
                 best_rect_it = it;

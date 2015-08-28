@@ -16,7 +16,6 @@
 #include <mve/mesh.h>
 
 #include "tri.h"
-#include "texture_view.h"
 #include "poisson_blending.h"
 
 int const texture_patch_border = 1;
@@ -28,6 +27,8 @@ int const texture_patch_border = 1;
   */
 class TexturePatch {
     public:
+        typedef std::shared_ptr<TexturePatch> Ptr;
+        typedef std::shared_ptr<const TexturePatch> ConstPtr;
         typedef std::vector<std::size_t> Faces;
         typedef std::vector<math::Vec2f> Texcoords;
 
@@ -43,7 +44,14 @@ class TexturePatch {
         /** Constructs a texture patch. */
         TexturePatch(int _label, std::vector<std::size_t> const & _faces,
             std::vector<math::Vec2f>  const & _texcoords, mve::ByteImage::Ptr _image);
+
         TexturePatch(TexturePatch const & texture_patch);
+
+        static TexturePatch::Ptr create(TexturePatch::ConstPtr texture_patch);
+        static TexturePatch::Ptr create(int label, std::vector<std::size_t> const & faces,
+            std::vector<math::Vec2f> const & texcoords, mve::ByteImage::Ptr image);
+
+        TexturePatch::Ptr duplicate(void);
 
         /** Adjust the image colors and update validity mask. */
         void adjust_colors(std::vector<math::Vec3f> const & adjust_values);
@@ -80,6 +88,22 @@ class TexturePatch {
         int get_height(void) const;
         int get_size(void) const;
 };
+
+inline TexturePatch::Ptr
+TexturePatch::create(TexturePatch::ConstPtr texture_patch) {
+    return Ptr(new TexturePatch(*texture_patch));
+}
+
+inline TexturePatch::Ptr
+TexturePatch::create(int label, std::vector<std::size_t> const & faces,
+    std::vector<math::Vec2f>  const & texcoords, mve::ByteImage::Ptr image) {
+    return Ptr(new TexturePatch(label, faces, texcoords, image));
+}
+
+inline TexturePatch::Ptr
+TexturePatch::duplicate(void) {
+    return Ptr(new TexturePatch(*this));
+}
 
 inline int
 TexturePatch::get_label(void) const {

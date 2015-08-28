@@ -23,6 +23,7 @@
 #include "uni_graph.h"
 #include "texture_view.h"
 #include "texture_patch.h"
+#include "texture_atlas.h"
 #include "sparse_table.h"
 
 #include "seam_leveling.h"
@@ -32,11 +33,13 @@ typedef SparseTable<std::uint32_t, std::uint16_t, float> ST;
 TEX_NAMESPACE_BEGIN
 
 typedef std::vector<TextureView> TextureViews;
-typedef std::vector<TexturePatch> TexturePatches;
+typedef std::vector<TexturePatch::Ptr> TexturePatches;
+typedef std::vector<TextureAtlas::Ptr> TextureAtlases;
 typedef ObjModel Model;
 typedef UniGraph Graph;
 typedef ST DataCosts;
 typedef std::vector<std::vector<VertexProjectionInfo> > VertexProjectionInfos;
+
 /**
   * prepares the mesh for texturing
   *  -removes duplicated faces
@@ -49,21 +52,22 @@ prepare_mesh(mve::VertexInfoList::Ptr vertex_infos, mve::TriangleMesh::Ptr mesh)
   * Generates TextureViews from the in_scene.
   */
 void
-generate_texture_views(std::string in_scene, std::vector<TextureView> * texture_views);
+generate_texture_views(std::string in_scene, TextureViews * texture_views);
 
 /**
   * Builds up the meshes face adjacency graph using the vertex_infos
   */
 void
-build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh, mve::VertexInfoList::ConstPtr vertex_infos, UniGraph * graph);
+build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
+    mve::VertexInfoList::ConstPtr vertex_infos, UniGraph * graph);
 
 /**
  * Calculates the data costs for each face and texture view combination,
  * if the face is visible within the texture view.
  */
 void
-calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> * texture_views,
-    Settings const & settings, ST * data_costs);
+calculate_data_costs(mve::TriangleMesh::ConstPtr mesh,
+    TextureViews * texture_views, Settings const & settings, ST * data_costs);
 
 /**
  * Runs the view selection procedure and saves the labeling in the graph
@@ -77,9 +81,9 @@ view_selection(ST const & data_costs, UniGraph * graph, Settings const & setting
 void generate_texture_patches(UniGraph const & graph,
     mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
-    std::vector<TextureView> * texture_views,
+    TextureViews * texture_views,
     VertexProjectionInfos * vertex_projection_infos,
-    std::vector<TexturePatch> * texture_patches);
+    TexturePatches * texture_patches);
 
 /**
   * Runs the seam leveling procedure proposed by Ivanov and Lempitsky
@@ -89,12 +93,16 @@ void
 global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     mve::VertexInfoList::ConstPtr vertex_infos,
     VertexProjectionInfos const & vertex_projection_infos,
-    std::vector<TexturePatch> * texture_patches);
+    TexturePatches * texture_patches);
 
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     VertexProjectionInfos const & vertex_projection_infos,
-    std::vector<TexturePatch> * texture_patches);
+    TexturePatches * texture_patches);
+
+void
+generate_texture_atlases(TexturePatches * texture_patches,
+    TextureAtlases * texture_atlases);
 
 /**
   * Builds up an model for the mesh by constructing materials and
@@ -102,7 +110,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
   */
 void
 build_model(mve::TriangleMesh::ConstPtr mesh,
-    std::vector<TexturePatch> const & texture_patches, Model * model);
+    TextureAtlases const & texture_atlas, Model * model);
 
 TEX_NAMESPACE_END
 

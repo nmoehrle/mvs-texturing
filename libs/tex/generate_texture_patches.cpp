@@ -49,7 +49,7 @@ void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo>
 /** Struct representing a TexturePatch candidate - final texture patches are obtained by merging candiates. */
 struct TexturePatchCandidate {
     Rect<int> bounding_box;
-    TexturePatch texture_patch;
+    TexturePatch::Ptr texture_patch;
 };
 
 /** Create a TexturePatchCandidate by calculating the faces' bounding box projected into the view,
@@ -101,7 +101,8 @@ generate_candidate(int label, TextureView const & texture_view,
     mve::image::gamma_correct(image, 2.2f);
 
     TexturePatchCandidate texture_patch_candidate =
-        {Rect<int>(min_x, min_y, max_x, max_y), TexturePatch(label, faces, texcoords, image)};
+        {Rect<int>(min_x, min_y, max_x, max_y),
+            TexturePatch::create(label, faces, texcoords, image)};
     return texture_patch_candidate;
 }
 
@@ -110,7 +111,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
     mve::VertexInfoList::ConstPtr vertex_infos,
     std::vector<TextureView> * texture_views,
     std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos,
-    std::vector<TexturePatch> * texture_patches) {
+    std::vector<TexturePatch::Ptr> * texture_patches) {
 
     util::WallTimer timer;
 
@@ -142,12 +143,12 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
             for (sit = candidates.begin(); sit != candidates.end();) {
                 Rect<int> bounding_box = sit->bounding_box;
                 if (it != sit && bounding_box.is_inside(&it->bounding_box)) {
-                    TexturePatch::Faces & faces = it->texture_patch.get_faces();
-                    TexturePatch::Faces & ofaces = sit->texture_patch.get_faces();
+                    TexturePatch::Faces & faces = it->texture_patch->get_faces();
+                    TexturePatch::Faces & ofaces = sit->texture_patch->get_faces();
                     faces.insert(faces.end(), ofaces.begin(), ofaces.end());
 
-                    TexturePatch::Texcoords & texcoords = it->texture_patch.get_texcoords();
-                    TexturePatch::Texcoords & otexcoords = sit->texture_patch.get_texcoords();
+                    TexturePatch::Texcoords & texcoords = it->texture_patch->get_texcoords();
+                    TexturePatch::Texcoords & otexcoords = sit->texture_patch->get_texcoords();
                     math::Vec2f offset;
                     offset[0] = sit->bounding_box.min_x - it->bounding_box.min_x;
                     offset[1] = sit->bounding_box.min_y - it->bounding_box.min_y;
@@ -172,8 +173,8 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
                 texture_patch_id = num_patches++;
             }
 
-            std::vector<std::size_t> const & faces = it->texture_patch.get_faces();
-            std::vector<math::Vec2f> const & texcoords = it->texture_patch.get_texcoords();
+            std::vector<std::size_t> const & faces = it->texture_patch->get_faces();
+            std::vector<math::Vec2f> const & texcoords = it->texture_patch->get_texcoords();
             for (std::size_t i = 0; i < faces.size(); ++i) {
                 std::size_t const face_id = faces[i];
                 std::size_t const face_pos = face_id * 3;
@@ -472,7 +473,8 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
                     texcoords.push_back(projection);
                 }
             }
-            TexturePatch texture_patch(0, subgraph, texcoords, image);
+            TexturePatch::Ptr texture_patch
+                = TexturePatch::create(0, subgraph, texcoords, image);
             std::size_t texture_patch_id;
             #pragma omp critical
             {

@@ -11,6 +11,7 @@
 #define TEX_RECTANGULARBIN_HEADER
 
 #include <list>
+#include <memory>
 
 #include "rect.h"
 
@@ -22,19 +23,30 @@
   * </a>
   */
 class RectangularBin {
+    public:
+        typedef std::shared_ptr<RectangularBin> Ptr;
+
     private:
-        int width;
-        int height;
+        unsigned int width;
+        unsigned int height;
         std::list<Rect<int> > rects;
 
     public:
         /**
           * Initializes the rectangular binpacking algorithm to fill a rectangle of the given size.
           */
-        RectangularBin(int width, int height);
+        RectangularBin(unsigned int width, unsigned int height);
+
+        static RectangularBin::Ptr create(unsigned int width, unsigned int height);
 
         /** Returns true and changes the position of the given rect if it fits into the bin. */
         bool insert(Rect<int> * rect);
 };
+
+inline RectangularBin::Ptr
+RectangularBin::create(unsigned int width, unsigned int height)
+{
+    return Ptr(new RectangularBin(width, height));
+}
 
 #endif /* TEX_RECTANGULARBIN_HEADER */

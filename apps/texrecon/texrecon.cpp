@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <util/timer.h>
+#include <util/system.h>
 #include <util/file_system.h>
 #include <mve/mesh_io_ply.h>
 
@@ -24,13 +25,14 @@
 #include "arguments.h"
 
 int main(int argc, char **argv) {
-
 #ifdef RESEARCH
     std::cout << "******************************************************************************" << std::endl
               << " Due to use of the -DRESEARCH=ON compile option, this program is licensed "     << std::endl
               << " for research purposes only. Please pay special attention to the gco license."  << std::endl
               << "******************************************************************************" << std::endl;
 #endif
+
+    util::system::register_segfault_handler();
 
     Timer timer;
     timer.measure("Start");
@@ -136,9 +138,10 @@ int main(int argc, char **argv) {
     }
     std::cout << "\tTook: " << wtimer.get_elapsed_sec() << "s" << std::endl;
 
-    /* Create texture patches and adjust them. */
-    tex::TexturePatches texture_patches;
+    tex::TextureAtlases texture_atlases;
     {
+        /* Create texture patches and adjust them. */
+        tex::TexturePatches texture_patches;
         tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
         tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
@@ -152,7 +155,7 @@ int main(int argc, char **argv) {
             #pragma omp parallel for schedule(dynamic)
             for (std::size_t i = 0; i < texture_patches.size(); ++i) {
                 texture_patch_counter.progress<SIMPLE>();
-                TexturePatch * texture_patch = &texture_patches[i];
+                TexturePatch::Ptr texture_patch = texture_patches[i];
                 std::vector<math::Vec3f> patch_adjust_values(texture_patch->get_faces().size() * 3, math::Vec3f(0.0f));
                 texture_patch->adjust_colors(patch_adjust_values);
                 texture_patch_counter.inc();
@@ -165,13 +168,17 @@ int main(int argc, char **argv) {
             tex::local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches);
         }
         timer.measure("Running local seam leveling");
+
+        /* Generate texture atlases. */
+        std::cout << "Generating texture atlases:" << std::endl;
+        tex::generate_texture_atlases(&texture_patches, &texture_atlases);
     }
 
     /* Create and write out obj model. */
     {
         std::cout << "Building objmodel:" << std::endl;
         tex::Model model;
-        tex::build_model(mesh, texture_patches, &model);
+        tex::build_model(mesh, texture_atlases, &model);
         timer.measure("Building OBJ model");
 
         std::cout << "\tSaving model... " << std::flush;
@@ -187,18 +194,20 @@ int main(int argc, char **argv) {
     }
 
     if (conf.write_view_selection_model) {
+        texture_atlases.clear();
         std::cout << "Generating debug texture patches:" << std::endl;
         {
-            texture_patches.clear();
+            tex::TexturePatches texture_patches;
             generate_debug_embeddings(&texture_views);
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
             tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
+            tex::generate_texture_atlases(&texture_patches, &texture_atlases);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;
         {
             tex::Model model;
-            tex::build_model(mesh, texture_patches, &model);
+            tex::build_model(mesh, texture_atlases, &model);
             std::cout << "\tSaving model... " << std::flush;
             tex::Model::save(model, conf.out_prefix + "_view_selection");
             std::cout << "done." << std::endl;

@@ -17,23 +17,23 @@
   */
 class Material {
     private:
-        mve::ByteImage::Ptr diffuse_map;
+        mve::ByteImage::ConstPtr diffuse_map;
         //TODO: implement BRDF properties
 
     public:
-        Material(mve::ByteImage::Ptr diffuse_map);
+        Material(mve::ByteImage::ConstPtr diffuse_map);
 
-        mve::ByteImage::Ptr get_diffuse_map() const;
+        mve::ByteImage::ConstPtr get_diffuse_map() const;
 };
 
 inline
-mve::ByteImage::Ptr
+mve::ByteImage::ConstPtr
 Material::get_diffuse_map() const {
     return diffuse_map;
 }
 
 inline
-Material::Material(mve::ByteImage::Ptr diffuse_map)
+Material::Material(mve::ByteImage::ConstPtr diffuse_map)
     : diffuse_map(diffuse_map) {
 }
 
