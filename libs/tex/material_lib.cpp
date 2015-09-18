@@ -50,9 +50,8 @@ MaterialLib::save_to_files(std::string const & prefix) const {
     }
     out.close();
 
-    #pragma omp parallel for
     for (std::size_t i = 0; i < materials.size(); ++i) {
-        std::string diffuse_map_postfix = "_" + material_names[i] + "_map_Kd.png";
-        mve::image::save_png_file(materials[i].get_diffuse_map(), prefix + diffuse_map_postfix);
+        std::string filename = prefix + "_" + material_names[i] + "_map_Kd.png";
+        util::fs::copy_file(materials[i].diffuse_map.c_str(), filename.c_str());
     }
 }

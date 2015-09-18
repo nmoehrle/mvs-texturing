@@ -12,7 +12,9 @@
 
 #include <vector>
 
-#include "material.h"
+struct Material {
+    std::string diffuse_map;
+};
 
 /**
   * Class representing a material lib of and obj model.

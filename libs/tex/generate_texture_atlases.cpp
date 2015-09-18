@@ -15,7 +15,6 @@
 #include <util/timer.h>
 #include <mve/image_tools.h>
 
-
 #include "defines.h"
 #include "histogram.h"
 #include "texture_patch.h"
@@ -176,7 +175,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     }
 
     std::cout << "\r\tWorking on atlas " << texture_atlases->size()
-        << ") 100%... done." << std::endl;
+        << " 100%... done." << std::endl;
     util::WallTimer timer;
     std::cout << "\tFinalizing texture atlases... " << std::flush;
     #pragma omp taskwait

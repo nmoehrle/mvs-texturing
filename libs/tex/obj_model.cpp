@@ -7,6 +7,7 @@
  * of the BSD 3-Clause license. See the LICENSE.txt file for details.
  */
 
+#include <iomanip>
 #include <fstream>
 #include <cstring>
 #include <cerrno>

@@ -10,8 +10,10 @@
 #ifndef TEX_TEXTUREATLAS_HEADER
 #define TEX_TEXTUREATLAS_HEADER
 
+
 #include <vector>
 
+#include <util/exception.h>
 #include <math/vector.h>
 #include <mve/mesh.h>
 #include <mve/image.h>
@@ -32,8 +34,9 @@ class TextureAtlas {
         typedef std::vector<math::Vec2f> Texcoords;
 
     private:
-        unsigned int size;
-        unsigned int padding;
+        unsigned int const size;
+        unsigned int const padding;
+        bool finalized;
 
         Faces faces;
         Texcoords texcoords;
@@ -44,41 +47,32 @@ class TextureAtlas {
 
         RectangularBin::Ptr bin;
 
+        std::string filename;
+
         void apply_edge_padding(void);
+        void merge_texcoords(void);
 
     public:
         /** Constructs a texture patch. */
         TextureAtlas(unsigned int size);
+        ~TextureAtlas(void);
 
         static TextureAtlas::Ptr create(unsigned int size);
 
         Faces const & get_faces(void) const;
         TexcoordIds const & get_texcoord_ids(void) const;
         Texcoords const & get_texcoords(void) const;
-
-        mve::ByteImage::ConstPtr get_image(void) const;
-        mve::ByteImage::ConstPtr get_validity_mask(void) const;
+        std::string const & get_filename(void) const;
 
         bool insert(TexturePatch::ConstPtr texture_patch,
             float vmin, float vmax);
 
         void finalize(void);
-
 };
 
 inline TextureAtlas::Ptr
 TextureAtlas::create(unsigned int size) {
     return Ptr(new TextureAtlas(size));
-}
-
-inline mve::ByteImage::ConstPtr
-TextureAtlas::get_image(void) const {
-    return image;
-}
-
-inline mve::ByteImage::ConstPtr
-TextureAtlas::get_validity_mask(void) const {
-    return validity_mask;
 }
 
 inline TextureAtlas::Faces const &
@@ -94,6 +88,14 @@ TextureAtlas::get_texcoord_ids(void) const {
 inline TextureAtlas::Texcoords const &
 TextureAtlas::get_texcoords(void) const {
     return texcoords;
+}
+
+inline std::string const &
+TextureAtlas::get_filename(void) const {
+    if (!finalized) {
+        throw util::Exception("Texture atlas not finalized");
+    }
+    return filename;
 }
 
 #endif /* TEX_TEXTUREATLAS_HEADER */

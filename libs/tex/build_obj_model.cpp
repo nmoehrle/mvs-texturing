@@ -38,7 +38,9 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
 
         const std::size_t n = material_lib.size();
         group.material_name = std::string("material") + util::string::get_filled(n, 4);
-        Material material(texture_atlas->get_image());
+
+        Material material;
+        material.diffuse_map = texture_atlas->get_filename();
         material_lib.add_material(group.material_name, material);
 
         TextureAtlas::Faces const & atlas_faces = texture_atlas->get_faces();

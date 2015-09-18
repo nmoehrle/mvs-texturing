@@ -10,16 +10,26 @@
 #include <set>
 #include <map>
 
+#include <util/file_system.h>
 #include <mve/image_tools.h>
+#include <mve/image_io.h>
 
 #include "texture_atlas.h"
 
 TextureAtlas::TextureAtlas(unsigned int size) :
-    size(size), padding(size >> 7) {
+    size(size), padding(size >> 7), finalized(false) {
 
     bin = RectangularBin::create(size, size);
     image = mve::ByteImage::create(size, size, 3);
     validity_mask = mve::ByteImage::create(size, size, 1);
+    filename = std::tmpnam(nullptr);
+    std::cout << filename << std::endl;
+}
+
+TextureAtlas::~TextureAtlas() {
+    if (util::fs::exists(filename.c_str())) {
+        util::fs::unlink(filename.c_str());
+    }
 }
 
 /**
@@ -53,6 +63,10 @@ typedef std::set<std::pair<int, int> > PixelSet;
 
 bool
 TextureAtlas::insert(TexturePatch::ConstPtr texture_patch, float vmin, float vmax) {
+    if (finalized) {
+        throw util::Exception("No insertion possible, TextureAtlas already finalized");
+    }
+
     assert(bin != NULL);
     assert(validity_mask != NULL);
 
@@ -215,11 +229,7 @@ struct VectorCompare {
 typedef std::map<math::Vec2f, std::size_t, VectorCompare> TexcoordMap;
 
 void
-TextureAtlas::finalize() {
-    this->bin.reset();
-    this->apply_edge_padding();
-    this->validity_mask.reset();
-
+TextureAtlas::merge_texcoords() {
     Texcoords tmp; tmp.swap(this->texcoords);
 
     TexcoordMap texcoord_map;
@@ -234,4 +244,22 @@ TextureAtlas::finalize() {
             this->texcoord_ids.push_back(iter->second);
         }
     }
+
+}
+
+void
+TextureAtlas::finalize() {
+    if (finalized) {
+        throw util::Exception("TextureAtlas already finalized");
+    }
+
+    this->bin.reset();
+    this->apply_edge_padding();
+    this->validity_mask.reset();
+    this->merge_texcoords();
+
+    mve::image::save_png_file(this->image, this->filename);
+    this->image.reset();
+
+    this->finalized = true;
 }
