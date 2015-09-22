@@ -11,7 +11,7 @@
 
 TEX_NAMESPACE_BEGIN
 
-std::size_t remove_redundant_faces(mve::VertexInfoList::ConstPtr vertex_infos, mve::TriangleMesh::Ptr mesh) {
+std::size_t remove_redundant_faces(mve::MeshInfo const & mesh_info, mve::TriangleMesh::Ptr mesh) {
     mve::TriangleMesh::FaceList & faces = mesh->get_faces();
     mve::TriangleMesh::FaceList new_faces;
     new_faces.reserve(faces.size());
@@ -21,7 +21,7 @@ std::size_t remove_redundant_faces(mve::VertexInfoList::ConstPtr vertex_infos, m
         std::size_t face_id = i / 3;
         bool redundant = false;
         for (std::size_t j = 0; !redundant && j < 3; ++j) {
-            mve::MeshVertexInfo::FaceRefList const & adj_faces = vertex_infos->at(faces[i + j]).faces;
+            mve::MeshInfo::AdjacentFaces const & adj_faces = mesh_info[faces[i + j]].faces;
             for (std::size_t k = 0; !redundant && k < adj_faces.size(); ++k) {
                 std::size_t adj_face_id = adj_faces[k];
 
@@ -55,8 +55,8 @@ std::size_t remove_redundant_faces(mve::VertexInfoList::ConstPtr vertex_infos, m
 }
 
 void
-prepare_mesh(mve::VertexInfoList::Ptr vertex_infos, mve::TriangleMesh::Ptr mesh) {
-    std::size_t num_redundant = remove_redundant_faces(vertex_infos, mesh);
+prepare_mesh(mve::MeshInfo * mesh_info, mve::TriangleMesh::Ptr mesh) {
+    std::size_t num_redundant = remove_redundant_faces(*mesh_info, mesh);
     if (num_redundant > 0) {
         std::cout << "\tRemoved " << num_redundant << " redundant faces." << std::endl;
     }
@@ -65,7 +65,8 @@ prepare_mesh(mve::VertexInfoList::Ptr vertex_infos, mve::TriangleMesh::Ptr mesh)
     mesh->ensure_normals(true, true);
 
     /* Update vertex infos. */
-    vertex_infos->calculate(mesh);
+    mesh_info->clear();
+    mesh_info->initialize(mesh);
 }
 
 TEX_NAMESPACE_END

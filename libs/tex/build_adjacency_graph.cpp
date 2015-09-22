@@ -15,7 +15,7 @@ TEX_NAMESPACE_BEGIN
 
 void
 build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
-    mve::VertexInfoList::ConstPtr vertex_infos, UniGraph * graph)  {
+    mve::MeshInfo const & mesh_info, UniGraph * graph)  {
 
     mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
     std::size_t const num_faces = faces.size() / 3;
@@ -29,9 +29,9 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
         std::size_t v3 = faces[i + 2];
 
         std::vector<std::size_t> adj_faces;
-        vertex_infos->get_faces_for_edge(v1, v2, &adj_faces);
-        vertex_infos->get_faces_for_edge(v2, v3, &adj_faces);
-        vertex_infos->get_faces_for_edge(v3, v1, &adj_faces);
+        mesh_info.get_faces_for_edge(v1, v2, &adj_faces);
+        mesh_info.get_faces_for_edge(v2, v3, &adj_faces);
+        mesh_info.get_faces_for_edge(v3, v1, &adj_faces);
 
         for (std::size_t j = 0; j < adj_faces.size(); ++j) {
             /* Face id vs. face position. */

@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
         std::cerr << "\tCould not load mesh: "<< e.what() << std::endl;
         std::exit(EXIT_FAILURE);
     }
-    mve::VertexInfoList::Ptr vertex_infos = mve::VertexInfoList::create(mesh);
-    tex::prepare_mesh(vertex_infos, mesh);
+    mve::MeshInfo mesh_info(mesh);
+    tex::prepare_mesh(&mesh_info, mesh);
 
     std::size_t const num_faces = mesh->get_faces().size() / 3;
 
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Building adjacency graph: " << std::endl;
     tex::Graph graph(num_faces);
-    tex::build_adjacency_graph(mesh, vertex_infos, &graph);
+    tex::build_adjacency_graph(mesh, mesh_info, &graph);
 
     wtimer.reset();
     if (conf.labeling_file.empty()) {
@@ -144,11 +144,11 @@ int main(int argc, char **argv) {
         tex::TexturePatches texture_patches;
         tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
-        tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
+        tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views, &vertex_projection_infos, &texture_patches);
 
         if (conf.settings.global_seam_leveling) {
             std::cout << "Running global seam leveling:" << std::endl;
-            tex::global_seam_leveling(graph, mesh, vertex_infos, vertex_projection_infos, &texture_patches);
+            tex::global_seam_leveling(graph, mesh, mesh_info, vertex_projection_infos, &texture_patches);
             timer.measure("Running global seam leveling");
         } else {
             ProgressCounter texture_patch_counter("Calculating validity masks for texture patches", texture_patches.size());
@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
             tex::TexturePatches texture_patches;
             generate_debug_embeddings(&texture_views);
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
-            tex::generate_texture_patches(graph, mesh, vertex_infos, &texture_views, &vertex_projection_infos, &texture_patches);
+            tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views, &vertex_projection_infos, &texture_patches);
             tex::generate_texture_atlases(&texture_patches, &texture_atlases);
         }
 

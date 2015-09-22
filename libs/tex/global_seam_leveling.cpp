@@ -45,20 +45,20 @@ sample_edge(TexturePatch::ConstPtr texture_patch, math::Vec2f p1, math::Vec2f p2
 
 void
 find_seam_edges_for_vertex_label_combination(UniGraph const & graph, mve::TriangleMesh::ConstPtr & mesh,
-    mve::VertexInfoList::ConstPtr vertex_infos, std::size_t vertex, std::size_t label1, std::size_t label2,
+    mve::MeshInfo const & mesh_info, std::size_t vertex, std::size_t label1, std::size_t label2,
     std::vector<MeshEdge> * seam_edges) {
 
     assert(label1 != 0 && label2 != 0 && label1 < label2);
 
     mve::TriangleMesh::VertexList const & vertices = mesh->get_vertices();
 
-    std::vector<std::size_t> const & adj_verts = vertex_infos->at(vertex).verts;
+    std::vector<std::size_t> const & adj_verts = mesh_info[vertex].verts;
     for (std::size_t i = 0; i < adj_verts.size(); ++i) {
         std::size_t adj_vertex = adj_verts[i];
         if (vertex == adj_vertex) continue;
 
         std::vector<std::size_t> edge_faces;
-        vertex_infos->get_faces_for_edge(vertex, adj_vertex, &edge_faces);
+        mesh_info.get_faces_for_edge(vertex, adj_vertex, &edge_faces);
 
         for (std::size_t j = 0; j < edge_faces.size(); ++j) {
             for(std::size_t k = j + 1; k < edge_faces.size(); ++k) {
@@ -137,7 +137,7 @@ calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
 
 void
 global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
-    mve::VertexInfoList::ConstPtr vertex_infos,
+    mve::MeshInfo const & mesh_info,
     std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
     std::vector<TexturePatch::Ptr> * texture_patches) {
 
@@ -156,7 +156,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     for (std::size_t i = 0; i < num_vertices; ++i) {
         std::set<std::size_t> label_set;
 
-        std::vector<std::size_t> faces = vertex_infos->at(i).faces;
+        std::vector<std::size_t> faces = mesh_info[i].faces;
         std::set<std::size_t>::iterator it = label_set.begin();
         for (std::size_t j = 0; j < faces.size(); ++j) {
             std::size_t label = graph.get_label(faces[j]);
@@ -182,7 +182,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     coefficients_Gamma.reserve(2 * num_vertices);
     for (std::size_t i = 0; i < num_vertices; ++i) {
         for (std::size_t j = 0; j < labels[i].size(); ++j) {
-            std::vector<std::size_t> const & adj_verts = vertex_infos->at(i).verts;
+            std::vector<std::size_t> const & adj_verts = mesh_info[i].verts;
             for (std::size_t k = 0; k < adj_verts.size(); ++k) {
                 std::size_t adj_vertex = adj_verts[k];
                 for (std::size_t l = 0; l < labels[adj_vertex].size(); ++l) {
@@ -217,7 +217,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
                 if (label1 < label2) {
 
                     std::vector<MeshEdge> seam_edges;
-                    find_seam_edges_for_vertex_label_combination(graph, mesh, vertex_infos, i, label1, label2, &seam_edges);
+                    find_seam_edges_for_vertex_label_combination(graph, mesh, mesh_info, i, label1, label2, &seam_edges);
 
                     if (seam_edges.empty()) continue;
 

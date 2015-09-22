@@ -108,7 +108,7 @@ generate_candidate(int label, TextureView const & texture_view,
 
 void
 generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
-    mve::VertexInfoList::ConstPtr vertex_infos,
+    mve::MeshInfo const & mesh_info,
     std::vector<TextureView> * texture_views,
     std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos,
     std::vector<TexturePatch::Ptr> * texture_patches) {
@@ -249,14 +249,14 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
                 l2g[j] = vertex_id;
 
                 /* Check topology in original mesh. */
-                if (vertex_infos->at(vertex_id).vclass != mve::VERTEX_CLASS_SIMPLE) {
+                if (mesh_info[vertex_id].vclass != mve::MeshInfo::VERTEX_CLASS_SIMPLE) {
                     //std::cerr << "Complex/Border vertex in original mesh" << std::endl;
                     disk_topology = false;
                     break;
                 }
 
                 /* Check new topology and determine if vertex is now at the border. */
-                std::vector<std::size_t> const & adj_faces = vertex_infos->at(vertex_id).faces;
+                std::vector<std::size_t> const & adj_faces = mesh_info[vertex_id].faces;
                 std::set<std::size_t> const & adj_hole_faces = it->second;
                 std::vector<std::pair<std::size_t, std::size_t> > fan;
                 for (std::size_t k = 0; k < adj_faces.size(); ++k) {
@@ -401,7 +401,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
 
                     /* Calculate "Mean Value Coordinates" as proposed by Michael S. Floater */
                     std::map<std::size_t, float> weights;
-                    std::vector<std::size_t> const & adj_faces = vertex_infos->at(vertex_id).faces;
+                    std::vector<std::size_t> const & adj_faces = mesh_info[vertex_id].faces;
                     for (std::size_t adj_face : adj_faces) {
                         std::size_t v0 = mesh_faces[adj_face * 3];
                         std::size_t v1 = mesh_faces[adj_face * 3 + 1];
@@ -487,7 +487,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
 
             for (std::size_t j = 0; j < num_vertices; ++j) {
                 std::size_t const vertex_id = l2g[j];
-                std::vector<std::size_t> const & adj_faces = vertex_infos->at(vertex_id).faces;
+                std::vector<std::size_t> const & adj_faces = mesh_info[vertex_id].faces;
                 std::vector<std::size_t> faces; faces.reserve(adj_faces.size());
                 for (std::size_t adj_face : adj_faces) {
                     if (graph.get_label(adj_face) == 0) {
