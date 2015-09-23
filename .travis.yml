@@ -4,6 +4,16 @@ language: cpp
 compiler:
   - gcc
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+
+before_install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+
 before_script:
   - mkdir build
   - cd build
