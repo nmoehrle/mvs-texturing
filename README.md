@@ -44,7 +44,7 @@ thus provide the `-DRESEARCH=ON `flag (see compilation section below).*
     http://vision.csd.uwo.ca/code/
 
 
-Compilation
+Compilation ![Build Status](https://travis-ci.org/nmoehrle/mvs-texturing.svg)
 --------------------------------------------------------------------------------
 
 1.  `git clone https://github.com/nmoehrle/mvs-texturing.git`
