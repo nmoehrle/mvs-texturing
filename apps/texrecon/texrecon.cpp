@@ -25,6 +25,9 @@
 #include "arguments.h"
 
 int main(int argc, char **argv) {
+    util::system::print_build_timestamp(argv[0]);
+    util::system::register_segfault_handler();
+
 #ifdef RESEARCH
     std::cout << "******************************************************************************" << std::endl
               << " Due to use of the -DRESEARCH=ON compile option, this program is licensed "     << std::endl
@@ -32,11 +35,7 @@ int main(int argc, char **argv) {
               << "******************************************************************************" << std::endl;
 #endif
 
-    util::system::register_segfault_handler();
-
     Timer timer;
-    timer.measure("Start");
-
     util::WallTimer wtimer;
 
     Arguments conf;
@@ -63,8 +62,6 @@ int main(int argc, char **argv) {
     mve::MeshInfo mesh_info(mesh);
     tex::prepare_mesh(&mesh_info, mesh);
 
-    std::size_t const num_faces = mesh->get_faces().size() / 3;
-
     std::cout << "Generating texture views: " << std::endl;
     tex::TextureViews texture_views;
     tex::generate_texture_views(conf.in_scene, &texture_views);
@@ -72,15 +69,15 @@ int main(int argc, char **argv) {
     write_string_to_file(conf.out_prefix + ".conf", conf.to_string());
     timer.measure("Loading");
 
+    std::size_t const num_faces = mesh->get_faces().size() / 3;
+
     std::cout << "Building adjacency graph: " << std::endl;
     tex::Graph graph(num_faces);
     tex::build_adjacency_graph(mesh, mesh_info, &graph);
 
-    wtimer.reset();
     if (conf.labeling_file.empty()) {
         std::cout << "View selection:" << std::endl;
 
-        std::size_t const num_faces = mesh->get_faces().size() / 3;
         tex::DataCosts data_costs(num_faces, texture_views.size());
         if (conf.data_cost_file.empty()) {
             tex::calculate_data_costs(mesh, &texture_views, conf.settings, &data_costs);
