@@ -23,7 +23,6 @@ TextureAtlas::TextureAtlas(unsigned int size) :
     image = mve::ByteImage::create(size, size, 3);
     validity_mask = mve::ByteImage::create(size, size, 1);
     filename = std::tmpnam(nullptr);
-    std::cout << filename << std::endl;
 }
 
 TextureAtlas::~TextureAtlas() {
