@@ -33,15 +33,16 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
     MaterialLib & material_lib = obj_model->get_material_lib();
 
     for (TextureAtlas::Ptr texture_atlas : texture_atlases) {
-        groups.push_back(ObjModel::Group());
-        ObjModel::Group & group = groups.back();
-
-        const std::size_t n = material_lib.size();
-        group.material_name = std::string("material") + util::string::get_filled(n, 4);
 
         Material material;
-        material.diffuse_map = texture_atlas->get_filename();
-        material_lib.add_material(group.material_name, material);
+        const std::size_t n = material_lib.size();
+        material.name = std::string("material") + util::string::get_filled(n, 4);
+        material.diffuse_map = texture_atlas->get_image();
+        material_lib.push_back(material);
+
+        groups.push_back(ObjModel::Group());
+        ObjModel::Group & group = groups.back();
+        group.material_name = material.name;
 
         TextureAtlas::Faces const & atlas_faces = texture_atlas->get_faces();
         TextureAtlas::Texcoords const & atlas_texcoords = texture_atlas->get_texcoords();

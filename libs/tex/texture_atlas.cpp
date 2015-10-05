@@ -22,13 +22,6 @@ TextureAtlas::TextureAtlas(unsigned int size) :
     bin = RectangularBin::create(size, size);
     image = mve::ByteImage::create(size, size, 3);
     validity_mask = mve::ByteImage::create(size, size, 1);
-    filename = std::tmpnam(nullptr);
-}
-
-TextureAtlas::~TextureAtlas() {
-    if (util::fs::exists(filename.c_str())) {
-        util::fs::unlink(filename.c_str());
-    }
 }
 
 /**
@@ -256,9 +249,6 @@ TextureAtlas::finalize() {
     this->apply_edge_padding();
     this->validity_mask.reset();
     this->merge_texcoords();
-
-    mve::image::save_png_file(this->image, this->filename);
-    this->image.reset();
 
     this->finalized = true;
 }

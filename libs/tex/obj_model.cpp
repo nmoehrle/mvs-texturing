@@ -20,8 +20,6 @@
 
 #define OBJ_INDEX_OFFSET 1
 
-ObjModel::ObjModel() {}
-
 void
 ObjModel::save(ObjModel const & model, std::string const & prefix) {
     model.save_to_files(prefix);

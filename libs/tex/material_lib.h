@@ -11,33 +11,23 @@
 #define TEX_MATERIALLIB_HEADER
 
 #include <vector>
+#include <mve/image.h>
 
 struct Material {
-    std::string diffuse_map;
+    std::string name;
+    mve::ByteImage::ConstPtr diffuse_map;
 };
 
 /**
   * Class representing a material lib of and obj model.
   */
-class MaterialLib {
-    private:
-        std::vector<Material> materials;
-        std::vector<std::string> material_names;
+class MaterialLib : public std::vector<Material>{
+
     public:
-        MaterialLib();
-
-        void add_material(std::string const & name, Material material);
-        std::size_t size();
-
-        /** Saves the material lib to an .mtl file and all textures of its
+        /** Saves the material lib to an .mtl file and all maps of its
           * materials with the given prefix.
           */
         void save_to_files(std::string const & prefix) const;
 };
-
-inline std::size_t
-MaterialLib::size() {
-    return materials.size();
-}
 
 #endif /* TEX_MATERIALLIB_HEADER */

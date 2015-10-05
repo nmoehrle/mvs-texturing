@@ -197,7 +197,7 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
 }
 
 void
-generate_texture_views(std::string in_scene, std::vector<TextureView> * texture_views) {
+generate_texture_views(std::string const & in_scene, std::vector<TextureView> * texture_views) {
     util::Tokenizer tok;
     tok.split(in_scene, ':', true);
 

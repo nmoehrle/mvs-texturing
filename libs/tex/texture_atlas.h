@@ -47,22 +47,18 @@ class TextureAtlas {
 
         RectangularBin::Ptr bin;
 
-        std::string filename;
-
         void apply_edge_padding(void);
         void merge_texcoords(void);
 
     public:
-        /** Constructs a texture patch. */
         TextureAtlas(unsigned int size);
-        ~TextureAtlas(void);
 
         static TextureAtlas::Ptr create(unsigned int size);
 
         Faces const & get_faces(void) const;
         TexcoordIds const & get_texcoord_ids(void) const;
         Texcoords const & get_texcoords(void) const;
-        std::string const & get_filename(void) const;
+        mve::ByteImage::ConstPtr get_image(void) const;
 
         bool insert(TexturePatch::ConstPtr texture_patch,
             float vmin, float vmax);
@@ -90,12 +86,12 @@ TextureAtlas::get_texcoords(void) const {
     return texcoords;
 }
 
-inline std::string const &
-TextureAtlas::get_filename(void) const {
+inline mve::ByteImage::ConstPtr
+TextureAtlas::get_image(void) const {
     if (!finalized) {
         throw util::Exception("Texture atlas not finalized");
     }
-    return filename;
+    return image;
 }
 
 #endif /* TEX_TEXTUREATLAS_HEADER */
