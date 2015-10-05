@@ -305,8 +305,7 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         }
 
         /* Ensure that all memory is freeed. */
-        projected_face_infos[i].clear();
-        projected_face_infos[i].shrink_to_fit();
+        projected_face_infos[i] = std::vector<ProjectedFaceInfo>();
     }
 
     std::cout << "\tMaximum quality of a face within an image: " << max_quality << std::endl;
