@@ -45,7 +45,7 @@ std::size_t remove_redundant_faces(mve::MeshInfo const & mesh_info, mve::Triangl
         if (redundant) {
             ++num_redundant;
         } else {
-            new_faces.insert(new_faces.end(), &faces[i], &faces[i + 3]);
+            new_faces.insert(new_faces.end(), faces.cbegin() + i, faces.cbegin() + i + 3);
         }
     }
 
