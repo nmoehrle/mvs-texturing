@@ -109,18 +109,18 @@ void LBPGraph::set_neighbors(int site1, int site2){
 
 void LBPGraph::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
     for (std::size_t i = 0; i < costs.size(); ++i) {
-        Vertex * vertex = &vertices[costs[i].site];
-        vertex->labels.push_back(label);
+        Vertex & vertex = vertices[costs[i].site];
+        vertex.labels.push_back(label);
         int data_cost = costs[i].cost;
-        vertex->data_costs.push_back(data_cost);
+        vertex.data_costs.push_back(data_cost);
 
-        if (data_cost < vertex->data_cost) {
-            vertex->label = label;
-            vertex->data_cost = data_cost;
+        if (data_cost < vertex.data_cost) {
+            vertex.label = label;
+            vertex.data_cost = data_cost;
         }
 
-        for (int j : vertex->incoming_edges) {
-            DirectedEdge &incoming_edge = edges[j];
+        for (int j : vertex.incoming_edges) {
+            DirectedEdge & incoming_edge = edges[j];
             incoming_edge.old_msg.push_back(0);
             incoming_edge.new_msg.push_back(0);
         }

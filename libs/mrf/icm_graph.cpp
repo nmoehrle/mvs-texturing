@@ -56,14 +56,14 @@ void ICMGraph::set_neighbors(int site1, int site2) {
 
 void ICMGraph::set_data_costs(int label, std::vector<SparseDataCost> const & costs) {
     for (std::size_t i = 0; i < costs.size(); ++i) {
-        Site * site = &sites[costs[i].site];
-        site->labels.push_back(label);
+        Site & site = sites[costs[i].site];
+        site.labels.push_back(label);
         int data_cost = costs[i].cost;
-        site->data_costs.push_back(data_cost);
+        site.data_costs.push_back(data_cost);
 
-        if (data_cost < site->data_cost) {
-            site->label = label;
-            site->data_cost = data_cost;
+        if (data_cost < site.data_cost) {
+            site.label = label;
+            site.data_cost = data_cost;
         }
     }
 }

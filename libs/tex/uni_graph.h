@@ -87,22 +87,17 @@ UniGraph::add_edge(std::size_t n1, std::size_t n2) {
     }
 }
 
-/**
-  * Finds and deletes the first element of the vector which equals element.
-  */
 inline void
-delete_element(std::vector<std::size_t> * vector, std::size_t element) {
-    std::vector<std::size_t>::iterator position = std::find(vector->begin(), vector->end(), element);
-    if (position != vector->end())
-        vector->erase(position);
+delete_element(std::vector<std::size_t> * vec, std::size_t element) {
+    vec->erase(std::remove(vec->begin(), vec->end(), element), vec->end());
 }
 
 inline void
 UniGraph::remove_edge(std::size_t n1, std::size_t n2) {
     assert(n1 < num_nodes() && n2 < num_nodes());
     if (has_edge(n1, n2)){
-        delete_element(&(adj_lists[n1]), n2);
-        delete_element(&(adj_lists[n2]), n1);
+        delete_element(&adj_lists[n1], n2);
+        delete_element(&adj_lists[n2], n1);
         --edges;
     }
 }
