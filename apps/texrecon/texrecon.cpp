@@ -77,6 +77,7 @@ int main(int argc, char **argv) {
 
     if (conf.labeling_file.empty()) {
         std::cout << "View selection:" << std::endl;
+        util::WallTimer rwtimer;
 
         tex::DataCosts data_costs(num_faces, texture_views.size());
         if (conf.data_cost_file.empty()) {
@@ -102,6 +103,7 @@ int main(int argc, char **argv) {
 
         tex::view_selection(data_costs, &graph, conf.settings);
         timer.measure("Running MRF optimization");
+        std::cout << "\tTook: " << rwtimer.get_elapsed_sec() << "s" << std::endl;
 
         /* Write labeling to file. */
         if (conf.write_intermediate_results) {
@@ -133,7 +135,6 @@ int main(int argc, char **argv) {
 
         std::cout << "done." << std::endl;
     }
-    std::cout << "\tTook: " << wtimer.get_elapsed_sec() << "s" << std::endl;
 
     tex::TextureAtlases texture_atlases;
     {
