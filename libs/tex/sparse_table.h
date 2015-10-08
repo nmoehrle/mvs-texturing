@@ -111,7 +111,7 @@ SparseTable<C, R, T>::set_value(C col, R row, T value) {
 
 template <typename C, typename R, typename T> void
 SparseTable<C, R, T>::save_to_file(SparseTable const & sparse_table, const std::string &filename) {
-    std::ofstream out(filename.c_str());
+    std::ofstream out(filename.c_str(), std::ios::binary);
     if (!out.good())
         throw util::FileException(filename, std::strerror(errno));
 
@@ -137,7 +137,7 @@ SparseTable<C, R, T>::save_to_file(SparseTable const & sparse_table, const std::
 
 template <typename C, typename R, typename T> void
 SparseTable<C, R, T>::load_from_file(const std::string & filename, SparseTable<C, R, T> * sparse_table) {
-    std::ifstream in(filename.c_str());
+    std::ifstream in(filename.c_str(), std::ios::binary);
     if (!in.good())
         throw util::FileException(filename, std::strerror(errno));
 

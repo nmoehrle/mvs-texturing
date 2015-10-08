@@ -103,7 +103,7 @@ write_vector_to_csv(std::string const & filename, std::vector<T> const & vector,
   */
 template <typename T> void
 vector_to_file(std::string const & filename, std::vector<T> const & vector) {
-    std::ofstream out(filename.c_str());
+    std::ofstream out(filename.c_str(), std::ios::binary);
     if (!out.good())
         throw util::FileException(filename, std::strerror(errno));
 
@@ -117,7 +117,7 @@ vector_to_file(std::string const & filename, std::vector<T> const & vector) {
   */
 template <typename T> std::vector<T>
 vector_from_file(std::string const & filename) {
-    std::ifstream in(filename.c_str());
+    std::ifstream in(filename.c_str(), std::ios::binary);
     if (!in.good())
         throw util::FileException(filename, std::strerror(errno));
     in.seekg (0, in.end);
