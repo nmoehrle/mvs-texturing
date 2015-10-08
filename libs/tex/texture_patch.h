@@ -56,9 +56,6 @@ class TexturePatch {
         /** Adjust the image colors and update validity mask. */
         void adjust_colors(std::vector<math::Vec3f> const & adjust_values);
 
-        /** Compares texture patches image size. */
-        bool operator<(TexturePatch const & texture_patch) const;
-
         math::Vec3f get_pixel_value(math::Vec2f pixel) const;
         void set_pixel_value(math::Vec2i pixel, math::Vec3f color);
 
@@ -165,11 +162,6 @@ TexturePatch::get_faces(void) const {
 inline int
 TexturePatch::get_size(void) const {
     return get_width() * get_height();
-}
-
-inline bool
-TexturePatch::operator<(TexturePatch const & other) const {
-    return get_size() < other.get_size();
 }
 
 #endif /* TEX_TEXTUREPATCH_HEADER */

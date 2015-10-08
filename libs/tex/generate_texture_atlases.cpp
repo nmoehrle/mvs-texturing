@@ -51,7 +51,10 @@ calculate_texture_size(std::list<TexturePatch::ConstPtr> const & texture_patches
             unsigned int area = width * height;
             unsigned int waste = area - texture_patch->get_size();
 
+            /* Only consider patches where the information dominates padding. */
             if (static_cast<double>(waste) / texture_patch->get_size() > 1.0) {
+                /* Since the patches are sorted by size we can assume that only
+                 * few further patches will contribute to the size and break. */
                 break;
             }
 
@@ -112,6 +115,10 @@ calculate_mapping_function(std::list<TexturePatch::ConstPtr> const & texture_pat
     return std::pair<float, float>(min, max);
 }
 
+bool comp(TexturePatch::ConstPtr first, TexturePatch::ConstPtr second) {
+    return first->get_size() > second->get_size();
+}
+
 void
 generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     std::vector<TextureAtlas::Ptr> * texture_atlases) {
@@ -130,8 +137,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     std::cout << "\tSorting texture patches... " << std::flush;
     /* Improve the bin-packing algorithm efficiency by sorting texture patches
      * in descending order of size. */
-    texture_patches.sort();
-    texture_patches.reverse();
+    texture_patches.sort(comp);
     std::cout << "done." << std::endl;
 
     std::size_t const total_num_patches = texture_patches.size();
