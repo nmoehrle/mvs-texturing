@@ -16,12 +16,11 @@
 
 #include "texture_patch.h"
 
-TexturePatch::TexturePatch(int _label, std::vector<std::size_t> const & _faces,
-    std::vector<math::Vec2f>  const & _texcoords, mve::ByteImage::Ptr _image)
-    : label(_label), faces(_faces.begin(), _faces.end()),
-    texcoords(_texcoords.begin(), _texcoords.end()) {
+TexturePatch::TexturePatch(int label, std::vector<std::size_t> const & faces,
+    std::vector<math::Vec2f>  const & texcoords, mve::ByteImage::Ptr byte_image)
+    : label(label), faces(faces), texcoords(texcoords) {
 
-    image = mve::image::byte_to_float_image(_image);
+    image = mve::image::byte_to_float_image(byte_image);
 
     validity_mask = mve::ByteImage::create(get_width(), get_height(), 1);
     validity_mask->fill(255);
@@ -99,7 +98,7 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                             bcoords[0], bcoords[1], bcoords[2]);
                     }
                     validity_mask->at(x, y, 0) = 255;
-                    blending_mask->at(x, y, 0) = 128;
+                    blending_mask->at(x, y, 0) = 64;
                 }
             }
         }
@@ -177,7 +176,7 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     assert(valid_pixel(pixel));
 
     std::copy(color.begin(), color.end(), &image->at(pixel[0], pixel[1], 0));
-    blending_mask->at(pixel[0], pixel[1], 0) = 126;
+    blending_mask->at(pixel[0], pixel[1], 0) = 128;
 }
 
 void
@@ -187,7 +186,7 @@ TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     /* Invalidate all pixels outside of the boundary. */
     for (int y = 0; y < blending_mask->height(); ++y) {
         for (int x = 0; x < blending_mask->width(); ++x) {
-            if (blending_mask->at(x, y, 0) == 128) {
+            if (blending_mask->at(x, y, 0) == 64) {
                 validity_mask->at(x, y, 0) = 0;
             }
         }
@@ -206,28 +205,23 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
     PixelSet valid_border_pixels;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (validity_mask->at(x, y, 0) == 255) {
-                /* Valid border pixels need no invalid neighbours. */
-                if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
-                    valid_border_pixels.insert(std::pair<int, int>(x, y));
-                    continue;
-                }
+            if (validity_mask->at(x, y, 0) == 0) continue;
 
-                bool at_border = false;
-                /* Check the direct neighbourhood of all invalid pixels. */
-                for (int j = -1; j <= 1 && !at_border; ++j) {
-                    for (int i = -1; i <= 1 && !at_border; ++i) {
-                        int nx = x + i;
-                        int ny = y + j;
-                        /* If the valid pixel has a invalid neighbour: */
-                        if (0 <= nx && nx < width &&
-                            0 <= ny && ny < height &&
-                            validity_mask->at(nx, ny, 0) == 0) {
+            /* Valid border pixels need no invalid neighbours. */
+            if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
+                valid_border_pixels.insert(std::pair<int, int>(x, y));
+                continue;
+            }
 
-                            /* Add the pixel to the set of valid border pixels. */
-                            valid_border_pixels.insert(std::pair<int, int>(x, y));
-                            at_border = true;
-                        }
+            /* Check the direct neighbourhood of all invalid pixels. */
+            for (int j = -1; j <= 1; ++j) {
+                for (int i = -1; i <= 1; ++i) {
+                    int nx = x + i;
+                    int ny = y + j;
+                    /* If the valid pixel has a invalid neighbour: */
+                    if (validity_mask->at(nx, ny, 0) == 0) {
+                        /* Add the pixel to the set of valid border pixels. */
+                        valid_border_pixels.insert(std::pair<int, int>(x, y));
                     }
                 }
             }
@@ -237,7 +231,7 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
     mve::ByteImage::Ptr inner_pixel = validity_mask->duplicate();
 
     /* Iteratively erode all border pixels. */
-    for (std::size_t i = 0; i < strip_width; ++i){
+    for (std::size_t i = 0; i < strip_width; ++i) {
         PixelVector new_invalid_pixels(valid_border_pixels.begin(), valid_border_pixels.end());
         PixelVector::iterator it;
         valid_border_pixels.clear();
@@ -261,12 +255,31 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
                      int ny = y + j;
                      if (0 <= nx && nx < width &&
                          0 <= ny && ny < height &&
-                         inner_pixel->at(nx, ny, 0) == 255){
+                         inner_pixel->at(nx, ny, 0) == 255) {
 
                          valid_border_pixels.insert(std::pair<int, int>(nx, ny));
                      }
                  }
              }
+        }
+    }
+
+    /* Sanitize blending mask. */
+    for (int y = 1; y < height - 1; ++y) {
+        for (int x = 1; x < width - 1; ++x) {
+            if (blending_mask->at(x, y, 0) == 128)  {
+                uint8_t n[] = {blending_mask->at(x - 1, y, 0),
+                    blending_mask->at(x + 1, y, 0),
+                    blending_mask->at(x, y - 1, 0),
+                    blending_mask->at(x, y + 1, 0)
+                };
+                bool valid = true;
+                for (uint8_t v : n) {
+                    if (v == 255) continue;
+                    valid = false;
+                }
+                if (valid) blending_mask->at(x, y, 0) = 255;
+            }
         }
     }
 
@@ -281,6 +294,6 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
          int x = it->first;
          int y = it->second;
 
-         blending_mask->at(x, y, 0) = 126;
+         blending_mask->at(x, y, 0) = 128;
     }
 }

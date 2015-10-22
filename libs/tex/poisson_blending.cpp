@@ -13,8 +13,6 @@
 #include <math/vector.h>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseLU>
-#include <mve/image_io.h>
-#include <mve/image_tools.h>
 
 #include "poisson_blending.h"
 
@@ -69,7 +67,7 @@ poisson_blend(mve::FloatImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
     for (int i = 0; i < n; ++i) {
         if (mask->at(i) != 0) {
             indices->at(i) = index;
-            index++;
+            index += 1;
         }
     }
     const int nnz = index;
@@ -82,7 +80,7 @@ poisson_blend(mve::FloatImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
 
     for (int i = 0; i < n; ++i) {
         const int row = indices->at(i);
-        if (mask->at(i) == 126 || mask->at(i) == 128) {
+        if (mask->at(i) == 128 || mask->at(i) == 64) {
             Eigen::Triplet<float, int> t(row, row, 1.0f);
             coefficients_A.push_back(t);
 
