@@ -1,7 +1,5 @@
 All source files are distributed under the BSD 3-Clause License unless
-otherwise noted in the source file. Some files are distributed under the
-GPL 3 license, and programs that include or link to those files are subject
-to the GPL 3 license as well.
+otherwise noted in the source file.
 
 Software License Agreement (BSD 3-Clause License)
 ---------------------------------------------------------------------------
