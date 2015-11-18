@@ -91,6 +91,8 @@ struct Settings {
     bool geometric_visibility_test;
     bool global_seam_leveling;
     bool local_seam_leveling;
+    bool hole_filling;
+    bool keep_unseen_faces;
 };
 
 #endif /* TEX_SETTINGS_HEADER */

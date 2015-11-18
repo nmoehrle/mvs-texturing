@@ -142,7 +142,8 @@ int main(int argc, char **argv) {
         tex::TexturePatches texture_patches;
         tex::VertexProjectionInfos vertex_projection_infos;
         std::cout << "Generating texture patches:" << std::endl;
-        tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views, &vertex_projection_infos, &texture_patches);
+        tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views,
+            conf.settings, &vertex_projection_infos, &texture_patches);
 
         if (conf.settings.global_seam_leveling) {
             std::cout << "Running global seam leveling:" << std::endl;
@@ -198,7 +199,8 @@ int main(int argc, char **argv) {
             tex::TexturePatches texture_patches;
             generate_debug_embeddings(&texture_views);
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
-            tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views, &vertex_projection_infos, &texture_patches);
+            tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views,
+                conf.settings, &vertex_projection_infos, &texture_patches);
             tex::generate_texture_atlases(&texture_patches, &texture_atlases);
         }
 

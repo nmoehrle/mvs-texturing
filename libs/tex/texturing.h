@@ -82,6 +82,7 @@ void generate_texture_patches(UniGraph const & graph,
     mve::TriangleMesh::ConstPtr mesh,
     mve::MeshInfo const & mesh_info,
     TextureViews * texture_views,
+    Settings const & settings,
     VertexProjectionInfos * vertex_projection_infos,
     TexturePatches * texture_patches);
 
