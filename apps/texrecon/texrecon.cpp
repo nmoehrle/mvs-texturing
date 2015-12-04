@@ -85,13 +85,13 @@ int main(int argc, char **argv) {
 
             if (conf.write_intermediate_results) {
                 std::cout << "\tWriting data cost file... " << std::flush;
-                    ST::save_to_file(data_costs, conf.out_prefix + "_data_costs.spt");
+                tex::DataCosts::save_to_file(data_costs, conf.out_prefix + "_data_costs.spt");
                 std::cout << "done." << std::endl;
             }
         } else {
             std::cout << "\tLoading data cost file... " << std::flush;
             try {
-                ST::load_from_file(conf.data_cost_file, &data_costs);
+                tex::DataCosts::load_from_file(conf.data_cost_file, &data_costs);
             } catch (util::FileException e) {
                 std::cout << "failed!" << std::endl;
                 std::cerr << e.what() << std::endl;
