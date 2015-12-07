@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 project(Texturing)
 include(ExternalProject)
@@ -8,25 +8,10 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 endif()
 
+
+set(CMAKE_CXX_STANDARD 11)
+
 set(RESEARCH "OFF" CACHE BOOL "Use the gco library for Multi-Label Optimization, which is licensed only for research purposes!")
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11_FLAG)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X_FLAG)
-if(COMPILER_SUPPORTS_CXX11_FLAG)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    set(COMPILER_SUPPORTS_CXX11 TRUE)
-elseif(COMPILER_SUPPORTS_CXX0X_FLAG)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-    set(COMPILER_SUPPORTS_CXX11 TRUE)
-elseif(MSVC AND NOT (MSVC_VERSION LESS 1800))
-    set(COMPILER_SUPPORTS_CXX11 TRUE)
-endif()
-
-if(NOT COMPILER_SUPPORTS_CXX11)
-    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
-
 if(RESEARCH)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRESEARCH=1")
 endif()
