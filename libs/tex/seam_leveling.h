@@ -29,12 +29,12 @@ struct VertexProjectionInfo {
     }
 };
 
-struct ProjectedEdgeInfo {
+struct EdgeProjectionInfo {
     std::size_t texture_patch_id;
     math::Vec2f p1;
     math::Vec2f p2;
 
-    bool operator<(ProjectedEdgeInfo const & other) const {
+    bool operator<(EdgeProjectionInfo const & other) const {
         return texture_patch_id < other.texture_patch_id;
     }
 };
@@ -51,7 +51,7 @@ find_seam_edges(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 void
 find_mesh_edge_projections(
     std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
-    MeshEdge mesh_edge, std::vector<ProjectedEdgeInfo> * projected_edge_infos);
+    MeshEdge mesh_edge, std::vector<EdgeProjectionInfo> * projected_edge_infos);
 
 TEX_NAMESPACE_END
 

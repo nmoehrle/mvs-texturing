@@ -28,8 +28,6 @@
 
 #include "seam_leveling.h"
 
-typedef SparseTable<std::uint32_t, std::uint16_t, float> ST;
-
 TEX_NAMESPACE_BEGIN
 
 typedef std::vector<TextureView> TextureViews;
@@ -37,8 +35,9 @@ typedef std::vector<TexturePatch::Ptr> TexturePatches;
 typedef std::vector<TextureAtlas::Ptr> TextureAtlases;
 typedef ObjModel Model;
 typedef UniGraph Graph;
-typedef ST DataCosts;
+typedef SparseTable<std::uint32_t, std::uint16_t, float> DataCosts;
 typedef std::vector<std::vector<VertexProjectionInfo> > VertexProjectionInfos;
+typedef std::vector<std::vector<FaceProjectionInfo> > FaceProjectionInfos;
 
 /**
   * prepares the mesh for texturing
@@ -67,13 +66,19 @@ build_adjacency_graph(mve::TriangleMesh::ConstPtr mesh,
  */
 void
 calculate_data_costs(mve::TriangleMesh::ConstPtr mesh,
-    TextureViews * texture_views, Settings const & settings, ST * data_costs);
+    TextureViews * texture_views, Settings const & settings,
+    DataCosts * data_costs);
+
+void
+postprocess_face_infos(Settings const & settings,
+    FaceProjectionInfos * projected_face_infos,
+    DataCosts * data_costs);
 
 /**
  * Runs the view selection procedure and saves the labeling in the graph
  */
 void
-view_selection(ST const & data_costs, UniGraph * graph, Settings const & settings);
+view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const & settings);
 
 /**
   * Generates texture patches using the graph to determine adjacent faces with the same label.

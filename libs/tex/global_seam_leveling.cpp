@@ -103,20 +103,20 @@ calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
 
         assert(length != 0.0f);
 
-        std::vector<ProjectedEdgeInfo> projected_edge_infos;
-        find_mesh_edge_projections(vertex_projection_infos, seam_edge, &projected_edge_infos);
+        std::vector<EdgeProjectionInfo> edge_projection_infos;
+        find_mesh_edge_projections(vertex_projection_infos, seam_edge, &edge_projection_infos);
 
         std::size_t num_samples = 0;
 
-        for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
-            TexturePatch::Ptr texture_patch = texture_patches[projected_edge_info.texture_patch_id];
+        for (EdgeProjectionInfo const & edge_projection_info : edge_projection_infos) {
+            TexturePatch::Ptr texture_patch = texture_patches[edge_projection_info.texture_patch_id];
             const int texture_patch_label = texture_patch->get_label();
             if (texture_patch_label == label1 || texture_patch_label == label2) {
                 if (texture_patch_label == label1)
-                    color1_accum.add(sample_edge(texture_patch, projected_edge_info.p1, projected_edge_info.p2), length);
+                    color1_accum.add(sample_edge(texture_patch, edge_projection_info.p1, edge_projection_info.p2), length);
 
                 if (texture_patch_label == label2)
-                    color2_accum.add(sample_edge(texture_patch, projected_edge_info.p1, projected_edge_info.p2), length);
+                    color2_accum.add(sample_edge(texture_patch, edge_projection_info.p1, edge_projection_info.p2), length);
 
                 num_samples++;
             }

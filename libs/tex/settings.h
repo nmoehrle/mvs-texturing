@@ -14,38 +14,10 @@
 #include <vector>
 #include <string>
 
+#include "defines.h"
+
 template <typename T>
 const std::vector<std::string> choice_strings();
-
-/** Enum representing a data term. */
-enum DataTerm {
-    AREA = 0,
-    GMI = 1
-};
-template <> inline
-const std::vector<std::string> choice_strings<DataTerm>() {
-    return {"area", "gmi"};
-}
-
-/** Enum representing a smoothness term. */
-enum SmoothnessTerm {
-    POTTS = 0
-};
-template <> inline
-const std::vector<std::string> choice_strings<SmoothnessTerm>() {
-    return {"potts"};
-}
-
-/** Enum representing the choice of outlier removal. */
-enum OutlierRemoval {
-    NONE = 0,
-    GAUSS_DAMPING = 1,
-    GAUSS_CLAMPING = 2
-};
-template <> inline
-const std::vector<std::string> choice_strings<OutlierRemoval>() {
-    return {"none", "gauss_damping", "gauss_clamping"};
-}
 
 template <typename T> inline
 const std::string choice_string(T i) {
@@ -81,6 +53,26 @@ T parse_choice(std::string s) {
     throw std::invalid_argument(ss.str());
 }
 
+TEX_NAMESPACE_BEGIN
+
+/** Enum representing a data term. */
+enum DataTerm {
+    AREA = 0,
+    GMI = 1
+};
+
+/** Enum representing a smoothness term. */
+enum SmoothnessTerm {
+    POTTS = 0
+};
+
+/** Enum representing the choice of outlier removal. */
+enum OutlierRemoval {
+    NONE = 0,
+    GAUSS_DAMPING = 1,
+    GAUSS_CLAMPING = 2
+};
+
 struct Settings {
     bool verbose;
 
@@ -94,5 +86,22 @@ struct Settings {
     bool hole_filling;
     bool keep_unseen_faces;
 };
+
+TEX_NAMESPACE_END
+
+template <> inline
+const std::vector<std::string> choice_strings<tex::DataTerm>() {
+    return {"area", "gmi"};
+}
+
+template <> inline
+const std::vector<std::string> choice_strings<tex::SmoothnessTerm>() {
+    return {"potts"};
+}
+
+template <> inline
+const std::vector<std::string> choice_strings<tex::OutlierRemoval>() {
+    return {"none", "gauss_damping", "gauss_clamping"};
+}
 
 #endif /* TEX_SETTINGS_HEADER */

@@ -11,6 +11,8 @@
 
 #include "debug.h"
 
+TEX_NAMESPACE_BEGIN
+
 const bool font[] = {
     0,1,0, 0,1,0, 1,1,0, 1,1,0, 1,0,0, 1,1,1, 0,1,0, 1,1,1, 0,1,0 ,0,1,0,
     1,0,1, 1,1,0, 0,0,1, 0,0,1, 1,0,1, 1,0,0, 1,0,0, 0,0,1, 1,0,1, 1,0,1,
@@ -104,3 +106,5 @@ generate_debug_embeddings(std::vector<TextureView> * texture_views) {
         texture_view->bind_image(image);
     }
 }
+
+TEX_NAMESPACE_END

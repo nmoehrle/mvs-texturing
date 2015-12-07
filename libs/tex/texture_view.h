@@ -20,13 +20,15 @@
 #include "tri.h"
 #include "settings.h"
 
+TEX_NAMESPACE_BEGIN
+
 /** Struct containing the quality and mean color of a face within a view. */
-struct ProjectedFaceInfo {
+struct FaceProjectionInfo {
     std::uint16_t view_id;
     float quality;
     math::Vec3f mean_color;
 
-    bool operator<(ProjectedFaceInfo const & other) const {
+    bool operator<(FaceProjectionInfo const & other) const {
         return view_id < other.view_id;
     }
 };
@@ -107,7 +109,7 @@ class TextureView {
 
         void
         get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3,
-            ProjectedFaceInfo * face_info, Settings const & settings) const;
+            FaceProjectionInfo * face_info, Settings const & settings) const;
 
         void
         export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3, std::string const & filename) const;
@@ -199,5 +201,7 @@ TextureView::release_image(void) {
     assert(image != NULL);
     image.reset();
 }
+
+TEX_NAMESPACE_END
 
 #endif /* TEX_TEXTUREVIEW_HEADER */

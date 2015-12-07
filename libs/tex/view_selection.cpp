@@ -49,12 +49,12 @@ set_neighbors(UniGraph const & graph, std::vector<FaceInfo> const & face_infos,
 
 /** Set the data costs of the MRF. */
 void
-set_data_costs(std::vector<FaceInfo> const & face_infos, ST const & data_costs,
+set_data_costs(std::vector<FaceInfo> const & face_infos, DataCosts const & data_costs,
     std::vector<mrf::Graph::Ptr> const & mrfs) {
 
     /* Set data costs for all labels except label 0 (undefined) */
     for (std::size_t i = 0; i < data_costs.rows(); i++) {
-        ST::Row const & data_costs_for_label = data_costs.row(i);
+        DataCosts::Row const & data_costs_for_label = data_costs.row(i);
 
         std::vector<std::vector<mrf::SparseDataCost> > costs(mrfs.size());
         for(std::size_t j = 0; j < data_costs_for_label.size(); j++) {
@@ -86,10 +86,10 @@ set_data_costs(std::vector<FaceInfo> const & face_infos, ST const & data_costs,
 
 /** Remove all edges of nodes which corresponding face has not been seen in any texture view. */
 void
-isolate_unseen_faces(UniGraph * graph, ST const & data_costs) {
+isolate_unseen_faces(UniGraph * graph, DataCosts const & data_costs) {
     int num_unseen_faces = 0;
     for (std::uint32_t i = 0; i < data_costs.cols(); i++) {
-        ST::Column const & data_costs_for_face = data_costs.col(i);
+        DataCosts::Column const & data_costs_for_face = data_costs.col(i);
 
         if (data_costs_for_face.size() == 0) {
             num_unseen_faces++;
@@ -104,7 +104,7 @@ isolate_unseen_faces(UniGraph * graph, ST const & data_costs) {
 }
 
 void
-view_selection(ST const & data_costs, UniGraph * graph, Settings const & settings) {
+view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const & settings) {
     UniGraph mgraph(*graph);
     isolate_unseen_faces(&mgraph, data_costs);
 

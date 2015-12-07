@@ -18,16 +18,16 @@ TEX_NAMESPACE_BEGIN
 #define STRIP_SIZE 20
 
 math::Vec3f
-mean_color_of_edge_point(std::vector<ProjectedEdgeInfo> const & projected_edge_infos,
+mean_color_of_edge_point(std::vector<EdgeProjectionInfo> const & edge_projection_infos,
     std::vector<TexturePatch::Ptr> const & texture_patches, float t) {
 
     assert(0.0f <= t && t <= 1.0f);
     math::Accum<math::Vec3f> color_accum(math::Vec3f(0.0f));
 
-    for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos) {
-        TexturePatch::Ptr texture_patch = texture_patches[projected_edge_info.texture_patch_id];
+    for (EdgeProjectionInfo const & edge_projection_info : edge_projection_infos) {
+        TexturePatch::Ptr texture_patch = texture_patches[edge_projection_info.texture_patch_id];
         if (texture_patch->get_label() == 0) continue;
-        math::Vec2f pixel = projected_edge_info.p1 * t + (1.0f - t) * projected_edge_info.p2;
+        math::Vec2f pixel = edge_projection_info.p1 * t + (1.0f - t) * edge_projection_info.p2;
         math::Vec3f color = texture_patch->get_pixel_value(pixel);
         color_accum.add(color, 1.0f);
     }
@@ -111,26 +111,26 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     std::vector<math::Vec3f> vertex_colors(num_vertices);
     std::vector<std::vector<math::Vec3f> > edge_colors;
 
-    std::vector<std::vector<ProjectedEdgeInfo> > projected_edge_infos;
+    std::vector<std::vector<EdgeProjectionInfo> > edge_projection_infos;
     {
         std::vector<MeshEdge> seam_edges;
         find_seam_edges(graph, mesh, &seam_edges);
         edge_colors.resize(seam_edges.size());
-        projected_edge_infos.resize(seam_edges.size());
+        edge_projection_infos.resize(seam_edges.size());
         for (std::size_t i = 0; i < seam_edges.size(); ++i) {
             MeshEdge const & seam_edge = seam_edges[i];
             find_mesh_edge_projections(vertex_projection_infos, seam_edge,
-                &projected_edge_infos[i]);
+                &edge_projection_infos[i]);
         }
     }
 
     std::vector<std::vector<Line> > lines(texture_patches->size());
     std::vector<std::vector<Pixel> > pixels(texture_patches->size());
     /* Sample edge colors. */
-    for (std::size_t i = 0; i < projected_edge_infos.size(); ++i) {
+    for (std::size_t i = 0; i < edge_projection_infos.size(); ++i) {
         float max_length = 0;
-        for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos[i]) {
-            float length = (projected_edge_info.p1 - projected_edge_info.p2).norm();
+        for (EdgeProjectionInfo const & edge_projection_info : edge_projection_infos[i]) {
+            float length = (edge_projection_info.p1 - edge_projection_info.p2).norm();
             max_length = std::max(max_length, length);
         }
 
@@ -138,15 +138,15 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         edge_color.resize(std::ceil(max_length * 2.0f));
         for (std::size_t j = 0; j < edge_color.size(); ++j) {
             float t = static_cast<float>(j) / (edge_color.size() - 1);
-            edge_color[j] = mean_color_of_edge_point(projected_edge_infos[i], *texture_patches, t);
+            edge_color[j] = mean_color_of_edge_point(edge_projection_infos[i], *texture_patches, t);
         }
 
-        for (ProjectedEdgeInfo const & projected_edge_info : projected_edge_infos[i]) {
+        for (EdgeProjectionInfo const & edge_projection_info : edge_projection_infos[i]) {
             Line line;
-            line.from = projected_edge_info.p1;
-            line.to = projected_edge_info.p2;
+            line.from = edge_projection_info.p1;
+            line.to = edge_projection_info.p2;
             line.color = &edge_colors[i];
-            lines[projected_edge_info.texture_patch_id].push_back(line);
+            lines[edge_projection_info.texture_patch_id].push_back(line);
         }
     }
 

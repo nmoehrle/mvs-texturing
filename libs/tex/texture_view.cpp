@@ -15,6 +15,8 @@
 
 #include "texture_view.h"
 
+TEX_NAMESPACE_BEGIN
+
 TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
     std::string const & image_file)
     : id(id), image_file(image_file) {
@@ -131,7 +133,7 @@ TextureView::erode_validity_mask(void) {
 
 void
 TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
-    math::Vec3f const & v3, ProjectedFaceInfo * face_info, Settings const & settings) const {
+    math::Vec3f const & v3, FaceProjectionInfo * face_info, Settings const & settings) const {
 
     assert(image != NULL);
     assert(settings.data_term != GMI || gradient_magnitude != NULL);
@@ -310,3 +312,5 @@ TextureView::export_validity_mask(std::string const & filename) const {
     }
     mve::image::save_png_file(img, filename);
 }
+
+TEX_NAMESPACE_END

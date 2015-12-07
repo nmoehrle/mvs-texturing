@@ -61,12 +61,12 @@ find_seam_edges(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 void
 find_mesh_edge_projections(
     std::vector<std::vector<VertexProjectionInfo> > const & vertex_projection_infos,
-    MeshEdge mesh_edge, std::vector<ProjectedEdgeInfo> * projected_edge_infos) {
+    MeshEdge mesh_edge, std::vector<EdgeProjectionInfo> * edge_projection_infos) {
     std::vector<VertexProjectionInfo> const & v1_projection_infos = vertex_projection_infos[mesh_edge.v1];
     std::vector<VertexProjectionInfo> const & v2_projection_infos = vertex_projection_infos[mesh_edge.v2];
 
     /* Use a set to eliminate duplicates which may occur if the mesh is degenerated. */
-    std::set<ProjectedEdgeInfo> projected_edge_infos_set;
+    std::set<EdgeProjectionInfo> edge_projection_infos_set;
 
     for (VertexProjectionInfo v1_projection_info : v1_projection_infos) {
         for (VertexProjectionInfo v2_projection_info : v2_projection_infos) {
@@ -80,14 +80,14 @@ find_mesh_edge_projections(
                     math::Vec2f p1 = v1_projection_info.projection;
                     math::Vec2f p2 = v2_projection_info.projection;
 
-                    ProjectedEdgeInfo projected_edge_info = {texture_patch_id, p1, p2};
-                    projected_edge_infos_set.insert(projected_edge_info);
+                    EdgeProjectionInfo edge_projection_info = {texture_patch_id, p1, p2};
+                    edge_projection_infos_set.insert(edge_projection_info);
                 }
             }
         }
     }
 
-    projected_edge_infos->insert(projected_edge_infos->end(), projected_edge_infos_set.begin(), projected_edge_infos_set.end());
+    edge_projection_infos->insert(edge_projection_infos->end(), edge_projection_infos_set.begin(), edge_projection_infos_set.end());
 }
 
 TEX_NAMESPACE_END

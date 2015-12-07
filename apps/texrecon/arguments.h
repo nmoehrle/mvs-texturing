@@ -22,7 +22,7 @@ struct Arguments {
     std::string data_cost_file;
     std::string labeling_file;
 
-    Settings settings;
+    tex::Settings settings;
 
     bool write_timings;
     bool write_intermediate_results;

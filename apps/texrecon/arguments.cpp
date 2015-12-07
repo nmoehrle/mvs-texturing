@@ -55,13 +55,13 @@ Arguments parse_args(int argc, char **argv) {
         "Skip view selection and use the labeling provided in the given file");
     args.add_option('d',"data_term", true,
         "Data term: {" +
-        choices<DataTerm>() + "} [" + choice_string<DataTerm>(GMI) + "]");
+        choices<tex::DataTerm>() + "} [" + choice_string<tex::DataTerm>(tex::GMI) + "]");
     args.add_option('s',"smoothness_term", true,
         "Smoothness term: {" +
-        choices<SmoothnessTerm>() + "} [" + choice_string<SmoothnessTerm>(POTTS) + "]");
+        choices<tex::SmoothnessTerm>() + "} [" + choice_string<tex::SmoothnessTerm>(tex::POTTS) + "]");
     args.add_option('o',"outlier_removal", true,
         "Photometric outlier (pedestrians etc.) removal method: {" +
-        choices<OutlierRemoval>() +  "} [" + choice_string<OutlierRemoval>(NONE) + "]");
+        choices<tex::OutlierRemoval>() +  "} [" + choice_string<tex::OutlierRemoval>(tex::NONE) + "]");
     args.add_option('v',"view_selection_model", false,
         "Write out view selection model [false]");
     args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false,
@@ -89,9 +89,9 @@ Arguments parse_args(int argc, char **argv) {
     conf.data_cost_file = "";
     conf.labeling_file = "";
 
-    conf.settings.data_term = GMI;
-    conf.settings.smoothness_term = POTTS;
-    conf.settings.outlier_removal = NONE;
+    conf.settings.data_term = tex::GMI;
+    conf.settings.smoothness_term = tex::POTTS;
+    conf.settings.outlier_removal = tex::NONE;
     conf.settings.geometric_visibility_test = true;
     conf.settings.global_seam_leveling = true;
     conf.settings.local_seam_leveling = true;
@@ -116,13 +116,13 @@ Arguments parse_args(int argc, char **argv) {
             conf.labeling_file = i->arg;
         break;
         case 'd':
-            conf.settings.data_term = parse_choice<DataTerm>(i->arg);
+            conf.settings.data_term = parse_choice<tex::DataTerm>(i->arg);
         break;
         case 's':
-            conf.settings.smoothness_term = parse_choice<SmoothnessTerm>(i->arg);
+            conf.settings.smoothness_term = parse_choice<tex::SmoothnessTerm>(i->arg);
         break;
         case 'o':
-            conf.settings.outlier_removal = parse_choice<OutlierRemoval>(i->arg);
+            conf.settings.outlier_removal = parse_choice<tex::OutlierRemoval>(i->arg);
         break;
         case '\0':
             if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST) {
@@ -164,9 +164,9 @@ Arguments::to_string(){
         << "Output prefix: \t" << out_prefix << std::endl
         << "Datacost file: \t" << data_cost_file << std::endl
         << "Labeling file: \t" << labeling_file << std::endl
-        << "Data term: \t" << choice_string<DataTerm>(settings.data_term) << std::endl
-        << "Smoothness term: \t" << choice_string<SmoothnessTerm>(settings.smoothness_term) << std::endl
-        << "Outlier removal method: \t" << choice_string<OutlierRemoval>(settings.outlier_removal) << std::endl
+        << "Data term: \t" << choice_string<tex::DataTerm>(settings.data_term) << std::endl
+        << "Smoothness term: \t" << choice_string<tex::SmoothnessTerm>(settings.smoothness_term) << std::endl
+        << "Outlier removal method: \t" << choice_string<tex::OutlierRemoval>(settings.outlier_removal) << std::endl
         << "Apply global seam leveling: \t" << bool_to_string(settings.global_seam_leveling) << std::endl
         << "Apply local seam leveling: \t" << bool_to_string(settings.local_seam_leveling) << std::endl;
 
