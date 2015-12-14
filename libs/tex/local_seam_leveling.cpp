@@ -128,7 +128,8 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     std::vector<std::vector<Pixel> > pixels(texture_patches->size());
     /* Sample edge colors. */
     for (std::size_t i = 0; i < edge_projection_infos.size(); ++i) {
-        float max_length = 0;
+        /* Determine sampling (ensure at least two samples per edge). */
+        float max_length = 1;
         for (EdgeProjectionInfo const & edge_projection_info : edge_projection_infos[i]) {
             float length = (edge_projection_info.p1 - edge_projection_info.p2).norm();
             max_length = std::max(max_length, length);
