@@ -33,7 +33,7 @@ find_package(TIFF REQUIRED)
 
 add_subdirectory(elibs)
 include_directories(SYSTEM
-    ${CMAKE_SOURCE_DIR}/elibs/coldet/src
+    ${CMAKE_SOURCE_DIR}/elibs/rayint/libs
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs
     ${CMAKE_SOURCE_DIR}/elibs/eigen
 )
@@ -43,7 +43,7 @@ include_directories(
 )
 
 link_directories(
-    ${CMAKE_BINARY_DIR}/elibs/coldet/src/ext_coldet-build/
+    ${CMAKE_SOURCE_DIR}/elibs/mve/libs/mve
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs/mve
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs/util
 )
