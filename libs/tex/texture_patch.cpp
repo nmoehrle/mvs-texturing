@@ -183,7 +183,7 @@ void
 TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     poisson_blend(orig, blending_mask, image, 1.0f);
 
-    /* Invalidate all pixels outside of the boundary. */
+    /* Invalidate all pixels outside the boundary. */
     for (int y = 0; y < blending_mask->height(); ++y) {
         for (int x = 0; x < blending_mask->width(); ++x) {
             if (blending_mask->at(x, y, 0) == 64) {
