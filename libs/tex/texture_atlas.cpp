@@ -90,8 +90,8 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch, float vmin, float vma
             math::Vec2f rel_texcoord(patch_texcoords[i * 3 + j]);
             math::Vec2f texcoord = rel_texcoord + offset;
 
-            texcoord[0] = texcoord[0] / (this->size - 1);
-            texcoord[1] = texcoord[1] / (this->size - 1);
+            texcoord[0] = texcoord[0] / this->size;
+            texcoord[1] = texcoord[1] / this->size;
             texcoords.push_back(texcoord);
         }
     }
