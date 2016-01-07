@@ -1,18 +1,14 @@
 os: linux
 language: cpp
-
+sudo: required
+dist: trusty
 compiler:
   - gcc
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
-
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+  - sudo add-apt-repository --yes ppa:george-edison55/cmake-3.x
+  - sudo apt-get update -qq
+  - sudo apt-get install cmake
 
 before_script:
   - mkdir build
