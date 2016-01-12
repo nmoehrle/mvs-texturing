@@ -277,6 +277,8 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
     }
     float radius = total_projection_length / (2.0f * MATH_PI);
 
+    if (total_length < std::numeric_limits<float>::epsilon()) return false;
+
     float length = 0.0f;
     std::vector<math::Vec2f> projections(num_vertices);
     for (std::size_t j = 0; j < border.size(); ++j) {
