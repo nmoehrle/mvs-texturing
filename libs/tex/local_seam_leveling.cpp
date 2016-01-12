@@ -166,7 +166,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
         for (VertexProjectionInfo const & projection_info : projection_infos) {
             Pixel pixel;
-            pixel.pos = math::Vec2i(projection_info.projection +  math::Vec2f(0.5f, 0.5f));
+            pixel.pos = math::Vec2i(projection_info.projection + math::Vec2f(0.5f, 0.5f));
             pixel.color = &vertex_colors[i];
             pixels[projection_info.texture_patch_id].push_back(pixel);
         }

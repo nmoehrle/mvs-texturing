@@ -19,6 +19,9 @@
 
 TEX_NAMESPACE_BEGIN
 
+#define MAX_HOLE_NUM_FACES 100
+#define MAX_HOLE_PATCH_SIZE 100
+
 void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos) {
     /* Merge vertex infos within the same texture patch. */
     #pragma omp parallel for
@@ -119,6 +122,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
         std::size_t const v0 = mesh_faces[face_id * 3];
         std::size_t const v1 = mesh_faces[face_id * 3 + 1];
         std::size_t const v2 = mesh_faces[face_id * 3 + 2];
+
         tmp[v0].insert(face_id);
         tmp[v1].insert(face_id);
         tmp[v2].insert(face_id);
@@ -126,7 +130,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
 
     std::size_t const num_vertices = tmp.size();
     /* Only fill small holes. */
-    if (num_vertices > 100) return false;
+    if (num_vertices > MAX_HOLE_NUM_FACES) return false;
 
     /* Calculate 2D parameterization using the technique from libremesh/patch2d,
      * which was published as sourcecode accompanying the following paper:
@@ -311,6 +315,10 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
                 float v01n = v01.norm();
                 math::Vec3f v02 = vertices[v2] - vertices[v0];
                 float v02n = v02.norm();
+
+                /* Ensure numerical stability */
+                if (v01n * v02n < std::numeric_limits<float>::epsilon()) return false;
+
                 float alpha = std::acos(v01.dot(v02) / (v01n * v02n));
                 weights[g2l[v1]] += std::tan(alpha / 2.0f) / v01n;
                 weights[g2l[v2]] += std::tan(alpha / 2.0f) / v02n;
@@ -320,6 +328,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
             float sum = 0.0f;
             for (it = weights.begin(); it != weights.end(); ++it)
                 sum += it->second;
+            assert(sum > 0.0f);
             for (it = weights.begin(); it != weights.end(); ++it)
                 it->second /= sum;
 
@@ -351,14 +360,17 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
         xy = solver.solve(by);
     }
 
-    int image_size = std::floor(radius * 1.1f) * 2 + 4;
+    float const max_hole_patch_size = MAX_HOLE_PATCH_SIZE;
+    int image_size = std::min(std::floor(radius * 1.1f) * 2.0f, max_hole_patch_size);
+    /* Ensure a minimum scale of one */
+    image_size += 2 * (1 + texture_patch_border);
     int scale = image_size / 2 - texture_patch_border;
     for (std::size_t j = 0, k = 0; j < num_vertices; ++j) {
-        if (!is_border[j]) {
+        if (is_border[j]) {
+            projections[j] = projections[j] * scale + image_size / 2;
+        } else {
             projections[j] = math::Vec2f(xx[k], xy[k]) * scale + image_size / 2;
             ++k;
-        } else {
-            projections[j] = projections[j] * scale + image_size / 2;
         }
     }
 
