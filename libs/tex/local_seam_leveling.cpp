@@ -51,7 +51,7 @@ draw_line(math::Vec2f p1, math::Vec2f p2,
     float length = std::sqrt(tdx * tdx + tdy * tdy);
 
     int const dx = std::abs(x1 - x0);
-    int const dy = std::abs(y1 - y0) ;
+    int const dy = std::abs(y1 - y0);
     int const sx = x0 < x1 ? 1 : -1;
     int const sy = y0 < y1 ? 1 : -1;
     int err = dx - dy;
@@ -144,8 +144,8 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
         for (EdgeProjectionInfo const & edge_projection_info : edge_projection_infos[i]) {
             Line line;
-            line.from = edge_projection_info.p1;
-            line.to = edge_projection_info.p2;
+            line.from = edge_projection_info.p1 + math::Vec2f(0.5f, 0.5f);
+            line.to = edge_projection_info.p2 + math::Vec2f(0.5f, 0.5f);
             line.color = &edge_colors[i];
             lines[edge_projection_info.texture_patch_id].push_back(line);
         }
