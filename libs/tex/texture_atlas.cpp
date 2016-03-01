@@ -54,7 +54,7 @@ typedef std::vector<std::pair<int, int> > PixelVector;
 typedef std::set<std::pair<int, int> > PixelSet;
 
 bool
-TextureAtlas::insert(TexturePatch::ConstPtr texture_patch, float vmin, float vmax) {
+TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
     if (finalized) {
         throw util::Exception("No insertion possible, TextureAtlas already finalized");
     }
@@ -69,7 +69,7 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch, float vmin, float vma
 
     /* Update texture atlas and its validity mask. */
     mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
-        texture_patch->get_image(), vmin, vmax);
+        texture_patch->get_image(), 0.0f, 1.0f);
     mve::image::gamma_correct(patch_image, 1.0f / 2.2f);
 
     copy_into(patch_image, rect.min_x, rect.min_y, image, padding);

@@ -85,36 +85,6 @@ calculate_texture_size(std::list<TexturePatch::ConstPtr> const & texture_patches
     }
 }
 
-std::pair<float, float>
-calculate_mapping_function(std::list<TexturePatch::ConstPtr> const & texture_patches) {
-    float min = std::numeric_limits<float>::max();
-    float max = std::numeric_limits<float>::lowest();
-    for (TexturePatch::ConstPtr texture_patch : texture_patches) {
-        mve::FloatImage::ConstPtr image = texture_patch->get_image();
-        mve::ByteImage::ConstPtr validity_mask = texture_patch->get_validity_mask();
-        for (int i = 0; i < image->get_value_amount(); ++i) {
-            if (validity_mask->at(i / 3) == 0) continue;
-
-            min = std::min(min, image->at(i));
-            max = std::max(max, image->at(i));
-        }
-    }
-    Histogram hist(min, max, 10000);
-    for (TexturePatch::ConstPtr texture_patch : texture_patches) {
-        mve::FloatImage::ConstPtr image = texture_patch->get_image();
-        mve::ByteImage::ConstPtr validity_mask = texture_patch->get_validity_mask();
-        for (int i = 0; i < image->get_value_amount(); ++i) {
-            if (validity_mask->at(i / 3) == 0) continue;
-
-            hist.add_value(image->at(i));
-        }
-    }
-    min = hist.get_approx_percentile(0.005f);
-    max = hist.get_approx_percentile(0.995f);
-
-    return std::pair<float, float>(min, max);
-}
-
 bool comp(TexturePatch::ConstPtr first, TexturePatch::ConstPtr second) {
     return first->get_size() > second->get_size();
 }
@@ -129,10 +99,6 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
         texture_patches.push_back(orig_texture_patches->back());
         orig_texture_patches->pop_back();
     }
-
-    /* Determine (tone) mapping function. */
-    float vmin, vmax;
-    std::tie(vmin, vmax) = calculate_mapping_function(texture_patches);
 
     std::cout << "\tSorting texture patches... " << std::flush;
     /* Improve the bin-packing algorithm efficiency by sorting texture patches
@@ -168,7 +134,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
                  << precent << "%... " << std::flush;
             }
 
-            if (texture_atlas->insert(*it, vmin, vmax)) {
+            if (texture_atlas->insert(*it)) {
                 it = texture_patches.erase(it);
                 remaining_patches -= 1;
             } else {

@@ -60,8 +60,7 @@ class TextureAtlas {
         Texcoords const & get_texcoords(void) const;
         mve::ByteImage::ConstPtr get_image(void) const;
 
-        bool insert(TexturePatch::ConstPtr texture_patch,
-            float vmin, float vmax);
+        bool insert(TexturePatch::ConstPtr texture_patch);
 
         void finalize(void);
 };
