@@ -44,7 +44,6 @@ include_directories(
 
 link_directories(
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs/mve
-    ${CMAKE_SOURCE_DIR}/elibs/mve/libs/mve
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs/util
 )
 
