@@ -10,7 +10,7 @@
 #include <numeric>
 
 #include <mve/image_color.h>
-#include <coldet.h>
+#include <acc/bvh_tree.h>
 #include <Eigen/Core>
 #include <Eigen/LU>
 
@@ -19,6 +19,8 @@
 #include "texturing.h"
 #include "sparse_table.h"
 #include "progress_counter.h"
+
+typedef acc::BVHTree<unsigned int, math::Vec3f> BVHTree;
 
 TEX_NAMESPACE_BEGIN
 
@@ -131,28 +133,16 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
     std::vector<TextureView> * texture_views, Settings const & settings,
     FaceProjectionInfos * face_projection_infos) {
 
-    mve::TriangleMesh::FaceList const & faces = mesh->get_faces();
-    mve::TriangleMesh::VertexList const & vertices = mesh->get_vertices();
+    std::vector<unsigned int> const & faces = mesh->get_faces();
+    std::vector<math::Vec3f> const & vertices = mesh->get_vertices();
     mve::TriangleMesh::NormalList const & face_normals = mesh->get_face_normals();
 
-    std::size_t const num_faces = faces.size() / 3;
     std::size_t const num_views = texture_views->size();
 
-    CollisionModel3D* model = newCollisionModel3D(true);
-    if (settings.geometric_visibility_test) {
-        /* Build up acceleration structure for the visibility test. */
-        ProgressCounter face_counter("\tBuilding collision model", num_faces);
-        model->setTriangleNumber(num_faces);
-        for (std::size_t i = 0; i < faces.size(); i += 3) {
-            face_counter.progress<SIMPLE>();
-            math::Vec3f v1 = vertices[faces[i]];
-            math::Vec3f v2 = vertices[faces[i + 1]];
-            math::Vec3f v3 = vertices[faces[i + 2]];
-            model->addTriangle(*v1, *v2, *v3);
-            face_counter.inc();
-        }
-        model->finalize();
-    }
+    util::WallTimer timer;
+    std::cout << "\tBuilding BVH from " << faces.size() / 3 << " faces... " << std::flush;
+    BVHTree bvh_tree(faces, vertices);
+    std::cout << "done. (Took: " << timer.get_elapsed() << " ms)" << std::endl;
 
     ProgressCounter view_counter("\tCalculating face qualities", num_views);
     #pragma omp parallel
@@ -208,12 +198,15 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
                     // TODO: random monte carlo samples...
 
                     for (std::size_t k = 0; k < sizeof(samples) / sizeof(samples[0]); ++k) {
-                        math::Vec3f vertex = *samples[k];
-                        math::Vec3f dir = view_pos - vertex;
-                        float const dir_length = dir.norm();
-                        dir.normalize();
+                        BVHTree::Ray ray;
+                        ray.origin = *samples[k];
+                        ray.dir = view_pos - ray.origin;
+                        ray.tmax = ray.dir.norm();
+                        ray.tmin = ray.tmax * 0.0001f;
+                        ray.dir.normalize();
 
-                        if (model->rayCollision(*vertex, *dir,  false, dir_length * 0.0001f, dir_length)) {
+                        BVHTree::Hit hit;
+                        if (bvh_tree.intersect(ray, &hit)) {
                             visible = false;
                             break;
                         }
@@ -255,9 +248,6 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
             projected_face_view_infos.clear();
         }
     }
-
-    delete model;
-    model = NULL;
 }
 
 void

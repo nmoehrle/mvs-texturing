@@ -9,12 +9,13 @@ if(RESEARCH)
     )
 endif()
 
-externalproject_add(ext_coldet
-    PREFIX          coldet
-    URL             https://downloads.sourceforge.net/project/coldet/coldet/2.0/coldet20.zip
-    URL_MD5         37646a7dd046d9c81fca9d55346a108a
-    UPDATE_COMMAND  ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/elibs/CMakeLists/coldet.txt CMakeLists.txt
-    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/coldet
+externalproject_add(ext_rayint
+    PREFIX          rayint
+    GIT_REPOSITORY  https://github.com/nmoehrle/rayint.git
+    GIT_TAG         cuda
+    UPDATE_COMMAND  ""
+    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/rayint
+    BUILD_COMMAND   ""
     INSTALL_COMMAND ""
 )
 
