@@ -15,6 +15,7 @@ externalproject_add(ext_rayint
     GIT_TAG         cuda
     UPDATE_COMMAND  ""
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/rayint
+    CONFIGURE_COMMAND ""
     BUILD_COMMAND   ""
     INSTALL_COMMAND ""
 )
