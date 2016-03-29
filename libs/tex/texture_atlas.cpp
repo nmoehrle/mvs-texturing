@@ -213,7 +213,7 @@ TextureAtlas::apply_edge_padding(void) {
 }
 
 struct VectorCompare {
-    bool operator()(math::Vec2f const & lhs, math::Vec2f const & rhs) {
+    bool operator()(math::Vec2f const & lhs, math::Vec2f const & rhs) const {
         return lhs[0] < rhs[0] || (lhs[0] == rhs[0] && lhs[1] < rhs[1]);
     }
 };
