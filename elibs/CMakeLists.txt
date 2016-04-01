@@ -23,8 +23,8 @@ externalproject_add(ext_rayint
 #find_package eigen
 externalproject_add(ext_eigen
     PREFIX          eigen
-    URL             https://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2
-    URL_MD5         21a928f6e0f1c7f24b6f63ff823593f5
+    URL             https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
+    URL_MD5         9e3bfaaab3db18253cfd87ea697b3ab1
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/eigen
     CONFIGURE_COMMAND ""
     BUILD_COMMAND   ""
