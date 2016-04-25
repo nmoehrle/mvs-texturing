@@ -10,7 +10,7 @@
 #ifndef TEX_PROGRESSCOUNTER_HEADER
 #define TEX_PROGRESSCOUNTER_HEADER
 
-
+#include <atomic>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -30,7 +30,7 @@ class ProgressCounter {
         util::WallTimer timer;
         std::string task;
         std::size_t max;
-        std::size_t count;
+        std::atomic_size_t count;
 
     public:
         ProgressCounter(std::string const & _task, std::size_t max);
@@ -47,7 +47,6 @@ ProgressCounter::ProgressCounter(std::string const & _task, std::size_t _max)
 inline void
 ProgressCounter::inc(void) {
     std::size_t tmp;
-    #pragma omp atomic capture
     tmp = ++count;
 
     if(tmp == max) {

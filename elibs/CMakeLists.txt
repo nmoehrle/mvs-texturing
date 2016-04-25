@@ -1,6 +1,6 @@
 if(RESEARCH)
     externalproject_add(ext_gco
-        PREFIX          gco
+        PREFIX          ext_gco
         URL             http://vision.csd.uwo.ca/code/gco-v3.0.zip
         URL_MD5         10e071892c38f076d30a91ca5351a847
         UPDATE_COMMAND  ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/elibs/CMakeLists/gco.txt CMakeLists.txt
@@ -10,7 +10,7 @@ if(RESEARCH)
 endif()
 
 externalproject_add(ext_rayint
-    PREFIX          rayint
+    PREFIX          ext_rayint
     GIT_REPOSITORY  https://github.com/nmoehrle/rayint.git
     GIT_TAG         cuda
     UPDATE_COMMAND  ""
@@ -22,7 +22,7 @@ externalproject_add(ext_rayint
 
 #find_package eigen
 externalproject_add(ext_eigen
-    PREFIX          eigen
+    PREFIX          ext_eigen
     URL             https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
     URL_MD5         9e3bfaaab3db18253cfd87ea697b3ab1
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/eigen
