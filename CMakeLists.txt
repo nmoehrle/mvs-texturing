@@ -50,7 +50,7 @@ link_directories(
 
 if(RESEARCH)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/elibs/gco)
-    link_directories(${CMAKE_BINARY_DIR}/elibs/gco/src/ext_gco-build)
+    link_directories(${CMAKE_BINARY_DIR}/elibs/ext_gco/src/ext_gco-build)
 endif()
 
 add_subdirectory(libs)
