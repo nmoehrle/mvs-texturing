@@ -13,6 +13,7 @@ before_install:
 before_script:
   - mkdir build
   - cd build
-  - cmake ..
 
-script: make
+script:
+  - cmake .. && make
+  - cmake .. -DRESEARCH=ON && make
