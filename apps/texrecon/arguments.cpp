@@ -8,6 +8,7 @@
  */
 
 #include "arguments.h"
+#include "util/file_system.h"
 
 #define SKIP_GLOBAL_SEAM_LEVELING "skip_global_seam_leveling"
 #define SKIP_GEOMETRIC_VISIBILITY_TEST "skip_geometric_visibility_test"
@@ -83,7 +84,7 @@ Arguments parse_args(int argc, char **argv) {
     Arguments conf;
     conf.in_scene = args.get_nth_nonopt(0);
     conf.in_mesh = args.get_nth_nonopt(1);
-    conf.out_prefix = args.get_nth_nonopt(2);
+    conf.out_prefix = util::fs::sanitize_path(args.get_nth_nonopt(2));
 
     /* Set defaults for optional arguments. */
     conf.data_cost_file = "";
