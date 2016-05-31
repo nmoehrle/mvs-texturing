@@ -12,6 +12,7 @@
 #include <fstream>
 #include <cstring>
 #include <cerrno>
+#include <cmath>
 
 #include <util/file_system.h>
 #include <util/exception.h>
