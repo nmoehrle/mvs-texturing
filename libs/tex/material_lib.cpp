@@ -40,7 +40,11 @@ MaterialLib::save_to_files(std::string const & prefix) const {
     out.close();
 
     for (Material const & material : *this) {
-        std::string filename = prefix + "_" + material.name + "_map_Kd.png";
-        mve::image::save_png_file(material.diffuse_map, filename);
+        std::string filename = prefix + "_" + material.name + "_map_Kd";
+        if (material.diffuse_map->channels() <= 4) {
+            mve::image::save_png_file(material.diffuse_map, filename + ".png");
+        } else {
+            mve::image::save_tiff_file(material.diffuse_map, filename + ".tiff");
+        }
     }
 }

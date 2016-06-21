@@ -116,9 +116,10 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     {
 
     while (!texture_patches.empty()) {
-        unsigned int texture_size = calculate_texture_size(texture_patches);
+        unsigned texture_size = calculate_texture_size(texture_patches);
+        unsigned channels = 3; //TODO propagate this througth the application
 
-        texture_atlases->push_back(TextureAtlas::create(texture_size));
+        texture_atlases->push_back(TextureAtlas::create(texture_size, channels));
         TextureAtlas::Ptr texture_atlas = texture_atlases->back();
 
         /* Try to insert each of the texture patches into the texture atlas. */

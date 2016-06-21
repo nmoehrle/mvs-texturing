@@ -152,12 +152,12 @@ Arguments parse_args(int argc, char **argv) {
 }
 
 std::string
-bool_to_string(bool b){
+bool_to_string(bool b) {
     return b ? "True" : "False";
 }
 
 std::string
-Arguments::to_string(){
+Arguments::to_string() {
     std::stringstream out;
     out << "Input scene: \t" << in_scene << std::endl
         << "Input mesh: \t" << in_mesh << std::endl

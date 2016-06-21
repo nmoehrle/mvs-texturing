@@ -10,6 +10,7 @@
 #ifndef TEX_PROGRESSCOUNTER_HEADER
 #define TEX_PROGRESSCOUNTER_HEADER
 
+#include <mutex>
 #include <atomic>
 #include <fstream>
 #include <iostream>
@@ -31,6 +32,7 @@ class ProgressCounter {
         std::string task;
         std::size_t max;
         std::atomic_size_t count;
+        std::mutex mutex;
 
     public:
         ProgressCounter(std::string const & _task, std::size_t max);
@@ -53,7 +55,7 @@ ProgressCounter::inc(void) {
         std::stringstream ss;
         ss << clear << task << " 100%... done. (Took "
             << timer.get_elapsed_sec() << "s)";
-        #pragma omp critical(progress_counter_inc)
+        std::lock_guard<std::mutex> guard(mutex);
         std::cout << ss.rdbuf() << std::endl;
     }
 }

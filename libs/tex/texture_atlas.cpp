@@ -16,11 +16,11 @@
 
 #include "texture_atlas.h"
 
-TextureAtlas::TextureAtlas(unsigned int size) :
+TextureAtlas::TextureAtlas(unsigned size, unsigned channels) :
     size(size), padding(size >> 7), finalized(false) {
 
     bin = RectangularBin::create(size, size);
-    image = mve::ByteImage::create(size, size, 3);
+    image = mve::ByteImage::create(size, size, channels);
     validity_mask = mve::ByteImage::create(size, size, 1);
 }
 
@@ -151,7 +151,7 @@ TextureAtlas::apply_edge_padding(void) {
 
             bool now_valid = false;
             /* Calculate new pixel value. */
-            for (int c = 0; c < 3; ++c) {
+            for (int c = 0; c < image->channels(); ++c) {
                 float norm = 0.0f;
                 float value = 0.0f;
                 for (int j = -1; j <= 1; ++j) {

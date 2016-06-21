@@ -159,7 +159,7 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
             }
 
             image_file = std::string("/tmp/") + util::fs::basename(img_file);
-            mve::image::save_png_file(image, image_file);
+            mve::image::save_mvei_file(image, image_file);
         }
         #pragma omp critical
         texture_views->push_back(TextureView(i / 2, cam_info, image_file));
