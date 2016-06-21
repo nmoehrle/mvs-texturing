@@ -99,10 +99,30 @@ TextureView::load_image(void) {
     image = mve::image::load_file(image_file);
 }
 
+mve::ByteImage::Ptr
+average(mve::ByteImage::Ptr image) {
+    mve::ByteImage::Ptr ret;
+    for (int i = 0; i < image->get_pixel_amount(); ++i) {
+        unsigned sum = 0;
+        for (int j = 0; j < image->channels(); ++j) {
+            sum += image->at(i, j);
+        }
+        ret->at(i) = sum / image->channels();
+    }
+    return ret;
+}
+
 void
 TextureView::generate_gradient_magnitude(void) {
     assert(image != NULL);
-    mve::ByteImage::Ptr bw = mve::image::desaturate<std::uint8_t>(image, mve::image::DESATURATE_LUMINANCE);
+    mve::ByteImage::Ptr bw;
+    if (image->channels() == 1) {
+        bw = image;
+    } else if (image->channels() <= 4) {
+        bw = mve::image::desaturate<std::uint8_t>(image, mve::image::DESATURATE_LUMINANCE);
+    } else {
+        bw = average(image);
+    }
     gradient_magnitude = mve::image::sobel_edge<std::uint8_t>(bw);
 }
 
