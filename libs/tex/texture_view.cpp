@@ -102,6 +102,7 @@ TextureView::load_image(void) {
 mve::ByteImage::Ptr
 average(mve::ByteImage::Ptr image) {
     mve::ByteImage::Ptr ret;
+    ret = mve::ByteImage::create(image->width(), image->height(), 1);
     for (int i = 0; i < image->get_pixel_amount(); ++i) {
         unsigned sum = 0;
         for (int j = 0; j < image->channels(); ++j) {
