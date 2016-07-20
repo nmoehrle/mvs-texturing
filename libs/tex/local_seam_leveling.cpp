@@ -154,6 +154,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     /* Sample vertex colors. */
     for (std::size_t i = 0; i < vertex_colors.size(); ++i) {
         std::vector<VertexProjectionInfo> const & projection_infos = vertex_projection_infos[i];
+        if (projection_infos.size() <= 1) continue;
 
         math::Accum<math::Vec3f> color_accum(math::Vec3f(0.0f));
         for (VertexProjectionInfo const & projection_info : projection_infos) {
@@ -162,6 +163,8 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
             math::Vec3f color = texture_patch->get_pixel_value(projection_info.projection);
             color_accum.add(color, 1.0f);
         }
+	if (color_accum.w == 0.0f) continue;
+
         vertex_colors[i] = color_accum.normalized();
 
         for (VertexProjectionInfo const & projection_info : projection_infos) {
@@ -193,6 +196,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         if (texture_patch->get_label() != 0) {
             texture_patch->prepare_blending_mask(STRIP_SIZE);
         }
+
         texture_patch->blend(image);
         texture_patch->release_blending_mask();
         texture_patch_counter.inc();

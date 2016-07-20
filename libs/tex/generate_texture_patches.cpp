@@ -255,7 +255,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
         std::size_t vi0 = border[j];
         std::size_t vi1 = border[(j + 1) % border.size()];
         std::vector<VertexProjectionInfo> const & vpi0 = vertex_projection_infos->at(vi0);
-        std::vector<VertexProjectionInfo> const & vpi1 = vertex_projection_infos->at(vi0);
+        std::vector<VertexProjectionInfo> const & vpi1 = vertex_projection_infos->at(vi1);
         /* According to the previous checks (vertex class within the origial
          * mesh and boundary) there already has to be at least one projection
          * of each border vertex. */
