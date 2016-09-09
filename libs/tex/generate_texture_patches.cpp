@@ -254,22 +254,29 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
     for (std::size_t j = 0; j < border.size(); ++j) {
         std::size_t vi0 = border[j];
         std::size_t vi1 = border[(j + 1) % border.size()];
-        std::vector<VertexProjectionInfo> const & vpi0 = vertex_projection_infos->at(vi0);
-        std::vector<VertexProjectionInfo> const & vpi1 = vertex_projection_infos->at(vi1);
+        std::vector<VertexProjectionInfo> vpi0, vpi1;
+        #pragma omp critical VPIs
+        {
+            vpi0 = vertex_projection_infos->at(vi0);
+            vpi1 = vertex_projection_infos->at(vi1);
+        }
+
         /* According to the previous checks (vertex class within the origial
          * mesh and boundary) there already has to be at least one projection
-         * of each border vertex. */
-        assert(!vpi0.empty() && !vpi1.empty());
+         * of each border vertex in a common texture patch. */
+        bool test = false;
         math::Vec2f vp0(0.0f), vp1(0.0f);
         for (VertexProjectionInfo const & info0 : vpi0) {
             for (VertexProjectionInfo const & info1 : vpi1) {
                 if (info0.texture_patch_id == info1.texture_patch_id) {
                     vp0 = info0.projection;
                     vp1 = info1.projection;
+                    test = true;
                     break;
                 }
             }
         }
+        assert(test);
         total_projection_length += (vp0 - vp1).norm();
         math::Vec3f const & v0 = vertices[vi0];
         math::Vec3f const & v1 = vertices[vi1];
@@ -404,7 +411,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
             }
         }
         VertexProjectionInfo info = {texture_patch_id, projections[j], faces};
-        #pragma omp critical
+        #pragma omp critical VPIs
         vertex_projection_infos->at(vertex_id).push_back(info);
     }
 
@@ -545,7 +552,6 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
 
                     VertexProjectionInfo info = {texture_patch_id, projection, {face_id}};
 
-                    #pragma omp critical
                     vertex_projection_infos->at(vertex_id).push_back(info);
                 }
             }
