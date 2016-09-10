@@ -43,13 +43,13 @@ class TexturePatch {
     public:
         /** Constructs a texture patch. */
         TexturePatch(int _label, std::vector<std::size_t> const & _faces,
-            std::vector<math::Vec2f>  const & _texcoords, mve::ByteImage::Ptr _image);
+            std::vector<math::Vec2f>  const & _texcoords, mve::FloatImage::Ptr _image);
 
         TexturePatch(TexturePatch const & texture_patch);
 
         static TexturePatch::Ptr create(TexturePatch::ConstPtr texture_patch);
         static TexturePatch::Ptr create(int label, std::vector<std::size_t> const & faces,
-            std::vector<math::Vec2f> const & texcoords, mve::ByteImage::Ptr image);
+            std::vector<math::Vec2f> const & texcoords, mve::FloatImage::Ptr image);
 
         TexturePatch::Ptr duplicate(void);
 
@@ -66,6 +66,8 @@ class TexturePatch {
         std::vector<std::size_t> const & get_faces(void) const;
         std::vector<math::Vec2f> & get_texcoords(void);
         std::vector<math::Vec2f> const & get_texcoords(void) const;
+
+        mve::FloatImage::Ptr get_image(void);
 
         mve::FloatImage::ConstPtr get_image(void) const;
         mve::ByteImage::ConstPtr get_validity_mask(void) const;
@@ -88,13 +90,13 @@ class TexturePatch {
 
 inline TexturePatch::Ptr
 TexturePatch::create(TexturePatch::ConstPtr texture_patch) {
-    return Ptr(new TexturePatch(*texture_patch));
+    return std::make_shared<TexturePatch>(*texture_patch);
 }
 
 inline TexturePatch::Ptr
 TexturePatch::create(int label, std::vector<std::size_t> const & faces,
-    std::vector<math::Vec2f>  const & texcoords, mve::ByteImage::Ptr image) {
-    return Ptr(new TexturePatch(label, faces, texcoords, image));
+    std::vector<math::Vec2f>  const & texcoords, mve::FloatImage::Ptr image) {
+    return std::make_shared<TexturePatch>(label, faces, texcoords, image);
 }
 
 inline TexturePatch::Ptr
@@ -115,6 +117,11 @@ TexturePatch::get_width(void) const {
 inline int
 TexturePatch::get_height(void) const {
     return image->height();
+}
+
+inline mve::FloatImage::Ptr
+TexturePatch::get_image(void) {
+    return image;
 }
 
 inline mve::FloatImage::ConstPtr

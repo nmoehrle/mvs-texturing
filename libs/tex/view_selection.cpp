@@ -158,7 +158,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const & 
     #endif
     for (std::size_t i = 0; i < components.size(); ++i) {
         switch (settings.smoothness_term) {
-            case POTTS:
+            case SMOOTHNESS_TERM_POTTS:
                 mrfs[i]->set_smooth_cost(*potts);
             break;
         }

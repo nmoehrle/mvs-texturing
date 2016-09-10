@@ -136,7 +136,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     math::Vec3f const & v3, FaceProjectionInfo * face_info, Settings const & settings) const {
 
     assert(image != NULL);
-    assert(settings.data_term != GMI || gradient_magnitude != NULL);
+    assert(settings.data_term != DATA_TERM_GMI || gradient_magnitude != NULL);
 
     math::Vec2f p1 = get_pixel_coords(v1);
     math::Vec2f p2 = get_pixel_coords(v2);
@@ -156,7 +156,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     math::Vec3d colors(0.0);
     double gmi = 0.0;
 
-    bool sampling_necessary = settings.data_term != AREA || settings.outlier_removal != NONE;
+    bool sampling_necessary = settings.data_term != DATA_TERM_AREA || settings.outlier_removal != OUTLIER_REMOVAL_NONE;
 
     if (sampling_necessary && area > 0.5f) {
         /* Sort pixels in ascending order of y */
@@ -204,14 +204,14 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
                 const float cy = static_cast<float>(y) + 0.5f;
                 if (!fast_sampling_possible && !tri.inside(cx, cy)) continue;
 
-                if (settings.outlier_removal != NONE) {
+                if (settings.outlier_removal != OUTLIER_REMOVAL_NONE) {
                     for (std::size_t i = 0; i < 3; i++){
                          color[i] = static_cast<double>(image->at(x, y, i)) / 255.0;
                     }
                     colors += color;
                 }
 
-                if (settings.data_term == GMI) {
+                if (settings.data_term == DATA_TERM_GMI) {
                     gmi += static_cast<double>(gradient_magnitude->at(x, y, 0)) / 255.0;
                 }
                 ++num_samples;
@@ -219,7 +219,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
         }
     }
 
-    if (settings.data_term == GMI) {
+    if (settings.data_term == DATA_TERM_GMI) {
         if (num_samples > 0) {
             gmi = (gmi / num_samples) * area;
         } else {
@@ -230,7 +230,7 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
         }
     }
 
-    if (settings.outlier_removal != NONE) {
+    if (settings.outlier_removal != OUTLIER_REMOVAL_NONE) {
         if (num_samples > 0) {
             face_info->mean_color = colors / num_samples;
         } else {
@@ -245,8 +245,8 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     }
 
     switch (settings.data_term) {
-        case AREA: face_info->quality = area; break;
-        case GMI:  face_info->quality = gmi; break;
+        case DATA_TERM_AREA: face_info->quality = area; break;
+        case DATA_TERM_GMI:  face_info->quality = gmi; break;
     }
 }
 

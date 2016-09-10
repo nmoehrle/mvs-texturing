@@ -16,6 +16,7 @@
 #include <mve/image_tools.h>
 
 #include "defines.h"
+#include "settings.h"
 #include "histogram.h"
 #include "texture_patch.h"
 #include "texture_atlas.h"
@@ -91,13 +92,18 @@ bool comp(TexturePatch::ConstPtr first, TexturePatch::ConstPtr second) {
 
 void
 generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
-    std::vector<TextureAtlas::Ptr> * texture_atlases) {
+    Settings const & settings, std::vector<TextureAtlas::Ptr> * texture_atlases) {
 
     std::list<TexturePatch::ConstPtr> texture_patches;
     while (!orig_texture_patches->empty()) {
-        //TODO avoid copying
-        texture_patches.push_back(orig_texture_patches->back());
+        TexturePatch::Ptr texture_patch = orig_texture_patches->back();
         orig_texture_patches->pop_back();
+
+        if (settings.tone_mapping != TONE_MAPPING_NONE) {
+            mve::image::gamma_correct(texture_patch->get_image(), 1.0f / 2.2f);
+        }
+
+        texture_patches.push_back(texture_patch);
     }
 
     std::cout << "\tSorting texture patches... " << std::flush;

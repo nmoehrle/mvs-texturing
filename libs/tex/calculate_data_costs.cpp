@@ -48,11 +48,11 @@ photometric_outlier_detection(std::vector<FaceProjectionInfo> * infos, Settings 
 
     float outlier_removal_factor = std::numeric_limits<float>::signaling_NaN();
     switch (settings.outlier_removal) {
-        case NONE: return true;
-        case GAUSS_CLAMPING:
+        case OUTLIER_REMOVAL_NONE: return true;
+        case OUTLIER_REMOVAL_GAUSS_CLAMPING:
             outlier_removal_factor = 1.0f;
         break;
-        case GAUSS_DAMPING:
+        case OUTLIER_REMOVAL_GAUSS_DAMPING:
             outlier_removal_factor = 0.2f;
         break;
     }
@@ -116,11 +116,11 @@ photometric_outlier_detection(std::vector<FaceProjectionInfo> * infos, Settings 
         double gauss_value = multi_gauss_unnormalized(color, var_mean, covariance_inv);
         assert(0.0 <= gauss_value && gauss_value <= 1.0);
         switch(settings.outlier_removal) {
-            case NONE: return true;
-            case GAUSS_DAMPING:
+            case OUTLIER_REMOVAL_NONE: return true;
+            case OUTLIER_REMOVAL_GAUSS_DAMPING:
                 info.quality *= gauss_value;
             break;
-            case GAUSS_CLAMPING:
+            case OUTLIER_REMOVAL_GAUSS_CLAMPING:
                 if (gauss_value < gauss_rejection_threshold) info.quality = 0.0f;
             break;
         }
@@ -157,7 +157,7 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
             texture_view->load_image();
             texture_view->generate_validity_mask();
 
-            if (settings.data_term == GMI) {
+            if (settings.data_term == DATA_TERM_GMI) {
                 texture_view->generate_gradient_magnitude();
                 texture_view->erode_validity_mask();
             }
@@ -230,7 +230,7 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
 
             texture_view->release_image();
             texture_view->release_validity_mask();
-            if (settings.data_term == GMI) {
+            if (settings.data_term == DATA_TERM_GMI) {
                 texture_view->release_gradient_magnitude();
             }
             view_counter.inc();
@@ -262,7 +262,7 @@ postprocess_face_infos(Settings const & settings,
         face_counter.progress<SIMPLE>();
 
         std::vector<FaceProjectionInfo> & infos = face_projection_infos->at(i);
-        if (settings.outlier_removal != NONE) {
+        if (settings.outlier_removal != OUTLIER_REMOVAL_NONE) {
             photometric_outlier_detection(&infos, settings);
 
             infos.erase(std::remove_if(infos.begin(), infos.end(),

@@ -17,10 +17,8 @@
 #include "texture_patch.h"
 
 TexturePatch::TexturePatch(int label, std::vector<std::size_t> const & faces,
-    std::vector<math::Vec2f>  const & texcoords, mve::ByteImage::Ptr byte_image)
-    : label(label), faces(faces), texcoords(texcoords) {
-
-    image = mve::image::byte_to_float_image(byte_image);
+    std::vector<math::Vec2f>  const & texcoords, mve::FloatImage::Ptr image)
+    : label(label), faces(faces), texcoords(texcoords), image(image) {
 
     validity_mask = mve::ByteImage::create(get_width(), get_height(), 1);
     validity_mask->fill(255);

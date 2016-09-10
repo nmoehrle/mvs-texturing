@@ -56,13 +56,20 @@ Arguments parse_args(int argc, char **argv) {
         "Skip view selection and use the labeling provided in the given file");
     args.add_option('d',"data_term", true,
         "Data term: {" +
-        choices<tex::DataTerm>() + "} [" + choice_string<tex::DataTerm>(tex::GMI) + "]");
+        choices<tex::DataTerm>() + "} [" +
+        choice_string<tex::DataTerm>(tex::DATA_TERM_GMI) + "]");
     args.add_option('s',"smoothness_term", true,
         "Smoothness term: {" +
-        choices<tex::SmoothnessTerm>() + "} [" + choice_string<tex::SmoothnessTerm>(tex::POTTS) + "]");
+        choices<tex::SmoothnessTerm>() + "} [" +
+        choice_string<tex::SmoothnessTerm>(tex::SMOOTHNESS_TERM_POTTS) + "]");
     args.add_option('o',"outlier_removal", true,
         "Photometric outlier (pedestrians etc.) removal method: {" +
-        choices<tex::OutlierRemoval>() +  "} [" + choice_string<tex::OutlierRemoval>(tex::NONE) + "]");
+        choices<tex::OutlierRemoval>() +  "} [" +
+        choice_string<tex::OutlierRemoval>(tex::OUTLIER_REMOVAL_NONE) + "]");
+    args.add_option('t',"tone_mapping", true,
+        "Photometric outlier (pedestrians etc.) removal method: {" +
+        choices<tex::ToneMapping>() +  "} [" +
+        choice_string<tex::ToneMapping>(tex::TONE_MAPPING_NONE) + "]");
     args.add_option('v',"view_selection_model", false,
         "Write out view selection model [false]");
     args.add_option('\0', SKIP_GEOMETRIC_VISIBILITY_TEST, false,
@@ -90,15 +97,6 @@ Arguments parse_args(int argc, char **argv) {
     conf.data_cost_file = "";
     conf.labeling_file = "";
 
-    conf.settings.data_term = tex::GMI;
-    conf.settings.smoothness_term = tex::POTTS;
-    conf.settings.outlier_removal = tex::NONE;
-    conf.settings.geometric_visibility_test = true;
-    conf.settings.global_seam_leveling = true;
-    conf.settings.local_seam_leveling = true;
-    conf.settings.hole_filling = true;
-    conf.settings.keep_unseen_faces = false;
-
     conf.write_timings = false;
     conf.write_intermediate_results = true;
     conf.write_view_selection_model = false;
@@ -124,6 +122,9 @@ Arguments parse_args(int argc, char **argv) {
         break;
         case 'o':
             conf.settings.outlier_removal = parse_choice<tex::OutlierRemoval>(i->arg);
+        break;
+        case 't':
+            conf.settings.tone_mapping = parse_choice<tex::ToneMapping>(i->arg);
         break;
         case '\0':
             if (i->opt->lopt == SKIP_GEOMETRIC_VISIBILITY_TEST) {
@@ -168,6 +169,7 @@ Arguments::to_string(){
         << "Data term: \t" << choice_string<tex::DataTerm>(settings.data_term) << std::endl
         << "Smoothness term: \t" << choice_string<tex::SmoothnessTerm>(settings.smoothness_term) << std::endl
         << "Outlier removal method: \t" << choice_string<tex::OutlierRemoval>(settings.outlier_removal) << std::endl
+        << "Tone mapping: \t" << choice_string<tex::ToneMapping>(settings.tone_mapping) << std::endl
         << "Apply global seam leveling: \t" << bool_to_string(settings.global_seam_leveling) << std::endl
         << "Apply local seam leveling: \t" << bool_to_string(settings.local_seam_leveling) << std::endl;
 

@@ -57,34 +57,41 @@ TEX_NAMESPACE_BEGIN
 
 /** Enum representing a data term. */
 enum DataTerm {
-    AREA = 0,
-    GMI = 1
+    DATA_TERM_AREA = 0,
+    DATA_TERM_GMI = 1
 };
 
 /** Enum representing a smoothness term. */
 enum SmoothnessTerm {
-    POTTS = 0
+    SMOOTHNESS_TERM_POTTS = 0
 };
 
-/** Enum representing the choice of outlier removal. */
+/** Enum representing outlier removal choice. */
 enum OutlierRemoval {
-    NONE = 0,
-    GAUSS_DAMPING = 1,
-    GAUSS_CLAMPING = 2
+    OUTLIER_REMOVAL_NONE = 0,
+    OUTLIER_REMOVAL_GAUSS_DAMPING = 1,
+    OUTLIER_REMOVAL_GAUSS_CLAMPING = 2
+};
+
+/** Enum representing tone mapping choice. */
+enum ToneMapping {
+    TONE_MAPPING_NONE = 0,
+    TONE_MAPPING_GAMMA = 1
 };
 
 struct Settings {
-    bool verbose;
+    bool verbose = false;
 
-    DataTerm data_term;
-    SmoothnessTerm smoothness_term;
-    OutlierRemoval outlier_removal;
+    DataTerm data_term = DATA_TERM_GMI;
+    SmoothnessTerm smoothness_term = SMOOTHNESS_TERM_POTTS;
+    OutlierRemoval outlier_removal = OUTLIER_REMOVAL_NONE;
+    ToneMapping tone_mapping = TONE_MAPPING_NONE;
 
-    bool geometric_visibility_test;
-    bool global_seam_leveling;
-    bool local_seam_leveling;
-    bool hole_filling;
-    bool keep_unseen_faces;
+    bool geometric_visibility_test = true;
+    bool global_seam_leveling = true;
+    bool local_seam_leveling = true;
+    bool hole_filling = true;
+    bool keep_unseen_faces = false;
 };
 
 TEX_NAMESPACE_END
@@ -102,6 +109,11 @@ const std::vector<std::string> choice_strings<tex::SmoothnessTerm>() {
 template <> inline
 const std::vector<std::string> choice_strings<tex::OutlierRemoval>() {
     return {"none", "gauss_damping", "gauss_clamping"};
+}
+
+template <> inline
+const std::vector<std::string> choice_strings<tex::ToneMapping>() {
+    return {"none", "gamma"};
 }
 
 #endif /* TEX_SETTINGS_HEADER */

@@ -70,7 +70,6 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
     /* Update texture atlas and its validity mask. */
     mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
         texture_patch->get_image(), 0.0f, 1.0f);
-    mve::image::gamma_correct(patch_image, 1.0f / 2.2f);
 
     copy_into(patch_image, rect.min_x, rect.min_y, image, padding);
     mve::ByteImage::ConstPtr patch_validity_mask = texture_patch->get_validity_mask();
