@@ -202,21 +202,18 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
 
 void
 generate_texture_views(std::string const & in_scene, std::vector<TextureView> * texture_views) {
-    util::Tokenizer tok;
-    tok.split(in_scene, ':', true);
-
     /* Determine input format. */
 
     /* BUNDLEFILE */
-    if (tok.size() == 1 && util::fs::file_exists(tok[0].c_str())) {
-        std::string const & file = tok[0];
+    if (util::fs::file_exists(in_scene.c_str())) {
+        std::string const & file = in_scene;
         std::string extension = util::string::uppercase(util::string::right(file, 3));
         if (extension == "NVM") from_nvm_scene(file, texture_views);
     }
 
     /* SCENE_FOLDER */
-    if (tok.size() == 1 && util::fs::dir_exists(tok[0].c_str())) {
-        from_images_and_camera_files(tok[0], texture_views);
+    if (util::fs::dir_exists(in_scene.c_str())) {
+        from_images_and_camera_files(in_scene, texture_views);
     }
 
     /* MVE_SCENE::EMBEDDING */
