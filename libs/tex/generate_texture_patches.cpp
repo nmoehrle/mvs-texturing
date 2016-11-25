@@ -78,27 +78,33 @@ generate_candidate(int label, TextureView const & texture_view,
 
             texcoords.push_back(pixel);
 
-            min_x = std::min(static_cast<int>(std::floor(pixel[0])) - texture_patch_border, min_x);
-            min_y = std::min(static_cast<int>(std::floor(pixel[1])) - texture_patch_border, min_y);
-            max_x = std::max(static_cast<int>(std::ceil(pixel[0])) + texture_patch_border, max_x);
-            max_y = std::max(static_cast<int>(std::ceil(pixel[1])) + texture_patch_border, max_y);
+            min_x = std::min(static_cast<int>(std::floor(pixel[0])), min_x);
+            min_y = std::min(static_cast<int>(std::floor(pixel[1])), min_y);
+            max_x = std::max(static_cast<int>(std::ceil(pixel[0])), max_x);
+            max_y = std::max(static_cast<int>(std::ceil(pixel[1])), max_y);
         }
     }
+
+    /* Check for valid projections/erroneous labeling files. */
+    assert(min_x >= 0);
+    assert(min_y >= 0);
+    assert(max_x < view_image->width());
+    assert(max_y < view_image->height());
+
+    int width = max_x - min_x;
+    int height = max_y - min_y;
+
+    /* Add border and adjust min accordingly. */
+    width += 2 * texture_patch_border;
+    height += 2 * texture_patch_border;
+    min_x -= texture_patch_border;
+    min_y -= texture_patch_border;
 
     /* Calculate the relative texcoords. */
     math::Vec2f min(min_x, min_y);
     for (std::size_t i = 0; i < texcoords.size(); ++i) {
         texcoords[i] = texcoords[i] - min;
     }
-
-    int const width = max_x - min_x;
-    int const height = max_y - min_y;
-
-    /* Check for valid projections/erroneous labeling files. */
-    assert(min_x >= 0 - texture_patch_border);
-    assert(min_y >= 0 - texture_patch_border);
-    assert(max_x < view_image->width() + texture_patch_border);
-    assert(max_y < view_image->height() + texture_patch_border);
 
     mve::ByteImage::Ptr byte_image;
     byte_image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vec3uc(255, 0, 255));
