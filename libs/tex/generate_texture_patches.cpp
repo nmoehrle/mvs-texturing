@@ -91,8 +91,8 @@ generate_candidate(int label, TextureView const & texture_view,
     assert(max_x < view_image->width());
     assert(max_y < view_image->height());
 
-    int width = max_x - min_x;
-    int height = max_y - min_y;
+    int width = max_x - min_x + 1;
+    int height = max_y - min_y + 1;
 
     /* Add border and adjust min accordingly. */
     width += 2 * texture_patch_border;
