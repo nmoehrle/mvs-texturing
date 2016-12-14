@@ -8,7 +8,7 @@ setting.
 
 The algorithm was published in Sept. 2014 on the
 *European Conference on Computer Vision*. Please refer to our project website
-(http://www.gris.tu-darmstadt.de/projects/mvs-texturing)
+(http://www.gcc.tu-darmstadt.de/home/proj/texrecon/)
 for the paper and further information.
 
 *Please be aware that while the interface of the `texrecon` application is
@@ -31,12 +31,12 @@ The code and the build system have the following prerequisites:
 Furthermore the build system automatically downloads and compiles the following
 dependencies (so there is nothing you need to do here):
 
-- coldet
-    http://sourceforge.net/projects/coldet/
+- rayint
+    https://github.com/nmoehrle/rayint
 - Eigen
     http://eigen.tuxfamily.org/
 - Multi-View Environment
-    http://www.gris.informatik.tu-darmstadt.de/projects/multiview-environment/
+    http://www.gcc.tu-darmstadt.de/home/proj/mve/
 
 *The following is only downloaded if you use this software for research purposes and
 thus provide the `-DRESEARCH=ON `flag (see compilation section below).*
@@ -81,14 +81,14 @@ As input our algorithm requires a triangulated 3D model and images that are
 registered against this model. One way to obtain this is to:
 *   import images, infer camera parameters and reconstruct depth maps
     using the [Multi-View Environment]
-    (http://www.gris.informatik.tu-darmstadt.de/projects/multiview-environment/),
+    (http://www.gcc.tu-darmstadt.de/home/proj/mve/),
     and
 *   fuse these depth maps into a combined 3D model using the
     [Floating Scale Surface Reconstruction]
-    (http://www.gris.informatik.tu-darmstadt.de/projects/floating-scale-surface-recon/)
+    (http://www.gcc.tu-darmstadt.de/home/proj/fssr/)
     algorithm.
 
-A quick guide on how to use these applications can be found on our project [website](http://www.gris.informatik.tu-darmstadt.de/projects/mvs-texturing).
+A quick guide on how to use these applications can be found on our project [website](http://www.gcc.tu-darmstadt.de/home/proj/texrecon/).
 
 By starting the application without any parameters and you will get a
 description of the expected file formats and optional parameters.
