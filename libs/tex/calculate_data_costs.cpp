@@ -150,7 +150,7 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
         std::vector<std::pair<std::size_t, FaceProjectionInfo> > projected_face_view_infos;
 
         #pragma omp for schedule(dynamic)
-        for (std::uint16_t j = 0; j < texture_views->size(); ++j) {
+        for (std::uint16_t j = 0; j < static_cast<std::uint16_t>(num_views); ++j) {
             view_counter.progress<SIMPLE>();
 
             TextureView * texture_view = &texture_views->at(j);
@@ -312,9 +312,12 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
     std::size_t const num_faces = mesh->get_faces().size() / 3;
     std::size_t const num_views = texture_views->size();
 
-    assert(num_faces < std::numeric_limits<std::uint32_t>::max());
-    assert(num_views < std::numeric_limits<std::uint16_t>::max());
-    assert(MRF_MAX_ENERGYTERM < std::numeric_limits<float>::max());
+    if (num_faces > std::numeric_limits<std::uint32_t>::max())
+        throw std::runtime_error("Exeeded maximal number of faces");
+    if (num_views > std::numeric_limits<std::uint16_t>::max())
+        throw std::runtime_error("Exeeded maximal number of views");
+    static_assert(MRF_MAX_ENERGYTERM <= std::numeric_limits<float>::max(),
+        "MRF_MAX_ENERGYTERM has to be within float limits");
 
     FaceProjectionInfos face_projection_infos(num_faces);
     calculate_face_projection_infos(mesh, texture_views, settings, &face_projection_infos);
