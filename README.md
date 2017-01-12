@@ -21,7 +21,7 @@ Dependencies
 
 The code and the build system have the following prerequisites:
 
-- cmake (>= 2.8)
+- cmake (>= 3.1)
 - git
 - make
 - gcc (>= 4.6.3) or a compatible compiler
