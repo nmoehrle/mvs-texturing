@@ -15,8 +15,6 @@
 #include "mve/mesh.h"
 #include "mve/mesh_info.h"
 
-#include "mrf/graph.h"
-
 #include "defines.h"
 #include "settings.h"
 #include "obj_model.h"

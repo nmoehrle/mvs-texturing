@@ -28,13 +28,6 @@ int main(int argc, char **argv) {
     util::system::print_build_timestamp(argv[0]);
     util::system::register_segfault_handler();
 
-#ifdef RESEARCH
-    std::cout << "******************************************************************************" << std::endl
-              << " Due to use of the -DRESEARCH=ON compile option, this program is licensed "     << std::endl
-              << " for research purposes only. Please pay special attention to the gco license."  << std::endl
-              << "******************************************************************************" << std::endl;
-#endif
-
     Timer timer;
     util::WallTimer wtimer;
 
@@ -101,7 +94,12 @@ int main(int argc, char **argv) {
         }
         timer.measure("Calculating data costs");
 
-        tex::view_selection(data_costs, &graph, conf.settings);
+        try {
+            tex::view_selection(data_costs, &graph, conf.settings);
+        } catch (std::runtime_error& e) {
+            std::cerr << "\tOptimization failed: " << e.what() << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
         timer.measure("Running MRF optimization");
         std::cout << "\tTook: " << rwtimer.get_elapsed_sec() << "s" << std::endl;
 

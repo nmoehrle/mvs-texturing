@@ -7,13 +7,18 @@ compiler:
 
 before_install:
   - sudo add-apt-repository --yes ppa:george-edison55/cmake-3.x
+  - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo apt-get update -qq
   - sudo apt-get install cmake
+  - sudo apt-get install libtbb-dev
+  - sudo apt-get install g++-5
+  - sudo apt-get install gcc-5
 
 before_script:
+  - export CXX="g++-5"
+  - export CC="gcc-5"
   - mkdir build
   - cd build
 
 script:
   - cmake .. && make
-  - cmake .. -DRESEARCH=ON && make
