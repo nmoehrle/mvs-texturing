@@ -8,7 +8,6 @@
  */
 
 #include <algorithm>
-#include <limits>
 
 #include "lbp_graph.h"
 
@@ -29,7 +28,8 @@ ENERGY_TYPE LBPGraph::compute_energy() {
     #pragma omp parallel for reduction(+:energy)
     for (std::size_t edge_idx = 0; edge_idx < edges.size(); ++edge_idx) {
         DirectedEdge const & edge = edges[edge_idx];
-        energy += smooth_cost_func(edge.v1, edge.v2, vertices[edge.v1].label, vertices[edge.v2].label);
+        energy += smooth_cost_func(edge.v1, edge.v2,
+            vertices[edge.v1].label, vertices[edge.v2].label);
     }
 
     return energy;
@@ -47,9 +47,11 @@ ENERGY_TYPE LBPGraph::optimize(int num_iterations) {
                 ENERGY_TYPE min_energy = std::numeric_limits<ENERGY_TYPE>::max();
                 for (std::size_t k = 0; k < labels1.size(); ++k) {
                     int label1 = labels1[k];
-                    ENERGY_TYPE energy = smooth_cost_func(edge.v1, edge.v2, label1, label2) + vertices[edge.v1].data_costs[k];
+                    ENERGY_TYPE energy = smooth_cost_func(edge.v1, edge.v2, label1, label2)
+                        + vertices[edge.v1].data_costs[k];
 
-                    std::vector<int> const& incoming_edges1 = vertices[edge.v1].incoming_edges;
+                    std::vector<int> const& incoming_edges1
+                        = vertices[edge.v1].incoming_edges;
                     for (std::size_t n = 0; n < incoming_edges1.size(); ++n) {
                         DirectedEdge const& pre_edge = edges[incoming_edges1[n]];
                         if (pre_edge.v1 == edge.v2) continue;
@@ -111,7 +113,7 @@ void LBPGraph::set_data_costs(int label, std::vector<SparseDataCost> const & cos
     for (std::size_t i = 0; i < costs.size(); ++i) {
         Vertex & vertex = vertices[costs[i].site];
         vertex.labels.push_back(label);
-        int data_cost = costs[i].cost;
+        ENERGY_TYPE data_cost = costs[i].cost;
         vertex.data_costs.push_back(data_cost);
 
         if (data_cost < vertex.data_cost) {

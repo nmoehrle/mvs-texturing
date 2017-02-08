@@ -27,11 +27,12 @@ class LBPGraph : public Graph {
 
         struct Vertex {
             int label;
-            int data_cost;
+            ENERGY_TYPE data_cost;
             std::vector<int> labels;
-            std::vector<int> data_costs;
+            std::vector<ENERGY_TYPE> data_costs;
             std::vector<int> incoming_edges;
-            Vertex() : label(0), data_cost(MRF_MAX_ENERGYTERM) {}
+            Vertex() : label(0), data_cost(std::numeric_limits<ENERGY_TYPE>::max())
+                {}
         };
 
 

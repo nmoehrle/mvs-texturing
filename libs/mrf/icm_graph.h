@@ -14,16 +14,17 @@
 
 MRF_NAMESPACE_BEGIN
 
-/** Implementation of the iterated conditional mode algrorithm. */
+/** Implementation of the iterated conditional mode algorithm. */
 class ICMGraph : public Graph {
     private:
         struct Site {
             int label;
-            int data_cost;
+            ENERGY_TYPE data_cost;
             std::vector<int> labels;
-            std::vector<int> data_costs;
+            std::vector<ENERGY_TYPE> data_costs;
             std::vector<int> neighbors;
-            Site() : label(0), data_cost(MRF_MAX_ENERGYTERM) {}
+            Site() : label(0), data_cost(std::numeric_limits<ENERGY_TYPE>::max())
+                {}
         };
 
         std::vector<Site> sites;

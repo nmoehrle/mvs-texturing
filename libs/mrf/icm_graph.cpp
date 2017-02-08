@@ -30,7 +30,7 @@ ENERGY_TYPE ICMGraph::optimize(int num_iterations) {
         for (std::size_t j = 0; j < sites.size(); ++j) {
             Site * site = &sites[j];
             /* Current cost */
-            ENERGY_TYPE min_cost = std::numeric_limits<ENERGY_TYPE>::max(); //site->data_cost + smooth_cost(j, site->label);
+            ENERGY_TYPE min_cost = std::numeric_limits<ENERGY_TYPE>::max();
             for (std::size_t k = 0; k < site->labels.size(); ++k) {
                 ENERGY_TYPE cost = site->data_costs[k] + smooth_cost(j, site->labels[k]);
                 if (cost < min_cost) {
@@ -58,7 +58,7 @@ void ICMGraph::set_data_costs(int label, std::vector<SparseDataCost> const & cos
     for (std::size_t i = 0; i < costs.size(); ++i) {
         Site & site = sites[costs[i].site];
         site.labels.push_back(label);
-        int data_cost = costs[i].cost;
+        ENERGY_TYPE data_cost = costs[i].cost;
         site.data_costs.push_back(data_cost);
 
         if (data_cost < site.data_cost) {
