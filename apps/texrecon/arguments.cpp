@@ -67,7 +67,7 @@ Arguments parse_args(int argc, char **argv) {
         choices<tex::OutlierRemoval>() +  "} [" +
         choice_string<tex::OutlierRemoval>(tex::OUTLIER_REMOVAL_NONE) + "]");
     args.add_option('t',"tone_mapping", true,
-        "Photometric outlier (pedestrians etc.) removal method: {" +
+        "Tone mapping method: {" +
         choices<tex::ToneMapping>() +  "} [" +
         choice_string<tex::ToneMapping>(tex::TONE_MAPPING_NONE) + "]");
     args.add_option('v',"view_selection_model", false,
