@@ -10,10 +10,10 @@
 #ifndef MRF_GRAPH_HEADER
 #define MRF_GRAPH_HEADER
 
+#include <limits>
 #include <vector>
 #include <memory>
 
-#define MRF_MAX_ENERGYTERM 10000000
 #define MRF_NAMESPACE_BEGIN namespace mrf {
 #define MRF_NAMESPACE_END }
 

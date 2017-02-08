@@ -293,7 +293,7 @@ postprocess_face_infos(Settings const & settings,
 
             /* Clamp to percentile and normalize. */
             float normalized_quality = std::min(1.0f, info.quality / percentile);
-            float data_cost = (1.0f - normalized_quality) * MRF_MAX_ENERGYTERM;
+            float data_cost = (1.0f - normalized_quality);
             data_costs->set_value(i, info.view_id, data_cost);
         }
 
@@ -316,8 +316,6 @@ calculate_data_costs(mve::TriangleMesh::ConstPtr mesh, std::vector<TextureView> 
         throw std::runtime_error("Exeeded maximal number of faces");
     if (num_views > std::numeric_limits<std::uint16_t>::max())
         throw std::runtime_error("Exeeded maximal number of views");
-    static_assert(MRF_MAX_ENERGYTERM <= std::numeric_limits<float>::max(),
-        "MRF_MAX_ENERGYTERM has to be within float limits");
 
     FaceProjectionInfos face_projection_infos(num_faces);
     calculate_face_projection_infos(mesh, texture_views, settings, &face_projection_infos);

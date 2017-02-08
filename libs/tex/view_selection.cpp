@@ -19,7 +19,7 @@ bool IGNORE_LUMINANCE = false;
 /** Potts model */
 float
 potts(int, int, int l1, int l2) {
-    return l1 == l2 && l1 != 0 && l2 != 0 ? 0 : 1 * MRF_MAX_ENERGYTERM;
+    return (l1 == l2 && l1 != 0 && l2 != 0) ? 0.0f : 1.0f;
 }
 
 struct FaceInfo {
@@ -78,7 +78,7 @@ set_data_costs(std::vector<FaceInfo> const & face_infos, DataCosts const & data_
         std::vector<mrf::SparseDataCost> costs(mrfs[i]->num_sites());
         for (std::size_t j = 0; j < costs.size(); j++) {
             costs[j].site = j;
-            costs[j].cost = MRF_MAX_ENERGYTERM;
+            costs[j].cost = 1.0f;
         }
         mrfs[i]->set_data_costs(0, costs);
     }
@@ -100,7 +100,8 @@ isolate_unseen_faces(UniGraph * graph, DataCosts const & data_costs) {
         }
 
     }
-    std::cout << "\t" << num_unseen_faces << " faces have not been seen by a view." << std::endl;
+    std::cout << "\t" << num_unseen_faces
+        << " faces have not been seen by a view." << std::endl;
 }
 
 void
