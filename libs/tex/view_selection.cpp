@@ -24,10 +24,8 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     using pairwise_t = mapmap::PairwisePotts<cost_t, simd_w>;
 
     /* Construct graph */
-    mapmap::Graph<cost_t> mgraph;
+    mapmap::Graph<cost_t> mgraph(graph->num_nodes());
 
-    /* Allocate nodes... */
-    mgraph.add_edge(0, graph->num_nodes() - 1, 0.0f);
     for (std::size_t i = 0; i < graph->num_nodes(); ++i) {
         if (data_costs.col(i).empty()) continue;
 
