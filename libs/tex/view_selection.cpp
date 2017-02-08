@@ -46,12 +46,14 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     for (std::size_t i = 0; i < data_costs.cols(); ++i) {
         DataCosts::Column const & data_costs_for_node = data_costs.col(i);
 
-        std::size_t num_labels = data_costs_for_node.size() + 1;
-        std::vector<mapmap::_iv_st<cost_t, simd_w> > labels(num_labels);
-
-        labels[0] = 0;
-        for(std::size_t j = 0; j < data_costs_for_node.size(); ++j) {
-            labels[j + 1] = data_costs_for_node[j].first + 1;
+        std::vector<mapmap::_iv_st<cost_t, simd_w> > labels;
+        if (data_costs_for_node.empty()) {
+            labels.push_back(0);
+        } else {
+            labels.resize(data_costs_for_node.size());
+            for(std::size_t j = 0; j < data_costs_for_node.size(); ++j) {
+                labels[j] = data_costs_for_node[j].first + 1;
+            }
         }
 
         label_set.set_label_set_for_node(i, labels);
@@ -62,41 +64,53 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     for (std::size_t i = 0; i < data_costs.cols(); ++i) {
         DataCosts::Column const & data_costs_for_node = data_costs.col(i);
 
-        std::size_t num_costs = data_costs_for_node.size() + 1;
-        std::vector<mapmap::_s_t<cost_t, simd_w> > costs(num_costs);
+        std::vector<mapmap::_s_t<cost_t, simd_w> > costs;
+        if (data_costs_for_node.empty()) {
+            costs.push_back(1.0f);
+        } else {
+            costs.resize(data_costs_for_node.size());
+            for(std::size_t j = 0; j < data_costs_for_node.size(); ++j) {
+                float cost = data_costs_for_node[j].second;
+                costs[j] = cost;
+            }
 
-        costs[0] = 1.0f;
-        for(std::size_t j = 0; j < data_costs_for_node.size(); ++j) {
-            float cost = data_costs_for_node[j].second;
-            if (!std::isfinite(cost)) std::cerr << "WAT" << std::endl;
-            costs[j + 1] = cost;
         }
 
         unaries.set_costs_for_node(i, costs);
     }
 
-    mapmap::StopWhenReturnsDiminish<cost_t, simd_w> terminate(5, 0.001);
+    mapmap::StopWhenReturnsDiminish<cost_t, simd_w> terminate(5, 0.01);
     std::vector<mapmap::_iv_st<cost_t, simd_w> > solution;
+
+    auto display = [](const mapmap::luint_t time_ms,
+            const mapmap::_iv_st<cost_t, simd_w> objective) {
+        std::cout << "\t" << time_ms / 1000 << "\t" << objective << std::endl;
+    };
 
     mapmap::mapMAP<cost_t, simd_w, unary_t, pairwise_t> solver;
     solver.set_graph(&mgraph);
     solver.set_label_set(&label_set);
     solver.set_unaries(&unaries);
     solver.set_pairwise(&pairwise);
+    solver.set_logging_callback(display);
     solver.set_termination_criterion(&terminate);
 
+    std::cout << "\tTime[s]\tEnergy" << std::endl;
     solver.optimize(solution);
 
     /* Label 0 is undefined. */
     std::size_t num_labels = data_costs.rows() + 1;
+    std::size_t undefined = 0;
     /* Extract resulting labeling from solver. */
     for (std::size_t i = 0; i < graph->num_nodes(); ++i) {
         int label = label_set.label_from_offset(i, solution[i]);
         if (label < 0 || num_labels <= static_cast<std::size_t>(label)) {
             throw std::runtime_error("Incorrect labeling");
         }
+        if (label == 0) undefined += 1;
         graph->set_label(i, static_cast<std::size_t>(label));
     }
+    std::cout << undefined << " faces have not been seen" << std::endl;
 }
 
 TEX_NAMESPACE_END
