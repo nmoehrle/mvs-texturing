@@ -22,6 +22,21 @@ TEX_NAMESPACE_BEGIN
 #define MAX_HOLE_NUM_FACES 100
 #define MAX_HOLE_PATCH_SIZE 100
 
+template <typename T>
+T clamp_nan_low(T const & v, T const & hi, T const & lo) {
+    return (v > lo) ? ((v < hi) ? v : hi) : lo;
+}
+
+template <typename T>
+T clamp_nan_hi(T const & v, T const & hi, T const & lo) {
+    return (v < hi) ? ((v > lo) ? v : lo) : hi;
+}
+
+template <typename T>
+T clamp(T const & v, T const & hi, T const & lo) {
+    return (v < lo) ? lo : ((v > hi) ? hi : v);
+}
+
 void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo> > * vertex_projection_infos) {
     /* Merge vertex infos within the same texture patch. */
     #pragma omp parallel for
@@ -273,7 +288,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
         }
 
         /* According to the previous checks (vertex class within the origial
-         * mesh and boundary) there already has to be at least one projection
+         * mesh and boundary) there has to be at least one projection
          * of each border vertex in a common texture patch. */
         bool test = false;
         math::Vec2f vp0(0.0f), vp1(0.0f);
@@ -339,16 +354,17 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
                 /* Ensure numerical stability */
                 if (v01n * v02n < std::numeric_limits<float>::epsilon()) return false;
 
-                float alpha = std::acos(v01.dot(v02) / (v01n * v02n));
-                weights[g2l[v1]] += std::tan(alpha / 2.0f) / v01n;
-                weights[g2l[v2]] += std::tan(alpha / 2.0f) / v02n;
+                float calpha = v01.dot(v02) / (v01n * v02n);
+                float alpha = std::acos(clamp(calpha, -1.0f, 1.0f));
+                weights[g2l[v1]] += std::tan(alpha / 2.0f) / (v01n / 2.0f);
+                weights[g2l[v2]] += std::tan(alpha / 2.0f) / (v02n / 2.0f);
             }
 
             std::map<std::size_t, float>::iterator it;
             float sum = 0.0f;
             for (it = weights.begin(); it != weights.end(); ++it)
                 sum += it->second;
-            assert(sum > 0.0f);
+            if (sum < std::numeric_limits<float>::epsilon()) return false;
             for (it = weights.begin(); it != weights.end(); ++it)
                 it->second /= sum;
 
