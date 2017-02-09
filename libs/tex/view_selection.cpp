@@ -84,7 +84,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
 
     auto display = [](const mapmap::luint_t time_ms,
             const mapmap::_iv_st<cost_t, simd_w> objective) {
-        std::cout << "\t" << time_ms / 1000 << "\t" << objective << std::endl;
+        std::cout << "\t\t" << time_ms / 1000 << "\t" << objective << std::endl;
     };
 
     mapmap::mapMAP<cost_t, simd_w, unary_t, pairwise_t> solver;
@@ -95,7 +95,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     solver.set_logging_callback(display);
     solver.set_termination_criterion(&terminate);
 
-    std::cout << "\tTime[s]\tEnergy" << std::endl;
+    std::cout << "\tOptimizing:\n\t\tTime[s]\tEnergy" << std::endl;
     solver.optimize(solution);
 
     /* Label 0 is undefined. */
@@ -110,7 +110,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
         if (label == 0) undefined += 1;
         graph->set_label(i, static_cast<std::size_t>(label));
     }
-    std::cout << undefined << " faces have not been seen" << std::endl;
+    std::cout << '\t' << undefined << " faces have not been seen" << std::endl;
 }
 
 TEX_NAMESPACE_END
