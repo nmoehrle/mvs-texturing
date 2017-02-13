@@ -51,6 +51,7 @@ public:
     Groups & get_groups(void);
 
     static void save(ObjModel const & model, std::string const & prefix);
+    static void saveSimpleTriangles(std::vector<math::Vec3f> const & vertices, std::vector<std::size_t> const & faces, std::string const & prefix);
 };
 
 inline
