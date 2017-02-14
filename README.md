@@ -34,9 +34,11 @@ dependencies (so there is nothing you need to do here):
 - rayint
     https://github.com/nmoehrle/rayint
 - Eigen
-    http://eigen.tuxfamily.org/
+    http://eigen.tuxfamily.org
 - Multi-View Environment
-    http://www.gcc.tu-darmstadt.de/home/proj/mve/
+    http://www.gcc.tu-darmstadt.de/home/proj/mve
+- mapMAP
+    http://www.gcc.tu-darmstadt.de/home/proj/mapmap
 
 
 Compilation ![Build Status](https://travis-ci.org/nmoehrle/mvs-texturing.svg)
@@ -90,7 +92,6 @@ assertions. However, these assertions could give valuable insight in failure cas
 
 License, Patents and Citing
 --------------------------------------------------------------------------------
-
 Our software is licensed under the BSD 3-Clause license, for more details see
 the LICENSE.txt file.
 
@@ -104,7 +105,6 @@ If you use our texturing code for research purposes, please cite our paper:
   publisher= {Springer},
 }
 ```
-
 
 Contact
 --------------------------------------------------------------------------------
