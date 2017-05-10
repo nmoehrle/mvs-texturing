@@ -151,7 +151,7 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
         if (cam_info.dist[0] != 0.0f) {
             mve::ByteImage::Ptr image = mve::image::load_file(img_file);
             if (cam_info.dist[1] != 0.0f) {
-                image = mve::image::image_undistort_bundler<uint8_t>(image,
+                image = mve::image::image_undistort_k2k4<uint8_t>(image,
                     cam_info.flen, cam_info.dist[0], cam_info.dist[1]);
             } else {
                 image = mve::image::image_undistort_vsfm<uint8_t>(image,
