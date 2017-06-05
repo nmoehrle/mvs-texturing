@@ -32,7 +32,7 @@ externalproject_add(ext_eigen
 )
 
 externalproject_add(ext_mve
-    PREFIX          mve
+    PREFIX          ext_mve
     GIT_REPOSITORY  https://github.com/nmoehrle/mve.git
     UPDATE_COMMAND  ""
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/mve
