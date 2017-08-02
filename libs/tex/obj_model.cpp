@@ -56,6 +56,7 @@ ObjModel::save_to_files(std::string const & prefix) const {
 
     for (std::size_t i = 0; i < groups.size(); ++i) {
         out << "usemtl " << groups[i].material_name << '\n';
+        out << "g " << i << '\n';
         for (std::size_t j = 0; j < groups[i].faces.size(); ++j) {
             Face const & face =  groups[i].faces[j];
             out << "f";
