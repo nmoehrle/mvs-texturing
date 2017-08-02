@@ -34,28 +34,28 @@ ObjModel::save_to_files(std::string const & prefix) const {
     if (!out.good())
         throw util::FileException(prefix + ".obj", std::strerror(errno));
 
-    out << "mtllib " << name << ".mtl" << std::endl;
+    out << "mtllib " << name << ".mtl" << '\n';
 
     out << std::fixed << std::setprecision(6);
     for (std::size_t i = 0; i < vertices.size(); ++i) {
         out << "v " << vertices[i][0] << " "
             << vertices[i][1] << " "
-            << vertices[i][2] << std::endl;
+            << vertices[i][2] << '\n';
     }
 
     for (std::size_t i = 0; i < texcoords.size(); ++i) {
         out << "vt " << texcoords[i][0] << " "
-            << 1.0f - texcoords[i][1] << std::endl;
+            << 1.0f - texcoords[i][1] << '\n';
     }
 
     for (std::size_t i = 0; i < normals.size(); ++i) {
         out << "vn " << normals[i][0] << " "
             << normals[i][1] << " "
-            << normals[i][2] << std::endl;
+            << normals[i][2] << '\n';
     }
 
     for (std::size_t i = 0; i < groups.size(); ++i) {
-        out << "usemtl " << groups[i].material_name << std::endl;
+        out << "usemtl " << groups[i].material_name << '\n';
         for (std::size_t j = 0; j < groups[i].faces.size(); ++j) {
             Face const & face =  groups[i].faces[j];
             out << "f";
@@ -64,7 +64,7 @@ ObjModel::save_to_files(std::string const & prefix) const {
                     << "/" << face.texcoord_ids[k]  + OBJ_INDEX_OFFSET
                     << "/" << face.normal_ids[k]  + OBJ_INDEX_OFFSET;
             }
-            out << std::endl;
+            out << '\n';
         }
     }
     out.close();
