@@ -23,17 +23,17 @@ TEX_NAMESPACE_BEGIN
 #define MAX_HOLE_PATCH_SIZE 100
 
 template <typename T>
-T clamp_nan_low(T const & v, T const & hi, T const & lo) {
+T clamp_nan_low(T const & v, T const & lo, T const & hi) {
     return (v > lo) ? ((v < hi) ? v : hi) : lo;
 }
 
 template <typename T>
-T clamp_nan_hi(T const & v, T const & hi, T const & lo) {
+T clamp_nan_hi(T const & v, T const & lo, T const & hi) {
     return (v < hi) ? ((v > lo) ? v : lo) : hi;
 }
 
 template <typename T>
-T clamp(T const & v, T const & hi, T const & lo) {
+T clamp(T const & v, T const & lo, T const & hi) {
     return (v < lo) ? lo : ((v > hi) ? hi : v);
 }
 
