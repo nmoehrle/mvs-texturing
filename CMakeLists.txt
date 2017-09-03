@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/elibs/tbb")
+
 project(Texturing)
 include(ExternalProject)
 
@@ -8,14 +10,15 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 endif()
 
+#Search for TBB library (release build)
+set(CMAKE_BUILD_TYPE_BACKUP ${CMAKE_BUILD_TYPE})
+set(CMAKE_BUILD_TYPE RELEASE)
+FIND_PACKAGE(TBB REQUIRED)
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_BACKUP})
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED yes)
-
-set(RESEARCH "OFF" CACHE BOOL "Use the gco library for Multi-Label Optimization, which is licensed only for research purposes!")
-if(RESEARCH)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRESEARCH=1")
-endif()
+add_definitions(-DEIGEN_MPL2_ONLY)
 
 FIND_PACKAGE(OpenMP)
 if(OPENMP_FOUND)
@@ -25,7 +28,8 @@ if(OPENMP_FOUND)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wundef -pedantic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wall -Wextra -Wundef -pedantic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpmath=sse -funroll-loops")
 endif()
 
 find_package(PNG REQUIRED)
@@ -37,6 +41,8 @@ include_directories(SYSTEM
     ${CMAKE_SOURCE_DIR}/elibs/rayint/libs
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs
     ${CMAKE_SOURCE_DIR}/elibs/eigen
+    ${CMAKE_SOURCE_DIR}/elibs/mapmap/
+    ${CMAKE_SOURCE_DIR}/elibs/mapmap/mapmap
 )
 
 include_directories(
@@ -48,20 +54,5 @@ link_directories(
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs/util
 )
 
-if(RESEARCH)
-    include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/elibs/gco)
-    link_directories(${CMAKE_BINARY_DIR}/elibs/ext_gco/src/ext_gco-build)
-endif()
-
 add_subdirectory(libs)
 add_subdirectory(apps)
-
-if(RESEARCH)
-    message(
-"
-******************************************************************************
- Due to use of the -DRESEARCH=ON option, the resulting program is licensed
- for research purposes only. Please pay special attention to the gco license.
-******************************************************************************
-")
-endif()

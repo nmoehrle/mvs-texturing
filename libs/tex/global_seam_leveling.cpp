@@ -130,7 +130,9 @@ calculate_difference(VertexProjectionInfos const & vertex_projection_infos,
     /* The order is essential. */
     math::Vec3f difference = color2 - color1;
 
-    assert(!isnan(difference[0]) && !isnan(difference[1]) && !isnan(difference[2]));
+    assert(!std::isnan(difference[0]));
+    assert(!std::isnan(difference[1]));
+    assert(!std::isnan(difference[2]));
 
     return difference;
 }

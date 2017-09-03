@@ -24,8 +24,8 @@ The code and the build system have the following prerequisites:
 - cmake (>= 3.1)
 - git
 - make
-- gcc (>= 4.6.3) or a compatible compiler
-- libpng, libjpg, libtiff
+- gcc (>= 5.0.0) or a compatible compiler
+- libpng, libjpg, libtiff, libtbb
 
 
 Furthermore the build system automatically downloads and compiles the following
@@ -34,14 +34,11 @@ dependencies (so there is nothing you need to do here):
 - rayint
     https://github.com/nmoehrle/rayint
 - Eigen
-    http://eigen.tuxfamily.org/
+    http://eigen.tuxfamily.org
 - Multi-View Environment
-    http://www.gcc.tu-darmstadt.de/home/proj/mve/
-
-*The following is only downloaded if you use this software for research purposes and
-thus provide the `-DRESEARCH=ON `flag (see compilation section below).*
-- multi-label graph cut optimization
-    http://vision.csd.uwo.ca/code/
+    http://www.gcc.tu-darmstadt.de/home/proj/mve
+- mapMAP
+    http://www.gcc.tu-darmstadt.de/home/proj/mapmap
 
 
 Compilation ![Build Status](https://travis-ci.org/nmoehrle/mvs-texturing.svg)
@@ -49,19 +46,8 @@ Compilation ![Build Status](https://travis-ci.org/nmoehrle/mvs-texturing.svg)
 
 1.  `git clone https://github.com/nmoehrle/mvs-texturing.git`
 2.  `cd mvs-texturing`
-3.  `mkdir build && cd build`
-4.  Generate make file
-    * `cmake ..`
-    * **IMPORTANT**: For research purposes only you can use
-    `cmake -DRESEARCH=ON ..`
-    instead. This downloads and links against Olga Veksler et al.'s multi-label
-    graph cut optimization, which tends to find better optima and gives better
-    texturing results. However, it is patented and can only be licensed for
-    non-research purposes by the respective authors. For non-research purposes
-    you have to stick to not using the RESEARCH flag. This will use Loopy Belief
-    Propagation instead of Graph Cut Optimization. Also see the license section
-    below for details.
-5.  `make` (or `make -j` for parallel compilation)
+3.  `mkdir build && cd build && cmake ..`
+4.  `make` (or `make -j` for parallel compilation)
 
 If something goes wrong during compilation you should check the output of the
 cmake step. CMake checks all dependencies and reports if anything is missing.
@@ -106,19 +92,8 @@ assertions. However, these assertions could give valuable insight in failure cas
 
 License, Patents and Citing
 --------------------------------------------------------------------------------
-
 Our software is licensed under the BSD 3-Clause license, for more details see
 the LICENSE.txt file.
-
-**IMPORTANT**: Using the `-DRESEARCH=ON` flag during compilation (see above) must
-not be used if this software is used for other purposes than research. This
-flag automatically downloads, compiles and links against multi-label graph cut
-optimization which
-> can be used only for research purposes. For commercial
-  purposes, be aware that there is a US patent on the main algorithm itself.
-
-*Cited from the multi-label graph cut optimization README file. See that file
-for further information.*
 
 If you use our texturing code for research purposes, please cite our paper:
 ```
@@ -130,7 +105,6 @@ If you use our texturing code for research purposes, please cite our paper:
   publisher= {Springer},
 }
 ```
-
 
 Contact
 --------------------------------------------------------------------------------
