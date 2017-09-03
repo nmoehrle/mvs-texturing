@@ -8,6 +8,7 @@ compiler:
 before_install:
   - sudo add-apt-repository --yes ppa:george-edison55/cmake-3.x
   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository --yes ppa:krzysztof-trzepla/onedata
   - sudo apt-get update -qq
   - sudo apt-get install cmake
   - sudo apt-get install libtbb-dev
