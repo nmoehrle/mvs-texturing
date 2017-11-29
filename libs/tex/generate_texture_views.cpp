@@ -106,6 +106,12 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
         }
     }
 
+    /* Create temporary dir for storing undistorted image files */
+    char const* tmp_dir = (path + "/tmp/").c_str();
+    if (!(util::fs::dir_exists(tmp_dir))) {
+        util::fs::mkdir(tmp_dir);
+    }
+
     ProgressCounter view_counter("\tLoading", files.size() / 2);
     #pragma omp parallel for
     for (std::size_t i = 0; i < files.size(); i += 2) {
@@ -158,7 +164,7 @@ from_images_and_camera_files(std::string const & path, std::vector<TextureView> 
                     cam_info.flen, cam_info.dist[0]);
             }
 
-            image_file = std::string("/tmp/") + util::fs::basename(img_file);
+            image_file = util::fs::abspath(tmp_dir) + "/" + util::fs::basename(img_file);
             mve::image::save_png_file(image, image_file);
         }
 
@@ -175,6 +181,12 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
     mve::Bundle::Ptr bundle = mve::load_nvm_bundle(nvm_file, &nvm_cams);
     mve::Bundle::Cameras& cameras = bundle->get_cameras();
 
+    /* Create temporary dir for storing undistorted image files */
+    char const* tmp_dir = (util::fs::dirname(nvm_file) + "/tmp/").c_str();
+    if (!(util::fs::dir_exists(tmp_dir))) {
+        util::fs::mkdir(tmp_dir);
+    }
+
     ProgressCounter view_counter("\tLoading", cameras.size());
     #pragma omp parallel for
     for (std::size_t i = 0; i < cameras.size(); ++i) {
@@ -190,7 +202,7 @@ from_nvm_scene(std::string const & nvm_file, std::vector<TextureView> * texture_
         image = mve::image::image_undistort_vsfm<uint8_t>
             (image, mve_cam.flen, nvm_cam.radial_distortion);
 
-        std::string image_file = std::string("/tmp/") + util::fs::basename(nvm_cam.filename);
+        std::string image_file = util::fs::abspath(tmp_dir) + "/" + util::fs::basename(nvm_cam.filename);
         mve::image::save_png_file(image, image_file);
 
         #pragma omp critical
