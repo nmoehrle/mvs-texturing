@@ -39,8 +39,21 @@ int main(int argc, char **argv) {
         std::exit(EXIT_FAILURE);
     }
 
-    if (!util::fs::dir_exists(util::fs::dirname(conf.out_prefix).c_str())) {
+    std::string const out_dir = util::fs::dirname(conf.out_prefix);
+
+    if (!util::fs::dir_exists(out_dir.c_str())) {
         std::cerr << "Destination directory does not exist!" << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    std::string const tmp_dir = util::fs::join_path(out_dir, "tmp");
+    if (!util::fs::dir_exists(tmp_dir.c_str())) {
+        util::fs::mkdir(tmp_dir.c_str());
+    } else {
+        std::cerr
+            << "Temporary directory \"tmp\" exists within the destination directory.\n"
+            << "Cannot continue since this directory would be delete in the end.\n"
+            << std::endl;
         std::exit(EXIT_FAILURE);
     }
 
@@ -49,7 +62,7 @@ int main(int argc, char **argv) {
     try {
         mesh = mve::geom::load_ply_mesh(conf.in_mesh);
     } catch (std::exception& e) {
-        std::cerr << "\tCould not load mesh: "<< e.what() << std::endl;
+        std::cerr << "\tCould not load mesh: " << e.what() << std::endl;
         std::exit(EXIT_FAILURE);
     }
     mve::MeshInfo mesh_info(mesh);
@@ -57,7 +70,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Generating texture views: " << std::endl;
     tex::TextureViews texture_views;
-    tex::generate_texture_views(conf.in_scene, &texture_views);
+    tex::generate_texture_views(conf.in_scene, &texture_views, tmp_dir);
 
     write_string_to_file(conf.out_prefix + ".conf", conf.to_string());
     timer.measure("Loading");
@@ -211,6 +224,12 @@ int main(int argc, char **argv) {
             std::cout << "done." << std::endl;
         }
     }
+
+    /* Remove temporary files. */
+    for (util::fs::File const & file : util::fs::Directory(tmp_dir)) {
+        util::fs::unlink(util::fs::join_path(file.path, file.name).c_str());
+    }
+    util::fs::rmdir(tmp_dir.c_str());
 
     return EXIT_SUCCESS;
 }
