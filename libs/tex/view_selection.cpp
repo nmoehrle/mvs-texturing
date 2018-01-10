@@ -21,6 +21,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     using cost_t = float;
     constexpr uint_t simd_w = mapmap::sys_max_simd_width<cost_t>();
     using unary_t = mapmap::UnaryTable<cost_t, simd_w>;
+    using unary_table_ptr = std::unique_ptr<unary_t>;
     using pairwise_t = mapmap::PairwisePotts<cost_t, simd_w>;
 
     /* Construct graph */
@@ -58,9 +59,9 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
 
         label_set.set_label_set_for_node(i, labels);
     }
-
-    mapmap::UnaryTable<cost_t, simd_w> unaries(&mgraph, &label_set);
-    mapmap::PairwisePotts<cost_t, simd_w> pairwise(1.0f);
+    
+    std::vector<unary_table_ptr> unaries(data_costs.cols());
+    pairwise_t pairwise(1.0f);
     for (std::size_t i = 0; i < data_costs.cols(); ++i) {
         DataCosts::Column const & data_costs_for_node = data_costs.col(i);
 
@@ -76,7 +77,8 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
 
         }
 
-        unaries.set_costs_for_node(i, costs);
+        unaries[i] = unary_table_ptr(new unary_t(i, &label_set));
+        unaries[i]->set_costs(costs);
     }
 
     mapmap::StopWhenReturnsDiminish<cost_t, simd_w> terminate(5, 0.01);
@@ -87,16 +89,29 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
         std::cout << "\t\t" << time_ms / 1000 << "\t" << objective << std::endl;
     };
 
-    mapmap::mapMAP<cost_t, simd_w, unary_t, pairwise_t> solver;
+    /* create mapMAP solver object */
+    mapmap::mapMAP<cost_t, simd_w> solver;
     solver.set_graph(&mgraph);
     solver.set_label_set(&label_set);
-    solver.set_unaries(&unaries);
+    for(std::size_t i = 0; i < graph->num_nodes(); ++i)
+        solver.set_unary(i, unaries[i].get());
     solver.set_pairwise(&pairwise);
     solver.set_logging_callback(display);
     solver.set_termination_criterion(&terminate);
+    
+    /* pass configuration arguments (optional) for solve */
+    mapmap::mapMAP_control ctr;
+    ctr.use_multilevel = true;
+    ctr.use_spanning_tree = true;
+    ctr.use_acyclic = true;
+    ctr.spanning_tree_multilevel_after_n_iterations = 5;
+    ctr.force_acyclic = true;
+    ctr.min_acyclic_iterations = 5;
+    ctr.relax_acyclic_maximal = true;
+    ctr.tree_algorithm = mapmap::LOCK_FREE_TREE_SAMPLER;
 
     std::cout << "\tOptimizing:\n\t\tTime[s]\tEnergy" << std::endl;
-    solver.optimize(solution);
+    solver.optimize(solution, ctr);
 
     /* Label 0 is undefined. */
     std::size_t num_labels = data_costs.rows() + 1;
