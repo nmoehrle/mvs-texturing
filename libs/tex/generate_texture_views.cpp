@@ -243,6 +243,12 @@ generate_texture_views(std::string const & in_scene,
         from_mve_scene(scene_dir, image_name, texture_views);
     }
 
+    std::sort(texture_views->begin(), texture_views->end(),
+        [] (TextureView const & l, TextureView const & r) -> bool {
+            return l.get_id() < r.get_id();
+        }
+    );
+
     std::size_t num_views = texture_views->size();
     if (num_views == 0) {
         std::cerr
