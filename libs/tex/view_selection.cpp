@@ -21,7 +21,6 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     using cost_t = float;
     constexpr uint_t simd_w = mapmap::sys_max_simd_width<cost_t>();
     using unary_t = mapmap::UnaryTable<cost_t, simd_w>;
-    using unary_table_ptr = std::unique_ptr<unary_t>;
     using pairwise_t = mapmap::PairwisePotts<cost_t, simd_w>;
 
     /* Construct graph */
@@ -59,8 +58,9 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
 
         label_set.set_label_set_for_node(i, labels);
     }
-    
-    std::vector<unary_table_ptr> unaries(data_costs.cols());
+
+    std::vector<unary_t> unaries;
+    unaries.reserve(data_costs.cols());
     pairwise_t pairwise(1.0f);
     for (std::size_t i = 0; i < data_costs.cols(); ++i) {
         DataCosts::Column const & data_costs_for_node = data_costs.col(i);
@@ -77,8 +77,8 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
 
         }
 
-        unaries[i] = unary_table_ptr(new unary_t(i, &label_set));
-        unaries[i]->set_costs(costs);
+        unaries.emplace_back(i, &label_set);
+        unaries.back().set_costs(costs);
     }
 
     mapmap::StopWhenReturnsDiminish<cost_t, simd_w> terminate(5, 0.01);
@@ -89,17 +89,17 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
         std::cout << "\t\t" << time_ms / 1000 << "\t" << objective << std::endl;
     };
 
-    /* create mapMAP solver object */
+    /* Create mapMAP solver object. */
     mapmap::mapMAP<cost_t, simd_w> solver;
     solver.set_graph(&mgraph);
     solver.set_label_set(&label_set);
     for(std::size_t i = 0; i < graph->num_nodes(); ++i)
-        solver.set_unary(i, unaries[i].get());
+        solver.set_unary(i, &unaries[i]);
     solver.set_pairwise(&pairwise);
     solver.set_logging_callback(display);
     solver.set_termination_criterion(&terminate);
-    
-    /* pass configuration arguments (optional) for solve */
+
+    /* Pass configuration arguments (optional) for solve. */
     mapmap::mapMAP_control ctr;
     ctr.use_multilevel = true;
     ctr.use_spanning_tree = true;
@@ -110,7 +110,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
     ctr.relax_acyclic_maximal = true;
     ctr.tree_algorithm = mapmap::LOCK_FREE_TREE_SAMPLER;
 
-    /* set true for deterministic (but slower) mapMAP execution */
+    /* Set true for deterministic (but slower) mapMAP execution. */
     ctr.sample_deterministic = false;
     ctr.initial_seed = 548923723;
 
