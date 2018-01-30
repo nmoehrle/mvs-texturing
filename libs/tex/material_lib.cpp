@@ -32,7 +32,7 @@ MaterialLib::save_to_files(std::string const & prefix) const {
             << "Ka 1.000000 1.000000 1.000000" << std::endl
             << "Kd 1.000000 1.000000 1.000000" << std::endl
             << "Ks 0.000000 0.000000 0.000000" << std::endl
-            << "Tr 1.000000" << std::endl
+            << "Tr 0.000000" << std::endl
             << "illum 1" << std::endl
             << "Ns 1.000000" << std::endl
             << "map_Kd " << name + diffuse_map_postfix << std::endl;
