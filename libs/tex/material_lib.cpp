@@ -28,13 +28,13 @@ MaterialLib::save_to_files(std::string const & prefix) const {
 
     for (Material const & material : *this) {
         std::string diffuse_map_postfix = "_" + material.name + "_map_Kd.png";
-        out << "newmtl " << material.name << std::endl
-            << "Ka 1.000000 1.000000 1.000000" << std::endl
-            << "Kd 1.000000 1.000000 1.000000" << std::endl
-            << "Ks 0.000000 0.000000 0.000000" << std::endl
-            << "Tr 1.000000" << std::endl
-            << "illum 1" << std::endl
-            << "Ns 1.000000" << std::endl
+        out << "newmtl " << material.name << '\n'
+            << "Ka 1.000000 1.000000 1.000000" << '\n'
+            << "Kd 1.000000 1.000000 1.000000" << '\n'
+            << "Ks 0.000000 0.000000 0.000000" << '\n'
+            << "Tr 0.000000" << '\n' // *Tr*ansparancy vs. *d*issolve: Tr = 1.0 - d
+            << "illum 1" << '\n'
+            << "Ns 1.000000" << '\n'
             << "map_Kd " << name + diffuse_map_postfix << std::endl;
     }
     out.close();
