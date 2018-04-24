@@ -242,8 +242,13 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     SpMat A(A_rows, x_rows);
     A.setFromTriplets(coefficients_A.begin(), coefficients_A.end());
 
-    SpMat Lhs = A.transpose() * A + Gamma.transpose() * Gamma;
-    /* Only keep lower triangle (CG only uses the lower), prune the rest and compress matrix. */
+    SpMat I(x_rows, x_rows);
+    I.setIdentity();
+
+    SpMat Lhs = A.transpose() * A + Gamma.transpose() * Gamma + I * 0.0001f;
+
+    /* Only keep lower triangle (CG only uses the lower),
+     * prune the rest and compress matrix. */
     Lhs.prune([](const int& row, const int& col, const float& value) -> bool {
             return col <= row && value != 0.0f;
         }); // value != 0.0f is only to suppress a compiler warning

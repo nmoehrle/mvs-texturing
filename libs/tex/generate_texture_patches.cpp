@@ -387,13 +387,9 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
             }
         }
 
-        for (std::size_t j = 0; j < matrix_size; ++j) {
-            coeff.push_back(Triplet(j, j, 1.0f));
-        }
-
         typedef Eigen::SparseMatrix<float> SpMat;
         SpMat A(matrix_size, matrix_size);
-        A.setFromTriplets(coeff.begin(), coeff.end());
+        A.setIdentity();
 
         Eigen::SparseLU<SpMat> solver;
         solver.analyzePattern(A);
