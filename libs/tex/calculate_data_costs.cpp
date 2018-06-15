@@ -178,21 +178,28 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
 
                 math::Vec3f view_to_face_vec = (face_center - view_pos).normalized();
                 math::Vec3f face_to_view_vec = (view_pos - face_center).normalized();
+                math::Vec3f up(0, 0, 1);
 
-                /* Backface and basic frustum culling */
-                float viewing_angle = face_to_view_vec.dot(face_normal);
-                if (viewing_angle < 0.0f || viewing_direction.dot(view_to_face_vec) < 0.0f)
-                    continue;
+                /* Skip culling if the face is close to vertical
+                   and 2.5D mode is enabled */
+                bool vertical = false;
+                if (settings.nadir_mode && fabs(up.dot(face_normal)) < 0.5) vertical = true;
+                
+                if (!vertical){
+                    /* Backface and basic frustum culling */
+                    float viewing_angle = face_to_view_vec.dot(face_normal);
+                    if (viewing_angle < 0.0f || viewing_direction.dot(view_to_face_vec) < 0.0f)
+                        continue;
 
-                float cutoffAngle = settings.geometric_visibility_test ? 75.0f : 90.0f;
-                if (std::acos(viewing_angle) > MATH_DEG2RAD(cutoffAngle))
-                    continue;
+                    if (std::acos(viewing_angle) > MATH_DEG2RAD(75.0f))
+                        continue;
+                }
 
                 /* Projects into the valid part of the TextureView? */
                 if (!texture_view->inside(v1, v2, v3))
                     continue;
 
-                if (settings.geometric_visibility_test) {
+                if (!vertical && settings.geometric_visibility_test) {
                     /* Viewing rays do not collide? */
                     bool visible = true;
                     math::Vec3f const * samples[] = {&v1, &v2, &v3};
@@ -221,6 +228,12 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
                 texture_view->get_face_info(v1, v2, v3, &info, settings);
 
                 if (info.quality == 0.0) continue;
+
+                if (vertical){
+                    /* Choose a view that is closest to the face
+                       instead of the GMI/AREA quality score. */ 
+                    info.quality = 0.0001f + 65535.0f / (face_center - view_pos).square_norm();
+                }
 
                 /* Change color space. */
                 mve::image::color_rgb_to_ycbcr(*(info.mean_color));
