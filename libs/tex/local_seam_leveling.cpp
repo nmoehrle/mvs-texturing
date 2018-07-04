@@ -29,11 +29,16 @@ mean_color_of_edge_point(std::vector<EdgeProjectionInfo> const & edge_projection
         if (texture_patch->get_label() == 0) continue;
         math::Vec2f pixel = edge_projection_info.p1 * t + (1.0f - t) * edge_projection_info.p2;
         math::Vec3f color = texture_patch->get_pixel_value(pixel);
+        if (std::isnan(color[0])) continue;
         color_accum.add(color, 1.0f);
     }
 
-    math::Vec3f mean_color = color_accum.normalized();
-    return mean_color;
+    if (color_accum.w > 0){
+        math::Vec3f mean_color = color_accum.normalized();
+        return mean_color;
+    }else{
+        return math::Vec3f(1.0f);
+    }
 }
 
 void
