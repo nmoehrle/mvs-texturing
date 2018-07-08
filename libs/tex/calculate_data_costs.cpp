@@ -232,7 +232,7 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
                 if (vertical){
                     /* Choose a view that is closest to the face
                        instead of the GMI/AREA quality score. */ 
-                    info.quality = 0.0001f + 65535.0f / (face_center - view_pos).square_norm();
+                    info.quality = 0.0001f + settings.nadir_weight / (face_center - view_pos).square_norm();
                 }
 
                 /* Change color space. */
