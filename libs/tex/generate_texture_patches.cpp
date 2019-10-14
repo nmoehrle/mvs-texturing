@@ -466,7 +466,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
     std::size_t num_patches = 0;
 
     std::cout << "\tRunning... " << std::flush;
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for ordered schedule(dynamic)
     for (std::size_t i = 0; i < texture_views->size(); ++i) {
 
         std::vector<std::vector<std::size_t> > subgraphs;
@@ -511,7 +511,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
         for (; it != candidates.end(); ++it) {
             std::size_t texture_patch_id;
 
-            #pragma omp critical
+            #pragma omp ordered
             {
                 texture_patches->push_back(it->texture_patch);
                 texture_patch_id = num_patches++;
@@ -542,7 +542,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
         std::vector<std::vector<std::size_t> > subgraphs;
         graph.get_subgraphs(0, &subgraphs);
 
-        #pragma omp parallel for schedule(dynamic)
+        #pragma omp parallel for ordered schedule(dynamic)
         for (std::size_t i = 0; i < subgraphs.size(); ++i) {
             std::vector<std::size_t> const & subgraph = subgraphs[i];
 
@@ -556,7 +556,7 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
                 num_patches += 1;
             } else {
                 if (settings.keep_unseen_faces) {
-                    #pragma omp critical
+                    #pragma omp ordered
                     unseen_faces.insert(unseen_faces.end(),
                         subgraph.begin(), subgraph.end());
                 }
