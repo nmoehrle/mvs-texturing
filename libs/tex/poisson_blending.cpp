@@ -20,7 +20,10 @@ typedef Eigen::SparseMatrix<float> SpMat;
 
 math::Vec3f simple_laplacian(int i, mve::FloatImage::ConstPtr img){
     const int width = img->width();
-    assert(i > width + 1 && i < img->get_pixel_amount() - width -1);
+    // Check it's not in the top/bottom border (`texture_patch_border = 1`).
+    assert(i > width && i < img->get_pixel_amount() - width);
+    // Check it's not in the left/right border (`texture_patch_border = 1`).
+    assert(i % width != 0 && i % width != width-1);
 
     return -4.0f * math::Vec3f(&img->at(i, 0))
         + math::Vec3f(&img->at(i - width, 0))
