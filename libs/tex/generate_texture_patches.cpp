@@ -377,8 +377,7 @@ bool fill_hole(std::vector<std::size_t> const & hole, UniGraph const & graph,
             by[idx[j]] = 0.0f;
             for (it = weights.begin(); it != weights.end(); ++it) {
                 if (is_border[it->first]) {
-                    std::size_t border_vertex_id = border[idx[it->first]];
-                    math::Vec2f projection = projections[g2l[border_vertex_id]];
+                    math::Vec2f projection = projections[it->first];
                     bx[idx[j]] += projection[0] * it->second;
                     by[idx[j]] += projection[1] * it->second;
                 } else {
