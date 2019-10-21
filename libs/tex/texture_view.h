@@ -47,7 +47,7 @@ class TextureView {
         int width;
         int height;
         std::string image_file;
-        mve::ByteImage::Ptr image;
+        mve::ImageBase::Ptr image;
         mve::ByteImage::Ptr gradient_magnitude;
         std::vector<bool> validity_mask;
 
@@ -59,7 +59,7 @@ class TextureView {
         /** Returns the 2D pixel coordinates of the given vertex projected into the view. */
         math::Vec2f get_pixel_coords(math::Vec3f const & vertex) const;
         /** Returns the RGB pixel values [0, 1] for the given vertex projected into the view, calculated by linear interpolation. */
-        math::Vec3f get_pixel_values(math::Vec3f const & vertex) const;
+//        math::Vec3f get_pixel_values(math::Vec3f const & vertex) const;
 
         /** Returns whether the pixel location is valid in this view.
           * The pixel location is valid if its inside the visible area and,
@@ -71,7 +71,7 @@ class TextureView {
         bool inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3) const;
 
         /** Returns the RGB pixel values [0, 1] for the give pixel location. */
-        math::Vec3f get_pixel_values(math::Vec2f const & pixel) const;
+//        math::Vec3f get_pixel_values(math::Vec2f const & pixel) const;
 
         /** Constructs a TextureView from the give mve::CameraInfo containing the given image. */
         TextureView(std::size_t id, mve::CameraInfo const & camera, std::string const & image_file);
@@ -85,7 +85,10 @@ class TextureView {
         /** Returns the height of the corresponding image. */
         int get_height(void) const;
         /** Returns a reference pointer to the corresponding image. */
-        mve::ByteImage::Ptr get_image(void) const;
+
+        template <typename ImageType>
+        typename ImageType::Ptr
+        get_image(void) const;
 
         /** Exchange encapsulated image. */
         void bind_image(mve::ByteImage::Ptr new_image);
@@ -93,6 +96,7 @@ class TextureView {
         /** Loads the corresponding image. */
         void load_image(void);
         /** Generates the validity mask. */
+        template <typename T>
         void generate_validity_mask(void);
         /** Generates the gradient magnitude image for the encapsulated image. */
         void generate_gradient_magnitude(void);
@@ -144,10 +148,12 @@ TextureView::get_height(void) const {
     return height;
 }
 
-inline mve::ByteImage::Ptr
+template <typename ImageType>
+inline typename ImageType::Ptr
 TextureView::get_image(void) const {
     assert(image != NULL);
-    return image;
+    typename ImageType::Ptr img = std::dynamic_pointer_cast<ImageType>(image);
+    return img;
 }
 
 inline bool
@@ -165,19 +171,19 @@ TextureView::get_pixel_coords(math::Vec3f const & vertex) const {
     return math::Vec2f(pixel[0] - 0.5f, pixel[1] - 0.5f);
 }
 
-inline math::Vec3f
-TextureView::get_pixel_values(math::Vec3f const & vertex) const {
-    math::Vec2f pixel = get_pixel_coords(vertex);
-    return get_pixel_values(pixel);
-}
+//inline math::Vec3f
+//TextureView::get_pixel_values(math::Vec3f const & vertex) const {
+//    math::Vec2f pixel = get_pixel_coords(vertex);
+//    return get_pixel_values(pixel);
+//}
 
-inline math::Vec3f
-TextureView::get_pixel_values(math::Vec2f const & pixel) const {
-    assert(image != NULL);
-    math::Vec3uc values;
-    image->linear_at(pixel[0], pixel[1], *values);
-    return math::Vec3f(values) / 255.0f;
-}
+//inline math::Vec3f
+//TextureView::get_pixel_values(math::Vec2f const & pixel) const {
+//    assert(image != NULL);
+//    math::Vec3uc values;
+//    image->linear_at(pixel[0], pixel[1], *values);
+//    return math::Vec3f(values) / 255.0f;
+//}
 
 inline void
 TextureView::bind_image(mve::ByteImage::Ptr new_image) {

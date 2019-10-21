@@ -39,6 +39,7 @@ TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
     camera.fill_world_to_cam(*world_to_cam);
 }
 
+template <typename T>
 void
 TextureView::generate_validity_mask(void) {
     assert(image != NULL);
@@ -96,7 +97,13 @@ TextureView::generate_validity_mask(void) {
 void
 TextureView::load_image(void) {
     if(image != NULL) return;
-    image = mve::image::load_file(image_file);
+
+    try {
+        image = mve::image::load_file(image_file);
+    } catch (...) {
+    }
+
+    image = mve::image::load_tiff_16_file(image_file);
 }
 
 void
