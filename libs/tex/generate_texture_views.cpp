@@ -190,23 +190,38 @@ from_nvm_scene(std::string const & nvm_file,
         mve::CameraInfo& mve_cam = cameras[i];
         mve::NVMCameraInfo const& nvm_cam = nvm_cams[i];
 
-        mve::ByteImage::Ptr image = mve::image::load_file(nvm_cam.filename);
+        mve::ImageBase::Ptr image = nullptr;
+        try {
+            image = mve::image::load_file(nvm_cam.filename);
+        } catch (...) {}
+        if (image == nullptr) image = mve::image::load_tiff_16_file(nvm_cam.filename);
 
         int const maxdim = std::max(image->width(), image->height());
         mve_cam.flen = mve_cam.flen / static_cast<float>(maxdim);
 
-        image = mve::image::image_undistort_vsfm<uint8_t>
-            (image, mve_cam.flen, nvm_cam.radial_distortion);
+        std::cerr << image->width() << "x" << image->height() << " (" << image->channels() << ") " << image->get_type_string() << std::endl;
+
+        switch (image->get_type()) {
+        case mve::IMAGE_TYPE_UINT16: {
+            image = mve::image::image_undistort_vsfm<uint16_t>
+                    (std::dynamic_pointer_cast<mve::RawImage>(image), mve_cam.flen, nvm_cam.radial_distortion);
+            break;
+        }
+        default:
+            image = mve::image::image_undistort_vsfm<uint8_t>
+                    (std::dynamic_pointer_cast<mve::ByteImage>(image), mve_cam.flen, nvm_cam.radial_distortion);
+        }
+
 
 
         const std::string image_file = util::fs::join_path(
             tmp_dir,
             util::fs::replace_extension(
                 util::fs::basename(nvm_cam.filename),
-                "png"
+                "mvei"
             )
         );
-        mve::image::save_png_file(image, image_file);
+        mve::image::save_mvei_file(image, image_file);
 
         #pragma omp critical
         texture_views->push_back(TextureView(i, mve_cam, image_file));
