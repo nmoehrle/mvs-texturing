@@ -45,6 +45,7 @@ TextureView::generate_validity_mask(void) {
     assert(image != NULL);
     validity_mask.resize(width * height, true);
     mve::ByteImage::Ptr checked = mve::ByteImage::create(width, height, 1);
+    typename mve::Image<T>::Ptr image = get_image<T>();
 
     std::list<math::Vec2i> queue;
 

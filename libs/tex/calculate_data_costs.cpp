@@ -155,7 +155,7 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
 
             TextureView * texture_view = &texture_views->at(j);
             texture_view->load_image();
-            if (texture_view->get_image<mve::ImageBase>()->get_type() == mve::IMAGE_TYPE_UINT16){
+            if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
                texture_view->generate_validity_mask<mve::ByteImage>();
             }else{
                texture_view->generate_validity_mask<mve::RawImage>();

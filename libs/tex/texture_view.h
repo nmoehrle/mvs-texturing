@@ -86,8 +86,11 @@ class TextureView {
         int get_height(void) const;
         /** Returns a reference pointer to the corresponding image. */
 
-        template <typename ImageType>
-        typename ImageType::Ptr
+        template <typename T>
+        typename mve::Image<T>::Ptr
+        get_image(void) const;
+
+        mve::ImageBase::Ptr
         get_image(void) const;
 
         /** Exchange encapsulated image. */
@@ -148,12 +151,18 @@ TextureView::get_height(void) const {
     return height;
 }
 
-template <typename ImageType>
-inline typename ImageType::Ptr
+template <typename T>
+inline typename mve::Image<T>::Ptr
 TextureView::get_image(void) const {
     assert(image != NULL);
-    typename ImageType::Ptr img = std::dynamic_pointer_cast<ImageType>(image);
+    typename mve::Image<T>::Ptr img = std::dynamic_pointer_cast<mve::Image<T>>(image);
     return img;
+}
+
+inline mve::ImageBase::Ptr
+TextureView::get_image(void) const{
+    assert(image != NULL);
+    return image;
 }
 
 inline bool
