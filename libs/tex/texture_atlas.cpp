@@ -138,7 +138,7 @@ TextureAtlas::apply_edge_padding(void) {
 
     const int width = image->width();
     const int height = image->height();
-    typename mve::Image<T>::Ptr image = std::dynamic_pointer_cast<mve::Image<T>>(image);
+    typename mve::Image<T>::Ptr img = std::dynamic_pointer_cast<mve::Image<T>>(image);
 
     math::Matrix<float, 3, 3> gauss;
     gauss[0] = 1.0f; gauss[1] = 2.0f; gauss[2] = 1.0f;
@@ -196,7 +196,7 @@ TextureAtlas::apply_edge_padding(void) {
 
                             float w = gauss[(j + 1) * 3 + (i + 1)];
                             norm += w;
-                            value += (image->at(nx, ny, c) / 255.0f) * w;
+                            value += (img->at(nx, ny, c) / 255.0f) * w;
                         }
                     }
                 }
@@ -205,7 +205,7 @@ TextureAtlas::apply_edge_padding(void) {
                     continue;
 
                 now_valid = true;
-                image->at(x, y, c) = (value / norm) * 255.0f;
+                img->at(x, y, c) = (value / norm) * 255.0f;
             }
 
             if (now_valid) {

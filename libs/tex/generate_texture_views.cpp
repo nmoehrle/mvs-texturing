@@ -199,8 +199,6 @@ from_nvm_scene(std::string const & nvm_file,
         int const maxdim = std::max(image->width(), image->height());
         mve_cam.flen = mve_cam.flen / static_cast<float>(maxdim);
 
-        std::cerr << image->width() << "x" << image->height() << " (" << image->channels() << ") " << image->get_type_string() << std::endl;
-
         switch (image->get_type()) {
         case mve::IMAGE_TYPE_UINT16: {
             image = mve::image::image_undistort_vsfm<uint16_t>
@@ -212,8 +210,6 @@ from_nvm_scene(std::string const & nvm_file,
                     (std::dynamic_pointer_cast<mve::ByteImage>(image), mve_cam.flen, nvm_cam.radial_distortion);
         }
 
-
-
         const std::string image_file = util::fs::join_path(
             tmp_dir,
             util::fs::replace_extension(
@@ -222,6 +218,7 @@ from_nvm_scene(std::string const & nvm_file,
             )
         );
         mve::image::save_mvei_file(image, image_file);
+
 
         #pragma omp critical
         texture_views->push_back(TextureView(i, mve_cam, image_file));
