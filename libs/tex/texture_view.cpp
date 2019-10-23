@@ -20,6 +20,7 @@ TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
     mve::image::ImageHeaders header;
     try {
          header = mve::image::load_file_headers(image_file);
+         std::cerr << "HEADER: " << header.width << "x" << header.height << " (" << header.type << ")\n";
     } catch (util::Exception e) {
         std::cerr << "Could not load image header of " << image_file << std::endl;
         std::cerr << e.what() << std::endl;
@@ -41,11 +42,12 @@ TextureView::load_image(void) {
 
     try {
         image = mve::image::load_file(image_file);
-    } catch (...) {
-    }
+    } catch (...) {}
 
-    // TODO: avoid making a mvei copy, reference NVM image paths instead
-    image = mve::image::load_mvei_file(image_file);
+    if (image == NULL){
+        std::cerr << "LOADED 16BIT: " << image_file << "\n";
+        image = mve::image::load_tiff_16_file(image_file);
+    }
 }
 
 void

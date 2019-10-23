@@ -21,6 +21,7 @@ TextureAtlas::TextureAtlas(unsigned int size, mve::ImageType type) :
     size(size), padding(size >> 7), finalized(false) {
 
     bin = RectangularBin::create(size, size);
+
     if (type == mve::IMAGE_TYPE_UINT16){
         image = mve::RawImage::create(size, size, 3);
     }else{

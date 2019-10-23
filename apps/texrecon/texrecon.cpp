@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Generating texture views: " << std::endl;
     tex::TextureViews texture_views;
-    tex::generate_texture_views(conf.in_scene, &texture_views, tmp_dir);
+    mve::ImageType type = tex::generate_texture_views(conf.in_scene, &texture_views, tmp_dir);
 
     write_string_to_file(conf.out_prefix + ".conf", conf.to_string());
     timer.measure("Loading");
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
 
         /* Generate texture atlases. */
         std::cout << "Generating texture atlases:" << std::endl;
-        tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases);
+        tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases, type);
     }
 
     /* Create and write out obj model. */
@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
             tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views,
                 conf.settings, &vertex_projection_infos, &texture_patches);
-            tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases);
+            tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases, type);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;

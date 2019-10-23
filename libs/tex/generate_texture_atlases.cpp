@@ -92,10 +92,9 @@ bool comp(TexturePatch::ConstPtr first, TexturePatch::ConstPtr second) {
 
 void
 generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
-    Settings const & settings, std::vector<TextureAtlas::Ptr> * texture_atlases) {
+    Settings const & settings, std::vector<TextureAtlas::Ptr> * texture_atlases, mve::ImageType type) {
 
     std::list<TexturePatch::ConstPtr> texture_patches;
-    mve::ImageType type = mve::IMAGE_TYPE_UNKNOWN;
 
     while (!orig_texture_patches->empty()) {
         TexturePatch::Ptr texture_patch = orig_texture_patches->back();
@@ -103,12 +102,6 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
 
         if (settings.tone_mapping != TONE_MAPPING_NONE) {
             mve::image::gamma_correct(texture_patch->get_image(), 1.0f / 2.2f);
-        }
-
-        if (type == mve::IMAGE_TYPE_UNKNOWN){
-            type = texture_patch->get_image()->get_type();
-        }else if (type != texture_patch->get_image()->get_type()){
-            std::cerr << "Mixed texture patch types detected!\n";
         }
 
         texture_patches.push_back(texture_patch);
