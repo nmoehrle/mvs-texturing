@@ -42,23 +42,25 @@ class TextureAtlas {
         Texcoords texcoords;
         TexcoordIds texcoord_ids;
 
-        mve::ByteImage::Ptr image;
+        mve::ImageBase::Ptr image;
         mve::ByteImage::Ptr validity_mask;
 
         RectangularBin::Ptr bin;
 
+        template <typename T>
         void apply_edge_padding(void);
+
         void merge_texcoords(void);
 
     public:
-        TextureAtlas(unsigned int size);
+        TextureAtlas(unsigned int size, mve::ImageType type);
 
-        static TextureAtlas::Ptr create(unsigned int size);
+        static TextureAtlas::Ptr create(unsigned int size, mve::ImageType type);
 
         Faces const & get_faces(void) const;
         TexcoordIds const & get_texcoord_ids(void) const;
         Texcoords const & get_texcoords(void) const;
-        mve::ByteImage::ConstPtr get_image(void) const;
+        mve::ImageBase::Ptr get_image(void) const;
 
         bool insert(TexturePatch::ConstPtr texture_patch);
 
@@ -66,8 +68,8 @@ class TextureAtlas {
 };
 
 inline TextureAtlas::Ptr
-TextureAtlas::create(unsigned int size) {
-    return Ptr(new TextureAtlas(size));
+TextureAtlas::create(unsigned int size, mve::ImageType type) {
+    return Ptr(new TextureAtlas(size, type));
 }
 
 inline TextureAtlas::Faces const &
@@ -85,7 +87,7 @@ TextureAtlas::get_texcoords(void) const {
     return texcoords;
 }
 
-inline mve::ByteImage::ConstPtr
+inline mve::ImageBase::Ptr
 TextureAtlas::get_image(void) const {
     if (!finalized) {
         throw util::Exception("Texture atlas not finalized");

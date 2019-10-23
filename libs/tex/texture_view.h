@@ -94,7 +94,7 @@ class TextureView {
         get_image(void) const;
 
         /** Exchange encapsulated image. */
-        void bind_image(mve::ByteImage::Ptr new_image);
+        void bind_image(mve::ImageBase::Ptr new_image);
 
         /** Loads the corresponding image. */
         void load_image(void);
@@ -102,6 +102,7 @@ class TextureView {
         template <typename T>
         void generate_validity_mask(void);
         /** Generates the gradient magnitude image for the encapsulated image. */
+        template <typename T>
         void generate_gradient_magnitude(void);
 
         /** Releases the validity mask. */
@@ -114,6 +115,7 @@ class TextureView {
         /** Erodes the validity mask by one pixel. */
         void erode_validity_mask(void);
 
+        template <typename T>
         void
         get_face_info(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3,
             FaceProjectionInfo * face_info, Settings const & settings) const;
@@ -195,7 +197,7 @@ TextureView::get_pixel_coords(math::Vec3f const & vertex) const {
 //}
 
 inline void
-TextureView::bind_image(mve::ByteImage::Ptr new_image) {
+TextureView::bind_image(mve::ImageBase::Ptr new_image) {
     image = new_image;
 }
 

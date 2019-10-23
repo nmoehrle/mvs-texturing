@@ -95,12 +95,20 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     Settings const & settings, std::vector<TextureAtlas::Ptr> * texture_atlases) {
 
     std::list<TexturePatch::ConstPtr> texture_patches;
+    mve::ImageType type = mve::IMAGE_TYPE_UNKNOWN;
+
     while (!orig_texture_patches->empty()) {
         TexturePatch::Ptr texture_patch = orig_texture_patches->back();
         orig_texture_patches->pop_back();
 
         if (settings.tone_mapping != TONE_MAPPING_NONE) {
             mve::image::gamma_correct(texture_patch->get_image(), 1.0f / 2.2f);
+        }
+
+        if (type == mve::IMAGE_TYPE_UNKNOWN){
+            type = texture_patch->get_image()->get_type();
+        }else if (type != texture_patch->get_image()->get_type()){
+            std::cerr << "Mixed texture patch types detected!\n";
         }
 
         texture_patches.push_back(texture_patch);
@@ -124,7 +132,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     while (!texture_patches.empty()) {
         unsigned int texture_size = calculate_texture_size(texture_patches);
 
-        texture_atlases->push_back(TextureAtlas::create(texture_size));
+        texture_atlases->push_back(TextureAtlas::create(texture_size, type));
         TextureAtlas::Ptr texture_atlas = texture_atlases->back();
 
         /* Try to insert each of the texture patches into the texture atlas. */

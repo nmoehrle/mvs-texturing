@@ -107,11 +107,12 @@ TextureView::load_image(void) {
     image = mve::image::load_tiff_16_file(image_file);
 }
 
+template <typename T>
 void
 TextureView::generate_gradient_magnitude(void) {
     assert(image != NULL);
-    mve::ByteImage::Ptr bw = mve::image::desaturate<std::uint8_t>(image, mve::image::DESATURATE_LUMINANCE);
-    gradient_magnitude = mve::image::sobel_edge<std::uint8_t>(bw);
+    typename mve::Image<T>::Ptr bw = mve::image::desaturate<T>(get_image<T>(), mve::image::DESATURATE_LUMINANCE);
+    gradient_magnitude = mve::image::sobel_edge<T>(bw);
 }
 
 void
@@ -139,12 +140,14 @@ TextureView::erode_validity_mask(void) {
     validity_mask.swap(eroded_validity_mask);
 }
 
+template <typename T>
 void
 TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
     math::Vec3f const & v3, FaceProjectionInfo * face_info, Settings const & settings) const {
 
     assert(image != NULL);
     assert(settings.data_term != DATA_TERM_GMI || gradient_magnitude != NULL);
+    typename mve::Image<T> image = get_image<T>();
 
     math::Vec2f p1 = get_pixel_coords(v1);
     math::Vec2f p2 = get_pixel_coords(v2);
@@ -307,8 +310,14 @@ TextureView::export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3,
     const int top = floor(aabb.max_y);
 
     assert(width > 0 && height > 0);
-    mve::image::save_png_file(mve::image::crop(image, width, height, left, top,
-        *math::Vec3uc(255, 0, 255)), filename);
+
+    if (image->get_type() == mve::IMAGE_TYPE_UINT16){
+        mve::image::save_tiff_16_file(mve::image::crop(get_image<uint16_t>(), width, height, left, top,
+            *math::Vec3sui(65535, 0, 65535)), filename);
+    }else{
+        mve::image::save_png_file(mve::image::crop(get_image<uint8_t>(), width, height, left, top,
+            *math::Vec3uc(255, 0, 255)), filename);
+    }
 }
 
 void

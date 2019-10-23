@@ -16,11 +16,16 @@
 
 #include "texture_atlas.h"
 
-TextureAtlas::TextureAtlas(unsigned int size) :
+
+TextureAtlas::TextureAtlas(unsigned int size, mve::ImageType type) :
     size(size), padding(size >> 7), finalized(false) {
 
     bin = RectangularBin::create(size, size);
-    image = mve::ByteImage::create(size, size, 3);
+    if (type == mve::IMAGE_TYPE_UINT16){
+        image = mve::RawImage::create(size, size, 3);
+    }else{
+        image = mve::ByteImage::create(size, size, 3);
+    }
     validity_mask = mve::ByteImage::create(size, size, 1);
 }
 
@@ -29,8 +34,9 @@ TextureAtlas::TextureAtlas(unsigned int size) :
   * optionally adding a border.
   * @warning asserts that the given src image fits into the given dest image.
   */
-void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
-    mve::ByteImage::Ptr dest, int border = 0) {
+template <typename T>
+void copy_into(typename mve::Image<T>::ConstPtr src, int x, int y,
+    typename mve::Image<T>::Ptr dest, int border = 0) {
 
     assert(x >= 0 && x + src->width() + 2 * border <= dest->width());
     assert(y >= 0 && y + src->height() + 2 * border <= dest->height());
@@ -48,6 +54,23 @@ void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
             }
         }
     }
+}
+
+mve::RawImage::Ptr
+float_to_raw_image (mve::FloatImage::ConstPtr image, float vmin, float vmax)
+{
+    if (image == nullptr)
+        throw std::invalid_argument("Null image given");
+
+    mve::RawImage::Ptr img = mve::RawImage::create();
+    img->allocate(image->width(), image->height(), image->channels());
+    for (int i = 0; i < image->get_value_amount(); ++i)
+    {
+        float value = std::min(vmax, std::max(vmin, image->at(i)));
+        value = 65535.0f * (value - vmin) / (vmax - vmin);
+        img->at(i) = static_cast<uint16_t>(value + 0.5f);
+    }
+    return img;
 }
 
 typedef std::vector<std::pair<int, int> > PixelVector;
@@ -68,12 +91,20 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
     if (!bin->insert(&rect)) return false;
 
     /* Update texture atlas and its validity mask. */
-    mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
-        texture_patch->get_image(), 0.0f, 1.0f);
 
-    copy_into(patch_image, rect.min_x, rect.min_y, image, padding);
+
+    if (image->get_type() == mve::IMAGE_TYPE_UINT16){
+        mve::RawImage::Ptr patch_image = float_to_raw_image(
+                texture_patch->get_image(), 0.0f, 1.0f);
+        copy_into<uint16_t>(patch_image, rect.min_x, rect.min_y, std::dynamic_pointer_cast<mve::RawImage>(image), padding);
+    }else{
+        mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
+                texture_patch->get_image(), 0.0f, 1.0f);
+        copy_into<uint8_t>(patch_image, rect.min_x, rect.min_y, std::dynamic_pointer_cast<mve::ByteImage>(image), padding);
+    }
+
     mve::ByteImage::ConstPtr patch_validity_mask = texture_patch->get_validity_mask();
-    copy_into(patch_validity_mask, rect.min_x, rect.min_y, validity_mask, padding);
+    copy_into<uint8_t>(patch_validity_mask, rect.min_x, rect.min_y, validity_mask, padding);
 
     TexturePatch::Faces const & patch_faces = texture_patch->get_faces();
     TexturePatch::Texcoords const & patch_texcoords = texture_patch->get_texcoords();
@@ -99,6 +130,7 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
 
 
 
+template <typename T>
 void
 TextureAtlas::apply_edge_padding(void) {
     assert(image != NULL);
@@ -106,6 +138,7 @@ TextureAtlas::apply_edge_padding(void) {
 
     const int width = image->width();
     const int height = image->height();
+    typename mve::Image<T>::Ptr image = std::dynamic_pointer_cast<mve::Image<T>>(image);
 
     math::Matrix<float, 3, 3> gauss;
     gauss[0] = 1.0f; gauss[1] = 2.0f; gauss[2] = 1.0f;
@@ -245,7 +278,11 @@ TextureAtlas::finalize() {
     }
 
     this->bin.reset();
-    this->apply_edge_padding();
+    if (image->get_type() == mve::IMAGE_TYPE_UINT16){
+        this->apply_edge_padding<uint16_t>();
+    }else{
+        this->apply_edge_padding<uint8_t>();
+    }
     this->validity_mask.reset();
     this->merge_texcoords();
 

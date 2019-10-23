@@ -15,7 +15,7 @@
 
 struct Material {
     std::string name;
-    mve::ByteImage::ConstPtr diffuse_map;
+    mve::ImageBase::Ptr diffuse_map;
 };
 
 /**

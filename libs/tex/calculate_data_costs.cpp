@@ -163,8 +163,13 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
 
 
             if (settings.data_term == DATA_TERM_GMI) {
-                texture_view->generate_gradient_magnitude();
-                texture_view->erode_validity_mask();
+                if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
+                    texture_view->generate_gradient_magnitude<uint16_t>();
+                    texture_view->erode_validity_mask();
+                }else{
+                    texture_view->generate_gradient_magnitude<uint8_t>();
+                    texture_view->erode_validity_mask();
+                }
             }
 
             math::Vec3f const & view_pos = texture_view->get_pos();
@@ -230,7 +235,11 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
                 FaceProjectionInfo info = {j, 0.0f, math::Vec3f(0.0f, 0.0f, 0.0f)};
 
                 /* Calculate quality. */
-                texture_view->get_face_info(v1, v2, v3, &info, settings);
+                if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
+                    texture_view->get_face_info<uint16_t>(v1, v2, v3, &info, settings);
+                }else{
+                    texture_view->get_face_info<uint8_t>(v1, v2, v3, &info, settings);
+                }
 
                 if (info.quality == 0.0) continue;
 
