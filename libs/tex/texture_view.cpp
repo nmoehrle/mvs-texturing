@@ -20,7 +20,6 @@ TextureView::TextureView(std::size_t id, mve::CameraInfo const & camera,
     mve::image::ImageHeaders header;
     try {
          header = mve::image::load_file_headers(image_file);
-         std::cerr << "HEADER: " << header.width << "x" << header.height << " (" << header.type << ")\n";
     } catch (util::Exception e) {
         std::cerr << "Could not load image header of " << image_file << std::endl;
         std::cerr << e.what() << std::endl;
