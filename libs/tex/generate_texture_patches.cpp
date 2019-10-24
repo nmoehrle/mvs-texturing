@@ -126,7 +126,7 @@ generate_candidate(int label, TextureView const & texture_view,
     mve::FloatImage::Ptr image;
     if (view_image->get_type() == mve::IMAGE_TYPE_UINT16){
         mve::RawImage::Ptr raw_image = texture_view.get_image<uint16_t>();
-        raw_image = mve::image::crop<uint16_t>(raw_image, width, height, min_x, min_y, *math::Vec3sui(65535, 0, 65535));
+        raw_image = mve::image::crop<uint16_t>(raw_image, width, height, min_x, min_y, *math::Vec3us(65535, 0, 65535));
         image = mve::image::raw_to_float_image(raw_image);
     }else{
         mve::ByteImage::Ptr byte_image;

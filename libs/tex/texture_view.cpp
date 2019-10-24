@@ -127,7 +127,7 @@ TextureView::export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3,
 
     if (image->get_type() == mve::IMAGE_TYPE_UINT16){
         mve::image::save_tiff_16_file(mve::image::crop(get_image<uint16_t>(), width, height, left, top,
-            *math::Vec3sui(65535, 0, 65535)), filename);
+            *math::Vec3us(65535, 0, 65535)), filename);
     }else{
         mve::image::save_png_file(mve::image::crop(get_image<uint8_t>(), width, height, left, top,
             *math::Vec3uc(255, 0, 255)), filename);
