@@ -45,7 +45,6 @@ TextureView::load_image(void) {
     } catch (...) {}
 
     if (image == NULL){
-        std::cerr << "LOADED 16BIT: " << image_file << "\n";
         image = mve::image::load_tiff_16_file(image_file);
     }
 }
