@@ -32,7 +32,7 @@ Arguments parse_args(int argc, char **argv) {
         "\nA .cam file is structured as follows:"
         "\n    tx ty tz R00 R01 R02 R10 R11 R12 R20 R21 R22"
         "\n    f d0 d1 paspect ppx ppy"
-        "\nFirst line: Extrinsics - translation vector and rotation matrix"
+        "\nFirst line: Extrinsics - translation vector and rotation matrix (the transform from world to camera)"
         "\nSecond line: Intrinsics - focal length, distortion coefficients, pixel aspect ratio and principal point"
         "\nThe focal length is the distance between camera center and image plane normalized by dividing with the larger image dimension."
         "\nFor non zero distortion coefficients the image will be undistorted prior to the texturing process."
