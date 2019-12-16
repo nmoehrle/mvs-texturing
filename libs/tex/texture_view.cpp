@@ -46,6 +46,19 @@ TextureView::load_image(void) {
     if (image == NULL){
         image = mve::image::load_tiff_16_file(image_file);
     }
+
+    // Assure images have always at least 3 channels
+    // TODO: make program scale down the grayscale image to a single band before
+    // saving textures
+    // TODO: free previous image
+
+    if (image->channels() == 1){
+        if (image->get_type() == mve::IMAGE_TYPE_UINT16){
+            image = mve::image::expand_grayscale<uint16_t>(std::dynamic_pointer_cast<mve::RawImage>(image));
+        }else{
+            image = mve::image::expand_grayscale<uint8_t>(std::dynamic_pointer_cast<mve::ByteImage>(image));
+        }
+    }
 }
 
 void
