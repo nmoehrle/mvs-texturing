@@ -107,7 +107,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
 void
 generate_texture_atlases(TexturePatches * texture_patches,
-    Settings const & settings, TextureAtlases * texture_atlases, mve::ImageType type);
+    Settings const & settings, TextureAtlases * texture_atlases, mve::ImageType type, bool grayscale);
 
 /**
   * Builds up an model for the mesh by constructing materials and

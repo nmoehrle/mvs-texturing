@@ -53,7 +53,7 @@ class TextureView {
         mve::ImageBase::Ptr image;
         mve::ImageBase::Ptr gradient_magnitude;
         std::vector<bool> validity_mask;
-
+        bool grayscale;
 
     public:
         /** Returns the id of the TexureView which is consistent for every run. */
@@ -131,6 +131,9 @@ class TextureView {
 
         void
         export_validity_mask(std::string const & filename) const;
+
+        bool
+        is_grayscale();
 };
 
 
@@ -418,6 +421,11 @@ TextureView::generate_gradient_magnitude(void) {
     assert(image != NULL);
     typename mve::Image<T>::Ptr bw = mve::image::desaturate<T>(get_image<T>(), mve::image::DESATURATE_LUMINANCE);
     gradient_magnitude = mve::image::sobel_edge<T>(bw);
+}
+
+inline bool
+TextureView::is_grayscale(){
+    return grayscale;
 }
 
 TEX_NAMESPACE_END

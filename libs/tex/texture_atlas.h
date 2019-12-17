@@ -37,6 +37,7 @@ class TextureAtlas {
         unsigned int const size;
         unsigned int const padding;
         bool finalized;
+        bool grayscale;
 
         Faces faces;
         Texcoords texcoords;
@@ -53,9 +54,9 @@ class TextureAtlas {
         void merge_texcoords(void);
 
     public:
-        TextureAtlas(unsigned int size, mve::ImageType type);
+        TextureAtlas(unsigned int size, mve::ImageType type, bool grayscale);
 
-        static TextureAtlas::Ptr create(unsigned int size, mve::ImageType type);
+        static TextureAtlas::Ptr create(unsigned int size, mve::ImageType type, bool grayscale);
 
         Faces const & get_faces(void) const;
         TexcoordIds const & get_texcoord_ids(void) const;
@@ -65,11 +66,12 @@ class TextureAtlas {
         bool insert(TexturePatch::ConstPtr texture_patch);
 
         void finalize(void);
+        bool is_grayscale();
 };
 
 inline TextureAtlas::Ptr
-TextureAtlas::create(unsigned int size, mve::ImageType type) {
-    return Ptr(new TextureAtlas(size, type));
+TextureAtlas::create(unsigned int size, mve::ImageType type, bool grayscale) {
+    return Ptr(new TextureAtlas(size, type, grayscale));
 }
 
 inline TextureAtlas::Faces const &
@@ -93,6 +95,11 @@ TextureAtlas::get_image(void) const {
         throw util::Exception("Texture atlas not finalized");
     }
     return image;
+}
+
+inline bool
+TextureAtlas::is_grayscale(){
+    return grayscale;
 }
 
 #endif /* TEX_TEXTUREATLAS_HEADER */

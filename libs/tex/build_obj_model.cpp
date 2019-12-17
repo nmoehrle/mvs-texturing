@@ -9,11 +9,39 @@
 
 #include <iostream>
 
+#include <mve/image_tools.h>
+#include <mve/image.h>
 #include "defines.h"
 #include "texture_atlas.h"
 #include "obj_model.h"
 
+
 TEX_NAMESPACE_BEGIN
+
+using namespace mve;
+
+template <typename T>
+typename Image<T>::Ptr
+condense_grayscale (typename Image<T>::ConstPtr image)
+{
+    if (image == nullptr)
+        throw std::invalid_argument("Null image given");
+
+    int const ic = image->channels();
+    if (ic != 3)
+        throw std::invalid_argument("Image must be in RGB");
+
+    typename Image<T>::Ptr out(Image<T>::create());
+    out->allocate(image->width(), image->height(), 1);
+
+    int pixels = image->get_pixel_amount();
+    for (int i = 0; i < pixels; ++i)
+    {
+        out->at(i, 0) = image->at(i, 0);
+    }
+
+    return out;
+}
 
 void
 build_model(mve::TriangleMesh::ConstPtr mesh,
@@ -38,6 +66,15 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
         const std::size_t n = material_lib.size();
         material.name = std::string("material") + util::string::get_filled(n, 4);
         material.diffuse_map = texture_atlas->get_image();
+
+        if (texture_atlas->is_grayscale()){
+            // Use only first channel (other two should be the same)
+            if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
+                material.diffuse_map = condense_grayscale<uint16_t>(std::dynamic_pointer_cast<mve::RawImage>(texture_atlas->get_image()));
+            }else{
+                material.diffuse_map = condense_grayscale<uint8_t>(std::dynamic_pointer_cast<mve::ByteImage>(texture_atlas->get_image()));
+            }
+        }
         material_lib.push_back(material);
 
         groups.push_back(ObjModel::Group());

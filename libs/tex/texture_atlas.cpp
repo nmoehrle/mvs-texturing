@@ -17,8 +17,8 @@
 #include "texture_atlas.h"
 
 
-TextureAtlas::TextureAtlas(unsigned int size, mve::ImageType type) :
-    size(size), padding(size >> 7), finalized(false) {
+TextureAtlas::TextureAtlas(unsigned int size, mve::ImageType type, bool grayscale) :
+    size(size), padding(size >> 7), finalized(false), grayscale(grayscale) {
 
     bin = RectangularBin::create(size, size);
 

@@ -181,7 +181,9 @@ int main(int argc, char **argv) {
 
         /* Generate texture atlases. */
         std::cout << "Generating texture atlases:" << std::endl;
-        tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases, type);
+
+        bool grayscale = texture_views.front().is_grayscale();
+        tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases, type, grayscale);
     }
 
     /* Create and write out obj model. */
@@ -212,7 +214,7 @@ int main(int argc, char **argv) {
             tex::VertexProjectionInfos vertex_projection_infos; // Will only be written
             tex::generate_texture_patches(graph, mesh, mesh_info, &texture_views,
                 conf.settings, &vertex_projection_infos, &texture_patches);
-            tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases, type);
+            tex::generate_texture_atlases(&texture_patches, conf.settings, &texture_atlases, type, false);
         }
 
         std::cout << "Building debug objmodel:" << std::endl;
