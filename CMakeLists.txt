@@ -41,7 +41,7 @@ include_directories(SYSTEM
     ${CMAKE_SOURCE_DIR}/elibs/rayint/libs
     ${CMAKE_SOURCE_DIR}/elibs/mve/libs
     ${CMAKE_SOURCE_DIR}/elibs/eigen
-    ${CMAKE_SOURCE_DIR}/elibs/mapmap/
+    ${CMAKE_SOURCE_DIR}/elibs/mapmap
     ${CMAKE_SOURCE_DIR}/elibs/mapmap/mapmap
     ${CMAKE_SOURCE_DIR}/elibs/mapmap/ext/dset
 )

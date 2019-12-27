@@ -55,7 +55,7 @@ Arguments parse_args(int argc, char **argv) {
     args.add_option('L',"labeling_file", true,
         "Skip view selection and use the labeling provided in the given file");
     args.add_option('d',"data_term", true,
-        "Data term: {" +
+        "Data term (face area, or magnitude of image gradient times face area): {" +
         choices<tex::DataTerm>() + "} [" +
         choice_string<tex::DataTerm>(tex::DATA_TERM_GMI) + "]");
     args.add_option('s',"smoothness_term", true,
