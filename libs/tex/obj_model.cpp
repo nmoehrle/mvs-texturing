@@ -69,3 +69,24 @@ ObjModel::save_to_files(std::string const & prefix) const {
     }
     out.close();
 }
+
+void
+ObjModel::saveSimpleTriangles(std::vector<math::Vec3f> const & vertices, std::vector<std::size_t> const & faces, std::string const & prefix)
+{
+    std::ofstream out((prefix + ".obj").c_str());
+
+    out << std::fixed << std::setprecision(6);
+    for (const auto & vertex : vertices) {
+        out << "v " << vertex[0] << " "
+            << vertex[1] << " "
+            << vertex[2] << std::endl;
+    }
+
+    for (std::size_t j = 0; j < faces.size(); j += 3) {
+        out << "f " << faces[j] + 1 << " "
+            << faces[j + 1] + 1 << " "
+            << faces[j + 2] + 1 << std::endl;
+    }
+    out.close();
+
+}

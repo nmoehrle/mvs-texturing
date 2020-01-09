@@ -17,6 +17,7 @@
 #define WRITE_TIMINGS "write_timings"
 #define SKIP_HOLE_FILLING "skip_hole_filling"
 #define KEEP_UNSEEN_FACES "keep_unseen_faces"
+#define SAVE_UNTEXTURED_FACES_MESH "write_untextured_faces_mesh"
 
 Arguments parse_args(int argc, char **argv) {
     util::Arguments args;
@@ -82,6 +83,8 @@ Arguments parse_args(int argc, char **argv) {
         "Skip hole filling [false]");
     args.add_option('\0', KEEP_UNSEEN_FACES, false,
         "Keep unseen faces [false]");
+    args.add_option('\0', SAVE_UNTEXTURED_FACES_MESH, false,
+        "Save untextured faces to seperate mesh file [false]");
     args.add_option('\0', WRITE_TIMINGS, false,
         "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
     args.add_option('\0', NO_INTERMEDIATE_RESULTS, false,
@@ -137,6 +140,8 @@ Arguments parse_args(int argc, char **argv) {
                 conf.settings.hole_filling = false;
             } else if (i->opt->lopt == KEEP_UNSEEN_FACES) {
                 conf.settings.keep_unseen_faces = true;
+            } else if (i->opt->lopt == SAVE_UNTEXTURED_FACES_MESH) {
+                conf.settings.save_untextured_faces_mesh = true;
             } else if (i->opt->lopt == WRITE_TIMINGS) {
                 conf.write_timings = true;
             } else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS) {

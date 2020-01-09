@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unordered_map>
 
 #include <util/timer.h>
 #include <util/system.h>
@@ -195,6 +196,40 @@ int main(int argc, char **argv) {
         tex::Model::save(model, conf.out_prefix);
         std::cout << "done." << std::endl;
         timer.measure("Saving");
+    }
+
+    if (conf.settings.save_untextured_faces_mesh) {
+        std::vector<bool> face_textured(mesh->get_faces().size() / 3, false);
+
+        for (TextureAtlas::Ptr texture_atlas : texture_atlases) {
+            for (std::size_t face_id : texture_atlas->get_faces()) {
+                face_textured[face_id] = true;
+            }
+        }
+
+        std::vector<std::size_t> untextured_faces;
+        std::unordered_map<std::size_t, std::size_t> vertices_index_remap;
+        for (std::size_t face_id = 0; face_id < face_textured.size(); ++face_id) {
+            if (face_textured[face_id]) {
+                continue;
+            }
+            std::size_t const face_pos = face_id * 3;
+            for (std::size_t j = 0; j < 3; ++j) {
+                std::size_t const vertex_id = mesh->get_faces()[face_pos  + j];
+                if (vertices_index_remap.find(vertex_id) == vertices_index_remap.end()) {
+                    int rempaed_vertex_id = vertices_index_remap.size();
+                    vertices_index_remap[vertex_id] = rempaed_vertex_id;
+                }
+                untextured_faces.push_back(vertices_index_remap[vertex_id]);
+            }
+        }
+        std::vector<math::Vec3f> untextured_vertices(vertices_index_remap.size());
+        for (const auto & entry : vertices_index_remap) {
+            untextured_vertices[entry.second] = mesh->get_vertices()[entry.first];
+        }
+        std::cout << "\tSaving separate mesh with " << (untextured_faces.size() / 3) << " untextured faces... ";
+        ObjModel::saveSimpleTriangles(untextured_vertices, untextured_faces, conf.out_prefix + "_untextured");
+        std::cout << "done." << std::endl;
     }
 
     std::cout << "Whole texturing procedure took: " << wtimer.get_elapsed_sec() << "s" << std::endl;
