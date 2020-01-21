@@ -27,7 +27,12 @@ MaterialLib::save_to_files(std::string const & prefix) const {
     std::string const name = util::fs::basename(prefix);
 
     for (Material const & material : *this) {
-        std::string diffuse_map_postfix = "_" + material.name + "_map_Kd.png";
+        std::string diffuse_map_postfix = "_" + material.name + "_map_Kd";
+        std::string ext = ".png";
+        if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
+            ext = ".tif";
+        }
+
         out << "newmtl " << material.name << '\n'
             << "Ka 1.000000 1.000000 1.000000" << '\n'
             << "Kd 1.000000 1.000000 1.000000" << '\n'
@@ -35,12 +40,16 @@ MaterialLib::save_to_files(std::string const & prefix) const {
             << "Tr 0.000000" << '\n' // *Tr*ansparancy vs. *d*issolve: Tr = 1.0 - d
             << "illum 1" << '\n'
             << "Ns 1.000000" << '\n'
-            << "map_Kd " << name + diffuse_map_postfix << std::endl;
+            << "map_Kd " << name + diffuse_map_postfix + ext << std::endl;
     }
     out.close();
 
     for (Material const & material : *this) {
-        std::string filename = prefix + "_" + material.name + "_map_Kd.png";
-        mve::image::save_png_file(material.diffuse_map, filename);
+        std::string filename = prefix + "_" + material.name + "_map_Kd";
+        if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
+            mve::image::save_tiff_16_file(std::dynamic_pointer_cast<mve::RawImage>(material.diffuse_map), filename + ".tif");
+        }else{
+            mve::image::save_png_file(std::dynamic_pointer_cast<mve::ByteImage>(material.diffuse_map), filename + ".png");
+        }
     }
 }

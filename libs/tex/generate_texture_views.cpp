@@ -177,7 +177,7 @@ from_images_and_camera_files(std::string const & path,
 
 void
 from_nvm_scene(std::string const & nvm_file,
-    std::vector<TextureView> * texture_views, std::string const & tmp_dir)
+    std::vector<TextureView> * texture_views)
 {
     std::vector<mve::NVMCameraInfo> nvm_cams;
     mve::Bundle::Ptr bundle = mve::load_nvm_bundle(nvm_file, &nvm_cams);
@@ -190,32 +190,36 @@ from_nvm_scene(std::string const & nvm_file,
         mve::CameraInfo& mve_cam = cameras[i];
         mve::NVMCameraInfo const& nvm_cam = nvm_cams[i];
 
-        mve::ByteImage::Ptr image = mve::image::load_file(nvm_cam.filename);
-
+        mve::ImageBase::Ptr image = nullptr;
+        try {
+            image = mve::image::load_file(nvm_cam.filename);
+        } catch (...) {}
+        if (image == nullptr){
+            image = mve::image::load_tiff_16_file(nvm_cam.filename);
+        }
         int const maxdim = std::max(image->width(), image->height());
         mve_cam.flen = mve_cam.flen / static_cast<float>(maxdim);
 
-        image = mve::image::image_undistort_vsfm<uint8_t>
-            (image, mve_cam.flen, nvm_cam.radial_distortion);
 
-
-        const std::string image_file = util::fs::join_path(
-            tmp_dir,
-            util::fs::replace_extension(
-                util::fs::basename(nvm_cam.filename),
-                "png"
-            )
-        );
-        mve::image::save_png_file(image, image_file);
+        switch (image->get_type()) {
+        case mve::IMAGE_TYPE_UINT16: {
+            image = mve::image::image_undistort_vsfm<uint16_t>
+                    (std::dynamic_pointer_cast<mve::RawImage>(image), mve_cam.flen, nvm_cam.radial_distortion);
+            break;
+        }
+        default:
+            image = mve::image::image_undistort_vsfm<uint8_t>
+                    (std::dynamic_pointer_cast<mve::ByteImage>(image), mve_cam.flen, nvm_cam.radial_distortion);
+        }
 
         #pragma omp critical
-        texture_views->push_back(TextureView(i, mve_cam, image_file));
+        texture_views->push_back(TextureView(i, mve_cam, nvm_cam.filename));
 
         view_counter.inc();
     }
 }
 
-void
+mve::ImageType
 generate_texture_views(std::string const & in_scene,
     std::vector<TextureView> * texture_views, std::string const & tmp_dir)
 {
@@ -226,7 +230,7 @@ generate_texture_views(std::string const & in_scene,
         std::string const & file = in_scene;
         std::string extension = util::string::uppercase(util::string::right(file, 3));
         if (extension == "NVM") {
-            from_nvm_scene(file, texture_views, tmp_dir);
+            from_nvm_scene(file, texture_views);
         }
     }
 
@@ -260,6 +264,9 @@ generate_texture_views(std::string const & in_scene,
             << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    texture_views->at(0).load_image();
+    return texture_views->at(0).get_image()->get_type();
 }
 
 TEX_NAMESPACE_END

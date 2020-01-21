@@ -48,7 +48,7 @@ prepare_mesh(mve::MeshInfo * mesh_info, mve::TriangleMesh::Ptr mesh);
 /**
   * Generates TextureViews from the in_scene.
   */
-void
+mve::ImageType
 generate_texture_views(std::string const & in_scene,
     TextureViews * texture_views, std::string const & tmp_dir);
 
@@ -107,7 +107,7 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
 void
 generate_texture_atlases(TexturePatches * texture_patches,
-    Settings const & settings, TextureAtlases * texture_atlases);
+    Settings const & settings, TextureAtlases * texture_atlases, mve::ImageType type, bool grayscale);
 
 /**
   * Builds up an model for the mesh by constructing materials and

@@ -92,9 +92,10 @@ bool comp(TexturePatch::ConstPtr first, TexturePatch::ConstPtr second) {
 
 void
 generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
-    Settings const & settings, std::vector<TextureAtlas::Ptr> * texture_atlases) {
+    Settings const & settings, std::vector<TextureAtlas::Ptr> * texture_atlases, mve::ImageType type, bool grayscale) {
 
     std::list<TexturePatch::ConstPtr> texture_patches;
+
     while (!orig_texture_patches->empty()) {
         TexturePatch::Ptr texture_patch = orig_texture_patches->back();
         orig_texture_patches->pop_back();
@@ -124,7 +125,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     while (!texture_patches.empty()) {
         unsigned int texture_size = calculate_texture_size(texture_patches);
 
-        texture_atlases->push_back(TextureAtlas::create(texture_size));
+        texture_atlases->push_back(TextureAtlas::create(texture_size, type, grayscale));
         TextureAtlas::Ptr texture_atlas = texture_atlases->back();
 
         /* Try to insert each of the texture patches into the texture atlas. */

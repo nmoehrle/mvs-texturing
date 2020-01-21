@@ -80,7 +80,7 @@ generate_candidate(int label, TextureView const & texture_view,
     std::vector<std::size_t> const & faces, mve::TriangleMesh::ConstPtr mesh,
     Settings const & settings) {
 
-    mve::ByteImage::Ptr view_image = texture_view.get_image();
+    mve::ImageBase::Ptr view_image = texture_view.get_image();
     int min_x = view_image->width(), min_y = view_image->height();
     int max_x = 0, max_y = 0;
 
@@ -123,9 +123,16 @@ generate_candidate(int label, TextureView const & texture_view,
         texcoords[i] = texcoords[i] - min;
     }
 
-    mve::ByteImage::Ptr byte_image;
-    byte_image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vec3uc(255, 0, 255));
-    mve::FloatImage::Ptr image = mve::image::byte_to_float_image(byte_image);
+    mve::FloatImage::Ptr image;
+    if (view_image->get_type() == mve::IMAGE_TYPE_UINT16){
+        mve::RawImage::Ptr raw_image = texture_view.get_image<uint16_t>();
+        raw_image = mve::image::crop<uint16_t>(raw_image, width, height, min_x, min_y, *math::Vec3us(65535, 0, 65535));
+        image = mve::image::raw_to_float_image(raw_image);
+    }else{
+        mve::ByteImage::Ptr byte_image;
+        byte_image = mve::image::crop(texture_view.get_image<uint8_t>(), width, height, min_x, min_y, *math::Vec3uc(255, 0, 255));
+        image = mve::image::byte_to_float_image(byte_image);
+    }
 
     if (!settings.tone_mapping == TONE_MAPPING_NONE) {
         mve::image::gamma_correct(image, 2.2f);
