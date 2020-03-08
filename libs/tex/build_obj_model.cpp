@@ -69,7 +69,9 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
 
         if (texture_atlas->is_grayscale()){
             // Use only first channel (other two should be the same)
-            if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
+            if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_FLOAT){
+                material.diffuse_map = condense_grayscale<float>(std::dynamic_pointer_cast<mve::FloatImage>(texture_atlas->get_image()));
+            }else if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
                 material.diffuse_map = condense_grayscale<uint16_t>(std::dynamic_pointer_cast<mve::RawImage>(texture_atlas->get_image()));
             }else{
                 material.diffuse_map = condense_grayscale<uint8_t>(std::dynamic_pointer_cast<mve::ByteImage>(texture_atlas->get_image()));

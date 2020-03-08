@@ -194,14 +194,27 @@ from_nvm_scene(std::string const & nvm_file,
         try {
             image = mve::image::load_file(nvm_cam.filename);
         } catch (...) {}
+
         if (image == nullptr){
-            image = mve::image::load_tiff_16_file(nvm_cam.filename);
+            try{
+                image = mve::image::load_tiff_16_file(nvm_cam.filename);
+            }catch (...) {}
         }
+
+        if (image == nullptr){
+            image = mve::image::load_tiff_float_file(nvm_cam.filename);
+        }
+
         int const maxdim = std::max(image->width(), image->height());
         mve_cam.flen = mve_cam.flen / static_cast<float>(maxdim);
 
 
         switch (image->get_type()) {
+        case mve::IMAGE_TYPE_FLOAT: {
+            image = mve::image::image_undistort_vsfm<float>
+                    (std::dynamic_pointer_cast<mve::FloatImage>(image), mve_cam.flen, nvm_cam.radial_distortion);
+            break;
+        }
         case mve::IMAGE_TYPE_UINT16: {
             image = mve::image::image_undistort_vsfm<uint16_t>
                     (std::dynamic_pointer_cast<mve::RawImage>(image), mve_cam.flen, nvm_cam.radial_distortion);

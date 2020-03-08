@@ -29,7 +29,8 @@ MaterialLib::save_to_files(std::string const & prefix) const {
     for (Material const & material : *this) {
         std::string diffuse_map_postfix = "_" + material.name + "_map_Kd";
         std::string ext = ".png";
-        if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
+        if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16 ||
+            material.diffuse_map->get_type() == mve::IMAGE_TYPE_FLOAT){
             ext = ".tif";
         }
 
@@ -46,7 +47,9 @@ MaterialLib::save_to_files(std::string const & prefix) const {
 
     for (Material const & material : *this) {
         std::string filename = prefix + "_" + material.name + "_map_Kd";
-        if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
+        if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_FLOAT){
+            mve::image::save_tiff_float_file(std::dynamic_pointer_cast<mve::FloatImage>(material.diffuse_map), filename + ".tif");
+        }else if (material.diffuse_map->get_type() == mve::IMAGE_TYPE_UINT16){
             mve::image::save_tiff_16_file(std::dynamic_pointer_cast<mve::RawImage>(material.diffuse_map), filename + ".tif");
         }else{
             mve::image::save_png_file(std::dynamic_pointer_cast<mve::ByteImage>(material.diffuse_map), filename + ".png");

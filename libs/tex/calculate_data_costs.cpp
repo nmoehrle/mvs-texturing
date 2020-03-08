@@ -155,14 +155,19 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
 
             TextureView * texture_view = &texture_views->at(j);
             texture_view->load_image();
-            if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
+            if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_FLOAT){
+               texture_view->generate_validity_mask<float>();
+            }else if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
                texture_view->generate_validity_mask<uint16_t>();
             }else{
                texture_view->generate_validity_mask<uint8_t>();
             }
 
             if (settings.data_term == DATA_TERM_GMI) {
-                if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
+                if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_FLOAT){
+                    texture_view->generate_gradient_magnitude<float>();
+                    texture_view->erode_validity_mask();
+                }else if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
                     texture_view->generate_gradient_magnitude<uint16_t>();
                     texture_view->erode_validity_mask();
                 }else{
@@ -234,7 +239,9 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
                 FaceProjectionInfo info = {j, 0.0f, math::Vec3f(0.0f, 0.0f, 0.0f)};
 
                 /* Calculate quality. */
-                if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
+                if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_FLOAT){
+                    texture_view->get_face_info<float>(v1, v2, v3, &info, settings);
+                }else if (texture_view->get_image()->get_type() == mve::IMAGE_TYPE_UINT16){
                     texture_view->get_face_info<uint16_t>(v1, v2, v3, &info, settings);
                 }else{
                     texture_view->get_face_info<uint8_t>(v1, v2, v3, &info, settings);

@@ -22,7 +22,9 @@ TextureAtlas::TextureAtlas(unsigned int size, mve::ImageType type, bool grayscal
 
     bin = RectangularBin::create(size, size);
 
-    if (type == mve::IMAGE_TYPE_UINT16){
+    if (type == mve::IMAGE_TYPE_FLOAT){
+        image = mve::FloatImage::create(size, size, 3);
+    }else if (type == mve::IMAGE_TYPE_UINT16){
         image = mve::RawImage::create(size, size, 3);
     }else{
         image = mve::ByteImage::create(size, size, 3);
@@ -94,7 +96,12 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
     /* Update texture atlas and its validity mask. */
 
 
-    if (image->get_type() == mve::IMAGE_TYPE_UINT16){
+    if (image->get_type() == mve::IMAGE_TYPE_FLOAT){
+        // TODO: check this!
+        // mve::FloatImage::Ptr patch_image = float_to_float_image(
+        //         texture_patch->get_image(), 0.0f, 1.0f);
+        copy_into<float>(texture_patch->get_image(), rect.min_x, rect.min_y, std::dynamic_pointer_cast<mve::FloatImage>(image), padding);
+    }else if (image->get_type() == mve::IMAGE_TYPE_UINT16){
         mve::RawImage::Ptr patch_image = float_to_raw_image(
                 texture_patch->get_image(), 0.0f, 1.0f);
         copy_into<uint16_t>(patch_image, rect.min_x, rect.min_y, std::dynamic_pointer_cast<mve::RawImage>(image), padding);
@@ -279,7 +286,9 @@ TextureAtlas::finalize() {
     }
 
     this->bin.reset();
-    if (image->get_type() == mve::IMAGE_TYPE_UINT16){
+    if (image->get_type() == mve::IMAGE_TYPE_FLOAT){
+        this->apply_edge_padding<float>();
+    }else if (image->get_type() == mve::IMAGE_TYPE_UINT16){
         this->apply_edge_padding<uint16_t>();
     }else{
         this->apply_edge_padding<uint8_t>();
