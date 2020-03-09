@@ -97,9 +97,6 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
 
 
     if (image->get_type() == mve::IMAGE_TYPE_FLOAT){
-        // TODO: check this!
-        // mve::FloatImage::Ptr patch_image = float_to_float_image(
-        //         texture_patch->get_image(), 0.0f, 1.0f);
         copy_into<float>(texture_patch->get_image(), rect.min_x, rect.min_y, std::dynamic_pointer_cast<mve::FloatImage>(image), padding);
     }else if (image->get_type() == mve::IMAGE_TYPE_UINT16){
         mve::RawImage::Ptr patch_image = float_to_raw_image(
