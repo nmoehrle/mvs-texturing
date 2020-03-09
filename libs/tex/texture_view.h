@@ -263,12 +263,12 @@ TextureView::generate_validity_mask(void) {
         int const x = pixel[0];
         int const y = pixel[1];
 
-        int sum = 0;
+        double sum = 0.0;
         for (int c = 0; c < image->channels(); ++c) {
             sum += image->at(x, y, c);
         }
 
-        if (sum == 0) {
+        if (sum == 0.0) {
             validity_mask[x + y * width] = false;
 
             std::vector<math::Vec2i> neighbours;
