@@ -10,6 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <tbb/task_scheduler_init.h>
+#include <omp.h>
 
 #include <util/timer.h>
 #include <util/system.h>
@@ -55,6 +57,13 @@ int main(int argc, char **argv) {
             << "Cannot continue since this directory would be delete in the end.\n"
             << std::endl;
         std::exit(EXIT_FAILURE);
+    }
+
+    // Set the number of threads to use.
+    tbb::task_scheduler_init schedule(conf.num_threads > 0 ? conf.num_threads : tbb::task_scheduler_init::automatic);
+    if (conf.num_threads > 0) {
+        omp_set_dynamic(0);
+        omp_set_num_threads(conf.num_threads);
     }
 
     std::cout << "Load and prepare mesh: " << std::endl;

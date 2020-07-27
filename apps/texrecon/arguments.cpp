@@ -19,6 +19,7 @@
 #define KEEP_UNSEEN_FACES "keep_unseen_faces"
 #define NADIR_MODE    "nadir_mode"
 #define NADIR_WEIGHT    "nadir_weight"
+#define NUM_THREADS "num_threads"
 
 Arguments parse_args(int argc, char **argv) {
     util::Arguments args;
@@ -34,7 +35,7 @@ Arguments parse_args(int argc, char **argv) {
         "\nA .cam file is structured as follows:"
         "\n    tx ty tz R00 R01 R02 R10 R11 R12 R20 R21 R22"
         "\n    f d0 d1 paspect ppx ppy"
-        "\nFirst line: Extrinsics - translation vector and rotation matrix"
+        "\nFirst line: Extrinsics - translation vector and rotation matrix (the transform from world to camera)"
         "\nSecond line: Intrinsics - focal length, distortion coefficients, pixel aspect ratio and principal point"
         "\nThe focal length is the distance between camera center and image plane normalized by dividing with the larger image dimension."
         "\nFor non zero distortion coefficients the image will be undistorted prior to the texturing process."
@@ -92,6 +93,8 @@ Arguments parse_args(int argc, char **argv) {
         "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
     args.add_option('\0', NO_INTERMEDIATE_RESULTS, false,
         "Do not write out intermediate results");
+    args.add_option('\0', NUM_THREADS, true,
+        "How many threads to use. Set 1 for determinism.");
     args.parse(argc, argv);
 
     Arguments conf;
@@ -106,6 +109,8 @@ Arguments parse_args(int argc, char **argv) {
     conf.write_timings = false;
     conf.write_intermediate_results = true;
     conf.write_view_selection_model = false;
+
+    conf.num_threads = -1;
 
     /* Handle optional arguments. */
     for (util::ArgResult const* i = args.next_option();
@@ -152,6 +157,8 @@ Arguments parse_args(int argc, char **argv) {
                 conf.write_timings = true;
             } else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS) {
                 conf.write_intermediate_results = false;
+            } else if (i->opt->lopt == NUM_THREADS) {
+                conf.num_threads = std::stoi(i->arg);
             } else {
                 throw std::invalid_argument("Invalid long option");
             }

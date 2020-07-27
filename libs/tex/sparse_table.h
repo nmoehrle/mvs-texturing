@@ -20,8 +20,8 @@
 #include "util/file_system.h"
 #include "util/exception.h"
 
-#define HEADER "SPT"
-#define VERSION "0.2"
+#define TEX_SPARSE_TABLE_HEADER "SPT"
+#define TEX_SPARSE_TABLE_VERSION "0.2"
 
 /**
   * Class representing a sparse table optimized for row and column wise access.
@@ -118,7 +118,7 @@ SparseTable<C, R, T>::save_to_file(SparseTable const & sparse_table, const std::
     C cols = sparse_table.cols();
     R rows = sparse_table.rows();
     std::size_t nnz = sparse_table.get_nnz();
-    out << HEADER << " " << VERSION << " " << cols << " " << rows << " " << nnz << std::endl;
+    out << TEX_SPARSE_TABLE_HEADER << " " << TEX_SPARSE_TABLE_VERSION << " " << cols << " " << rows << " " << nnz << std::endl;
 
     for (C col = 0; col < cols; ++col) {
         SparseTable::Column column = sparse_table.col(col);
@@ -145,7 +145,7 @@ SparseTable<C, R, T>::load_from_file(const std::string & filename, SparseTable<C
 
     in >> header;
 
-    if (header != HEADER) {
+    if (header != TEX_SPARSE_TABLE_HEADER) {
         in.close();
         throw util::FileException(filename, "Not a SparseTable file!");
     }
@@ -153,7 +153,7 @@ SparseTable<C, R, T>::load_from_file(const std::string & filename, SparseTable<C
     std::string version;
     in >> version;
 
-    if (version != VERSION) {
+    if (version != TEX_SPARSE_TABLE_VERSION) {
         in.close();
         throw util::FileException(filename, "Incompatible version of SparseTable file!");
     }
