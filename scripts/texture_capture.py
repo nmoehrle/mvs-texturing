@@ -31,7 +31,7 @@ The principal point has to be given in unit dimensions (e.g. 0.5 0.5).
 
 Example usage:
 
-python3 capture_interface.py ../data/office/
+python3 texture_capture.py ../data/office/
 
 """
 
