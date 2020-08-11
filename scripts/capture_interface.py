@@ -6,6 +6,7 @@ import numpy as np
 import open3d as o3d
 import shutil
 import time
+import cv2
 
 """
 Reads in the /keyframes directory written by the ondevice keyframer and writes them to the SCENE_FOLDER format expected by texrecon.
@@ -99,7 +100,7 @@ def extract_transform(j):
 def write_new_cam(new_cam_path, j, img_shape):
     cam_file = open(new_cam_path, 'w+')
     t = extract_transform(j)
-    print(t)
+    print('transform \n', t)
 
     first_line = '{} {} {} {} {} {} {} {} {} {} {} {}'.format(
         t[0, 3], t[1, 3], t[2, 3], t[0, 0], t[0, 1], t[0, 2], t[1, 0], t[1, 1], t[1, 2], t[2, 0], t[2, 1], t[2, 2])
@@ -138,15 +139,25 @@ def main(args):
             input_img_folder, cam_file.replace('.json', '.jpg'))
         new_img_path = os.path.join(
             args.output_folder, cam_file.replace('.json', '.jpg'))
-        shutil.copyfile(img_path, new_img_path)
-        img_shape = imageio.imread(new_img_path).shape
-        print(img_shape)
-        write_new_cam(new_cam_path, data, img_shape)
+        # load image, resize and write to new img path
+        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        shape = img.shape
+        print("Original image shape: ", shape)
+        scale_factor = args.max_image_dimension / max(shape)
+        new_img = cv2.resize(
+            img, (int(scale_factor*shape[1]), int(scale_factor*shape[0])))
+        cv2.imwrite(new_img_path, new_img)
+
+        new_img_shape = new_img.shape
+        print("new image shape: ", new_img_shape)
+        write_new_cam(new_cam_path, data, new_img_shape)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('capture_folder')
     parser.add_argument('output_folder')
+    parser.add_argument('--max_image_dimension', type=int, default=1920,
+                        help='Resize image so it has max_image_dimension')
     args = parser.parse_args()
     main(args)
