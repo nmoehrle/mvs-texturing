@@ -2,3 +2,8 @@ build/
 elibs/
 !elibs/CMakeLists/*
 !elibs/CMakeLists.txt
+data/
+.vscode/
+commands.md
+*.pyc
+__pycache__
