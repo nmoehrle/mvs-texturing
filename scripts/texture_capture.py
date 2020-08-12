@@ -29,9 +29,14 @@ The pixel aspect ratio is usually 1 or close to 1. If your SfM system doesn't ou
 The principal point has to be given in unit dimensions (e.g. 0.5 0.5).
 
 
-Example usage:
+Example usage to run on a single capture:
 
-python3 texture_capture.py ../data/office/
+python3 texture_capture.py --capture_folder ../data/office/
+
+
+Example usage to run on a folder of multiple captures:
+
+python3 texture_capture.py --multi_capture_folder ../data/
 
 """
 
@@ -170,27 +175,59 @@ def convert_keyframes(capture_folder, output_folder, max_image_dimension):
         write_new_cam(new_cam_path, data, new_img_shape)
 
 
-def main(args):
-    if args.output_folder is None:
-        output_folder = os.path.join(args.capture_folder, 'texrecon')
-    else:
-        output_folder = args.output_folder
+def main(capture_folder, output_folder, max_image_dimension, open_files=False):
+    timings = {}
+    print("Running texturing on ", capture_folder)
+    if output_folder is None:
+        output_folder = os.path.join(capture_folder, 'texrecon')
     os.makedirs(output_folder, exist_ok=True)
-    in_mesh = os.path.join(args.capture_folder, 'mesh.obj')
-    out_mesh = os.path.join(args.capture_folder, 'mesh.ply')
+    in_mesh = os.path.join(capture_folder, 'mesh.obj')
+    out_mesh = os.path.join(capture_folder, 'mesh.ply')
+    start_remesh = time.time()
     remesh(in_mesh, out_mesh)
-    convert_keyframes(args.capture_folder, output_folder,
-                      args.max_image_dimension)
+    timings['remesh'] = time.time() - start_remesh
+    start_convert = time.time()
+    convert_keyframes(capture_folder, output_folder,
+                      max_image_dimension)
+    timings['convert_keyframes'] = time.time() - start_convert
+    start_texture = time.time()
     textured_mesh = run_texturing(output_folder, out_mesh)
-    open_file(textured_mesh)
+    timings['texture'] = time.time() - start_texture
+    timings_path = os.path.join(output_folder, 'timings.json')
+    with open(timings_path, 'w+') as f:
+        json.dump(timings, f)
+    if open_files:
+        open_file(textured_mesh)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('capture_folder')
+    parser.add_argument('--capture_folder', type=str, default=None,
+                        help="A folder containing a single capture as written by the LiDAR capture app")
+    parser.add_argument('--multi_capture_folder', type=str, default=None,
+                        help="A folder containing multiple capture folders. If this argument is passed then texturing will be run on every capture folder in the directory")
     parser.add_argument('--output_folder', type=str, default=None,
                         help="Folder to write output textured mesh data to")
     parser.add_argument('--max_image_dimension', type=int, default=1920,
                         help='Resize image so it has max_image_dimension')
+    parser.add_argument('--open_files', action='store_true',
+                        help='Will open the files after conversion if passed')
     args = parser.parse_args()
-    main(args)
+
+    if args.multi_capture_folder is not None:
+        cap_folders = os.listdir(args.multi_capture_folder)
+        for cap_folder in cap_folders:
+            meta_path = os.path.join(
+                args.multi_capture_folder, cap_folder, 'meta.json')
+            if os.path.isfile(meta_path):
+                # if there is a meta file this is likely a valid capture folder
+                capture_folder = os.path.join(
+                    args.multi_capture_folder, cap_folder)
+                main(capture_folder, None, args.max_image_dimension,
+                     open_files=args.open_files)
+    elif args.capture_folder is not None:
+        main(args.capture_folder, args.output_folder,
+             args.max_image_dimension, open_files=args.open_files)
+    else:
+        raise ValueError(
+            "Must supply either a --capture_folder arg or a --multi_capture_folder arg to run")
