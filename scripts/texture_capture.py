@@ -179,7 +179,7 @@ def main(capture_folder, output_folder, max_image_dimension, open_files=False):
     timings = {}
     print("Running texturing on ", capture_folder)
     if output_folder is None:
-        output_folder = os.path.join(args.capture_folder, 'texrecon')
+        output_folder = os.path.join(capture_folder, 'texrecon')
     os.makedirs(output_folder, exist_ok=True)
     in_mesh = os.path.join(capture_folder, 'mesh.obj')
     out_mesh = os.path.join(capture_folder, 'mesh.ply')
@@ -195,14 +195,15 @@ def main(capture_folder, output_folder, max_image_dimension, open_files=False):
     timings['texture'] = time.time() - start_texture
     timings_path = os.path.join(output_folder, 'timings.json')
     with open(timings_path, 'w+') as f:
-        json.dump(timings, timings_path)
+        json.dump(timings, f)
     if open_files:
         open_file(textured_mesh)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--capture_folder', type=str, default=None, "A folder containing a single capture as written by the LiDAR capture app")
+    parser.add_argument('--capture_folder', type=str, default=None,
+                        help="A folder containing a single capture as written by the LiDAR capture app")
     parser.add_argument('--multi_capture_folder', type=str, default=None,
                         help="A folder containing multiple capture folders. If this argument is passed then texturing will be run on every capture folder in the directory")
     parser.add_argument('--output_folder', type=str, default=None,
