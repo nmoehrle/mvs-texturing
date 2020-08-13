@@ -74,7 +74,7 @@ def remesh(in_mesh: str, out_mesh: str, points_to_verts: float = 0.75):
     print("Time to compute mesh normals: {}".format(time.time() - start_normals))
     start_sample = time.time()
     num_points = points_to_verts*len(mesh.vertices)
-    pcd = mesh.sample_points_uniformly(number_of_points=30000)
+    pcd = mesh.sample_points_uniformly(number_of_points=num_points)
     print("Time to sample mesh: {} with {} points".format(
         time.time() - start_sample, num_points))
     start_mesh = time.time()
