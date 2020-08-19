@@ -7,3 +7,4 @@ data/
 commands.md
 *.pyc
 __pycache__
+scripts/commands.md

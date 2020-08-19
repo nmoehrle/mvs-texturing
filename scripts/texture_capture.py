@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import json
 import os
 import argparse
@@ -41,9 +43,9 @@ python3 texture_capture.py --multi_capture_folder ../data/
 """
 
 
-def run_texturing(scene_folder: str, in_mesh: str, out_mesh_prefix: str = None):
+def run_texturing(scene_folder: str, in_mesh: str, out_mesh_prefix: str = None, suffix: str = ""):
     if out_mesh_prefix is None:
-        out_mesh_prefix = os.path.join(scene_folder, "mesh")
+        out_mesh_prefix = os.path.join(scene_folder, "mesh{}".format(suffix))
     args = ["../build/apps/texrecon/texrecon",
             scene_folder, in_mesh, out_mesh_prefix]
     subprocess.call(args)
@@ -55,7 +57,7 @@ def open_file(file_path):
     subprocess.call(["open", file_path])
 
 
-def remesh(in_mesh: str, out_mesh: str, points_to_verts: float = 0.75):
+def remesh(in_mesh: str, out_mesh: str, points_to_verts: float = 0.75, remove_low_support_verts: bool=True):
     """
     Remeshes an input mesh by sampling it and applying Poisson Surface meshing
     Args:
@@ -73,7 +75,7 @@ def remesh(in_mesh: str, out_mesh: str, points_to_verts: float = 0.75):
     mesh.compute_vertex_normals()
     print("Time to compute mesh normals: {}".format(time.time() - start_normals))
     start_sample = time.time()
-    num_points = points_to_verts*len(mesh.vertices)
+    num_points = int(points_to_verts*len(mesh.vertices))
     pcd = mesh.sample_points_uniformly(number_of_points=num_points)
     print("Time to sample mesh: {} with {} points".format(
         time.time() - start_sample, num_points))
@@ -81,6 +83,10 @@ def remesh(in_mesh: str, out_mesh: str, points_to_verts: float = 0.75):
     with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
         mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
             pcd, depth=10)
+    if remove_low_support_verts:
+        vertices_to_remove = densities < np.quantile(densities, 0.025)
+        mesh.remove_vertices_by_mask(vertices_to_remove)
+
     print("Time to run Poisson surface reconstruction: {}".format(
         time.time() - start_mesh))
     start_write = time.time()
@@ -138,7 +144,8 @@ def write_new_cam(new_cam_path, j, img_shape):
     # texrecon wants center point normalized by image size
     ppx = j['cx'] / img_shape[1]
     ppy = j['cy'] / img_shape[0]
-    f = j['fx'] / max(img_shape)
+    #f = j['fx'] / max(img_shape)
+    f = j['fx'] / 1920.0
     paspect = 1.0
     second_line = '{} {} {} {} {} {}'.format(f, d0, d1, paspect, ppx, ppy)
     cam_file.write(second_line)
@@ -169,13 +176,11 @@ def convert_keyframes(capture_folder, output_folder, max_image_dimension):
         new_img = cv2.resize(
             img, (int(scale_factor*shape[1]), int(scale_factor*shape[0])))
         cv2.imwrite(new_img_path, new_img)
-
-        new_img_shape = new_img.shape
-        print("new image shape: ", new_img_shape)
-        write_new_cam(new_cam_path, data, new_img_shape)
+        print("new image shape: ", new_img.shape)
+        write_new_cam(new_cam_path, data, shape)
 
 
-def main(capture_folder, output_folder, max_image_dimension, open_files=False):
+def main(capture_folder, output_folder, max_image_dimension, open_files, suffix, points_to_verts):
     timings = {}
     print("Running texturing on ", capture_folder)
     if output_folder is None:
@@ -184,16 +189,16 @@ def main(capture_folder, output_folder, max_image_dimension, open_files=False):
     in_mesh = os.path.join(capture_folder, 'mesh.obj')
     out_mesh = os.path.join(capture_folder, 'mesh.ply')
     start_remesh = time.time()
-    remesh(in_mesh, out_mesh)
+    remesh(in_mesh, out_mesh, points_to_verts=points_to_verts)
     timings['remesh'] = time.time() - start_remesh
     start_convert = time.time()
-    convert_keyframes(capture_folder, output_folder,
-                      max_image_dimension)
+    #convert_keyframes(capture_folder, output_folder,
+    #                  max_image_dimension)
     timings['convert_keyframes'] = time.time() - start_convert
     start_texture = time.time()
-    textured_mesh = run_texturing(output_folder, out_mesh)
+    textured_mesh = run_texturing(output_folder, out_mesh, suffix=suffix)
     timings['texture'] = time.time() - start_texture
-    timings_path = os.path.join(output_folder, 'timings.json')
+    timings_path = os.path.join(output_folder, 'timings{}.json'.format(suffix))
     with open(timings_path, 'w+') as f:
         json.dump(timings, f)
     if open_files:
@@ -212,6 +217,10 @@ if __name__ == '__main__':
                         help='Resize image so it has max_image_dimension')
     parser.add_argument('--open_files', action='store_true',
                         help='Will open the files after conversion if passed')
+    parser.add_argument('--suffix', type=str, default="",
+                        help='Suffix to add to end of files being written')
+    parser.add_argument('--points_to_verts', type=float, default=0.5,
+                        help='Number of points to sample from mesh relative to OG # of verts')
     args = parser.parse_args()
 
     if args.multi_capture_folder is not None:
@@ -224,10 +233,10 @@ if __name__ == '__main__':
                 capture_folder = os.path.join(
                     args.multi_capture_folder, cap_folder)
                 main(capture_folder, None, args.max_image_dimension,
-                     open_files=args.open_files)
+                     open_files=args.open_files, suffix=args.suffix, points_to_verts=args.points_to_verts)
     elif args.capture_folder is not None:
         main(args.capture_folder, args.output_folder,
-             args.max_image_dimension, open_files=args.open_files)
+             args.max_image_dimension, open_files=args.open_files, suffix=args.suffix, points_to_verts=args.points_to_verts)
     else:
         raise ValueError(
             "Must supply either a --capture_folder arg or a --multi_capture_folder arg to run")
