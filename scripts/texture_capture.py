@@ -151,7 +151,7 @@ def write_new_cam(new_cam_path, j, img_shape):
     cam_file.write(second_line)
 
 
-def convert_keyframes(capture_folder, output_folder, max_image_dimension):
+def convert_keyframes(capture_folder, output_folder, max_image_dimension, clear_cache):
     input_cam_folder = os.path.join(
         capture_folder, 'keyframes', 'cameras')
     input_img_folder = os.path.join(
@@ -159,28 +159,32 @@ def convert_keyframes(capture_folder, output_folder, max_image_dimension):
     input_cams = sorted(os.listdir(input_cam_folder))
     for cam_file in input_cams:
         cam_path = os.path.join(input_cam_folder, cam_file)
-        data = {}
-        with open(cam_path, 'r') as f:
-            data = json.load(f)
+
         new_cam_path = os.path.join(
             output_folder, cam_file.replace('.json', '.cam'))
         img_path = os.path.join(
             input_img_folder, cam_file.replace('.json', '.jpg'))
         new_img_path = os.path.join(
             output_folder, cam_file.replace('.json', '.jpg'))
-        # load image, resize and write to new img path
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        shape = img.shape
-        print("Original image shape: ", shape)
-        scale_factor = max_image_dimension / max(shape)
-        new_img = cv2.resize(
-            img, (int(scale_factor*shape[1]), int(scale_factor*shape[0])))
-        cv2.imwrite(new_img_path, new_img)
-        print("new image shape: ", new_img.shape)
-        write_new_cam(new_cam_path, data, shape)
+        if os.path.isfile(new_img_path) and os.path.isfile(new_img_path) and not clear_cache:
+            print("Converted keyframe exists and we are not clearing cache")
+        else:
+            data = {}
+            with open(cam_path, 'r') as f:
+                data = json.load(f)
+            # load image, resize and write to new img path
+            img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+            shape = img.shape
+            print("Original image shape: ", shape)
+            scale_factor = max_image_dimension / max(shape)
+            new_img = cv2.resize(
+                img, (int(scale_factor*shape[1]), int(scale_factor*shape[0])))
+            cv2.imwrite(new_img_path, new_img)
+            print("new image shape: ", new_img.shape)
+            write_new_cam(new_cam_path, data, shape)
 
 
-def main(capture_folder, output_folder, max_image_dimension, open_files, suffix, points_to_verts):
+def main(capture_folder, output_folder, max_image_dimension, open_files, suffix, points_to_verts, clear_cache):
     timings = {}
     print("Running texturing on ", capture_folder)
     if output_folder is None:
@@ -192,8 +196,8 @@ def main(capture_folder, output_folder, max_image_dimension, open_files, suffix,
     remesh(in_mesh, out_mesh, points_to_verts=points_to_verts)
     timings['remesh'] = time.time() - start_remesh
     start_convert = time.time()
-    #convert_keyframes(capture_folder, output_folder,
-    #                  max_image_dimension)
+    convert_keyframes(capture_folder, output_folder,
+                      max_image_dimension, clear_cache)
     timings['convert_keyframes'] = time.time() - start_convert
     start_texture = time.time()
     textured_mesh = run_texturing(output_folder, out_mesh, suffix=suffix)
@@ -219,6 +223,8 @@ if __name__ == '__main__':
                         help='Will open the files after conversion if passed')
     parser.add_argument('--suffix', type=str, default="",
                         help='Suffix to add to end of files being written')
+    parser.add_argument('--clear_cache', action='store_true',
+                        help='Will overwrite previously converted keyframes if they exist')
     parser.add_argument('--points_to_verts', type=float, default=0.5,
                         help='Number of points to sample from mesh relative to OG # of verts')
     args = parser.parse_args()
@@ -233,10 +239,10 @@ if __name__ == '__main__':
                 capture_folder = os.path.join(
                     args.multi_capture_folder, cap_folder)
                 main(capture_folder, None, args.max_image_dimension,
-                     open_files=args.open_files, suffix=args.suffix, points_to_verts=args.points_to_verts)
+                     open_files=args.open_files, suffix=args.suffix, points_to_verts=args.points_to_verts, clear_cache=args.clear_cache)
     elif args.capture_folder is not None:
         main(args.capture_folder, args.output_folder,
-             args.max_image_dimension, open_files=args.open_files, suffix=args.suffix, points_to_verts=args.points_to_verts)
+             args.max_image_dimension, open_files=args.open_files, suffix=args.suffix, points_to_verts=args.points_to_verts, clear_cache=args.clear_cache)
     else:
         raise ValueError(
             "Must supply either a --capture_folder arg or a --multi_capture_folder arg to run")
