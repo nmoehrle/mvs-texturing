@@ -57,6 +57,17 @@ TextureView::generate_validity_mask(void) {
     queue.push_back(math::Vec2i(width - 1, height - 1));
     checked->at(width - 1, height - 1, 0) = 255;
 
+    /* Some undistorted images will be non-black at the corners
+     * but black in the middle of the frame. */
+    queue.push_back(math::Vec2i(0, height / 2));
+    checked->at(0, height/2, 0) = 255;
+    queue.push_back(math::Vec2i(width - 1, height / 2));
+    checked->at(width - 1, height/2, 0) = 255;
+    queue.push_back(math::Vec2i(width / 2, 0));
+    checked->at(width / 2, 0, 0) = 255;
+    queue.push_back(math::Vec2i(width / 2, height - 1));
+    checked->at(width / 2, height - 1, 0) = 255;
+
     while (!queue.empty()) {
         math::Vec2i pixel = queue.front();
         queue.pop_front();
