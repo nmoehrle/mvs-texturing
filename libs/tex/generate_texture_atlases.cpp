@@ -9,6 +9,7 @@
 
 #include <set>
 #include <list>
+#include <future>
 #include <iostream>
 #include <fstream>
 
@@ -116,10 +117,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     std::size_t remaining_patches = texture_patches.size();
     std::ofstream tty("/dev/tty", std::ios_base::out);
 
-    #pragma omp parallel
-    {
-    #pragma omp single
-    {
+    std::vector<std::future<void> > futures;
 
     while (!texture_patches.empty()) {
         unsigned int texture_size = calculate_texture_size(texture_patches);
@@ -148,21 +146,19 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
             }
         }
 
-        #pragma omp task
-        texture_atlas->finalize();
+        futures.push_back(std::async(std::launch::async, [texture_atlas] {
+            texture_atlas->finalize();
+        }));
     }
 
     std::cout << "\r\tWorking on atlas " << texture_atlases->size()
         << " 100%... done." << std::endl;
     util::WallTimer timer;
     std::cout << "\tFinalizing texture atlases... " << std::flush;
-    #pragma omp taskwait
+    for (std::future<void> & future : futures) {
+        future.wait();
+    }
     std::cout << "done. (Took: " << timer.get_elapsed_sec() << "s)" << std::endl;
-
-    /* End of single region */
-    }
-    /* End of parallel region. */
-    }
 }
 
 TEX_NAMESPACE_END
