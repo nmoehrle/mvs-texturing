@@ -1,0 +1,26 @@
+name: mvs-texturing
+version: '20170215-0'
+summary: MVS Texturing - 3D Reconstruction Texturing
+description: |
+  Tool that textures 3D reconstructions from images. This project focuses on 3D
+  reconstructions generated using structure from motion and multi-view stereo
+  techniques, however, it is not limited to this setting.
+
+grade: stable
+confinement: strict
+
+apps:
+  texrecon:
+    command: texrecon
+    plugs: [home]
+
+parts:
+  mvs-texturing:
+    plugin: cmake
+    source: https://github.com/nmoehrle/mvs-texturing.git
+    source-commit: 27d6656d42d29fe225b4a1c4d4ae887416dd8b76
+    build-packages:
+      - g++
+      - libjpeg8-dev
+      - libpng12-dev
+      - libtiff5-dev
