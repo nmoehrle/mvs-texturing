@@ -109,7 +109,7 @@ from_images_and_camera_files(std::string const & path,
     }
 
     ProgressCounter view_counter("\tLoading", files.size() / 2);
-    #pragma omp parallel for
+    #pragma omp parallel for ordered
     for (std::size_t i = 0; i < files.size(); i += 2) {
         view_counter.progress<SIMPLE>();
         const std::string cam_file = files[i];
@@ -168,7 +168,7 @@ from_images_and_camera_files(std::string const & path,
             mve::image::save_png_file(image, image_file);
         }
 
-        #pragma omp critical
+        #pragma omp ordered
         texture_views->push_back(TextureView(i / 2, cam_info, image_file));
 
         view_counter.inc();
@@ -184,7 +184,7 @@ from_nvm_scene(std::string const & nvm_file,
     mve::Bundle::Cameras& cameras = bundle->get_cameras();
 
     ProgressCounter view_counter("\tLoading", cameras.size());
-    #pragma omp parallel for
+    #pragma omp parallel for ordered
     for (std::size_t i = 0; i < cameras.size(); ++i) {
         view_counter.progress<SIMPLE>();
         mve::CameraInfo& mve_cam = cameras[i];
@@ -208,7 +208,7 @@ from_nvm_scene(std::string const & nvm_file,
         );
         mve::image::save_png_file(image, image_file);
 
-        #pragma omp critical
+        #pragma omp ordered
         texture_views->push_back(TextureView(i, mve_cam, image_file));
 
         view_counter.inc();
