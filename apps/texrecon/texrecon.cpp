@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <tbb/task_scheduler_init.h>
+#include <oneapi/tbb/info.h>
 #include <omp.h>
 
 #include <util/timer.h>
@@ -60,10 +60,12 @@ int main(int argc, char **argv) {
     }
 
     // Set the number of threads to use.
-    tbb::task_scheduler_init schedule(conf.num_threads > 0 ? conf.num_threads : tbb::task_scheduler_init::automatic);
-    if (conf.num_threads > 0) {
+    if (num_threads > 0) {
         omp_set_dynamic(0);
         omp_set_num_threads(conf.num_threads);
+    } else {
+        omp_set_dynamic(1);
+        omp_set_num_threads(oneapi::tbb::info::default_concurrency());
     }
 
     std::cout << "Load and prepare mesh: " << std::endl;
