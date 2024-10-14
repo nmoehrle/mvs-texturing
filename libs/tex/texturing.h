@@ -103,7 +103,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     VertexProjectionInfos const & vertex_projection_infos,
-    TexturePatches * texture_patches);
+    TexturePatches * texture_patches, bool keep_unseen_faces);
 
 void
 generate_texture_atlases(TexturePatches * texture_patches,

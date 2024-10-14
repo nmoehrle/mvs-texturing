@@ -105,7 +105,7 @@ struct Line {
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     VertexProjectionInfos const & vertex_projection_infos,
-    std::vector<TexturePatch::Ptr> * texture_patches) {
+    std::vector<TexturePatch::Ptr> * texture_patches, bool keep_unseen_faces) {
 
     std::size_t const num_vertices = vertex_projection_infos.size();
     std::vector<math::Vec3f> vertex_colors(num_vertices);
@@ -176,8 +176,23 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     }
 
     ProgressCounter texture_patch_counter("\tBlending texture patches", texture_patches->size());
+
+    std::size_t num_texture_patches;
+    /**
+     * If unseen faces are kept, the last `texture_patch` in `texture_patches`
+     * must belong to unseen faces and it is a 3x3 RGB image. Please read
+     * `generate_texture_patches()` for more info. A 3x3 RGB image is very small
+     * and its color will be influenced easily by neighboring pixels, which is
+     * not a desired behaviour. Thus, it skips the last `texture_patch` for
+     * unseen faces.
+     */
+    if (keep_unseen_faces == true) {
+        num_texture_patches = texture_patches->size() - 1;
+    } else {
+        num_texture_patches = texture_patches->size();
+    }
     #pragma omp parallel for schedule(dynamic)
-    for (std::size_t i = 0; i < texture_patches->size(); ++i) {
+    for (std::size_t i = 0; i < num_texture_patches; ++i) {
         TexturePatch::Ptr texture_patch = texture_patches->at(i);
         mve::FloatImage::Ptr image = texture_patch->get_image()->duplicate();
 
