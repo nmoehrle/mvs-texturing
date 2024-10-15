@@ -60,7 +60,6 @@ int main(int argc, char **argv) {
     }
 
     // Set the number of threads to use.
-    //tbb::task_scheduler_init schedule(conf.num_threads > 0 ? conf.num_threads : tbb::task_scheduler_init::automatic);
     tbb::task_arena arena(conf.num_threads > 0 ? conf.num_threads : tbb::this_task_arena::max_concurrency());
 
     if (conf.num_threads > 0) {
