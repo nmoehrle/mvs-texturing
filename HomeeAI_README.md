@@ -18,10 +18,12 @@ To build and run `mvs-texturing`, ensure the following dependencies are installe
 Additional dependencies are automatically downloaded and built by the system via
 `elibs/CMakeLists.txt`:
 
-- [rayint](https://github.com/nmoehrle/rayint)  
+- [rayint](https://github.com/nmoehrle/rayint)
 - [Eigen](http://eigen.tuxfamily.org)  
-- [Multi-View Environment (MVE)](http://www.gcc.tu-darmstadt.de/home/proj/mve)  
-- [mapMAP](http://www.gcc.tu-darmstadt.de/home/proj/mapmap)  
+- [Multi-View Environment (MVE)](https://github.com/nmoehrle/mve.git)  
+- [mapMAP](https://github.com/dthuerck/mapmap_cpu.git)  
+
+**Note:** We may need to update MVE to the latest version.
 
 ### Install Legacy oneTBB
 
@@ -35,21 +37,27 @@ cd oneTBB-2019_U9
 make -j
 ```
 
-## Build MVS-Texturing `mvs-texturing`
+## Build MVS-Texturing
 
-Use the following command to build the `mvs-texturin`g project:
+Use the following command to build:
 
 ```
 mkdir -p build && cd build && cmake .. && make -j; cd ..
 ```
 
-**Note:** If there are issues related to oneTBB, pass the correct paths to the
-TBB headers and libraries using CMake flags:
+### Resolve oneTBB Issues
+
+If there are issues related to oneTBB, pass the correct paths to the TBB headers
+and libraries using CMake flags. Note that the following code block does NOT work.
 
 ```shell
 cmake .. -DTBB_INCLUDE_DIRS=../oneTBB-2019_U9/include \
-         -DTBB_LIBRARIES=../oneTBB-2019_U9/build/linux_intel64_gcc_*_release
+         -DTBB_LIBRARIES=../oneTBB-2019_U9/build/linux_intel64_gcc_cc12.3.0_libc2.35_kernel6.5.0_release
 ```
+
+A better way to resolve issues related to building the project would be
+modularization. **TODO:** Modularize external libraries and use modern CMake
+commands.
 
 ## Prepare 3D Model and Camera Parameters
 
@@ -67,12 +75,14 @@ correct format:
 
 - **Camera Parameters:** The .cam file must follow this format:
 
-```
-tx ty tz r00 r01 r02 r10 r11 r12 r20 r21 r22  # extrinsic
-focal_length distort_1 distort_2 pixel_aspect_ratio principal_point_x principal_point_y  # intrinsic
-```
+    ```
+    tx ty tz r00 r01 r02 r10 r11 r12 r20 r21 r22  # extrinsic
+    focal_length distort_1 distort_2 pixel_aspect_ratio principal_point_x principal_point_y  # intrinsic
+    ```
 
-Please read [mve/libs/mve/camera.h](https://github.com/simonfuhrmann/mve/blob/master/libs/mve/camera.h) for more information.
+    Please read
+    [mve/libs/mve/camera.h](https://github.com/simonfuhrmann/mve/blob/master/libs/mve/camera.h)
+    for more information.
 
 
 ## Running MVS-Texturing
