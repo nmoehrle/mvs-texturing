@@ -180,11 +180,11 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     std::size_t num_texture_patches;
     /**
      * If unseen faces are kept, the last `texture_patch` in `texture_patches`
-     * must belong to unseen faces and it is a 3x3 RGB image. Please read
-     * `generate_texture_patches()` for more info. A 3x3 RGB image is very small
-     * and its color will be influenced easily by neighboring pixels, which is
-     * not a desired behaviour. Thus, it skips the last `texture_patch` for
-     * unseen faces.
+     * MUST belong to unseen faces and it is a 3x3 RGB image (if not, the
+     * following logic fails.) Please read `generate_texture_patches()` for more
+     * info. A 3x3 RGB image is very small and its color will be influenced
+     * easily by neighboring pixels, which is not a desired behaviour. Thus, it
+     * skips the last `texture_patch` for unseen faces.
      */
     if (keep_unseen_faces == true) {
         num_texture_patches = texture_patches->size() - 1;
