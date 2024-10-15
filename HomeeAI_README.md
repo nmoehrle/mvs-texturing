@@ -1,28 +1,32 @@
 # HomeeAI's MVS-Texturing
 
-This repository is forked from [the official mvs-texturing](https://github.com/nmoehrle/mvs-texturing).
+This repository is a fork of the [official mvs-texturing
+repository](https://github.com/nmoehrle/mvs-texturing).
 
-## Dependencies
+---
 
-`mvs-texturing` depends on the following prerequisites:
-- `cmake>=3.28`
-- git
-- make
-- `gcc>=12` and `g++>=12`
-- `libpng`, `libjpb` and `libtiff`
+## Prerequisites
 
-Furthermore the build system automatically downloads and compiles the following
-dependencies in `elibs/CMakeLists.txt`:
+To build and run `mvs-texturing`, ensure the following dependencies are installed:
 
-- rayint: https://github.com/nmoehrle/rayint
-- Eigen: http://eigen.tuxfamily.org
-- Multi-View Environment: http://www.gcc.tu-darmstadt.de/home/proj/mve
-- mapMAP: http://www.gcc.tu-darmstadt.de/home/proj/mapmap
+- **CMake** >= 3.28  
+- **Git**  
+- **Make**  
+- **GCC/G++** >= 12  
+- **Libraries**: `libpng`, `libjpeg`, `libtiff`
 
-### Download and Build the Old `oneTBB`
+Additional dependencies are automatically downloaded and built by the system via
+`elibs/CMakeLists.txt`:
 
-The current code depends on the old version of `oneTBB`. We need to download and
-compile `oneTBB` manually. Please follow the instruction below:
+- [rayint](https://github.com/nmoehrle/rayint)  
+- [Eigen](http://eigen.tuxfamily.org)  
+- [Multi-View Environment (MVE)](http://www.gcc.tu-darmstadt.de/home/proj/mve)  
+- [mapMAP](http://www.gcc.tu-darmstadt.de/home/proj/mapmap)  
+
+### Install Legacy oneTBB
+
+The current code requires **oneTBB 2019_U9**, which needs to be downloaded and
+built manually:
 
 ```shell
 wget https://github.com/oneapi-src/oneTBB/archive/refs/tags/2019_U9.tar.gz
@@ -31,98 +35,77 @@ cd oneTBB-2019_U9
 make -j
 ```
 
-## Build `mvs-texturing`
+## Build MVS-Texturing `mvs-texturing`
+
+Use the following command to build the `mvs-texturin`g project:
 
 ```
 mkdir -p build && cd build && cmake .. && make -j; cd ..
 ```
 
-<!-- ```
-cmake .. -DTBB_INCLUDE_DIRS=../oneTBB-2019_U9/include -DTBB_LIBRARIES=../oneTBB-2019_U9/build/linux_intel64_gcc_cc12.3.0_libc2.35_kernel6.5.0_release
+**Note:** If there are issues related to oneTBB, pass the correct paths to the
+TBB headers and libraries using CMake flags:
 
-cmake .. -DTBB_LIBRARIES=../oneTBB-2019_U9/build/linux_intel64_gcc_cc12.3.0_libc2.35_kernel6.5.0_release
-
-cmake .. -DTBB_INCLUDE_DIRS=/home/lionlai/sfm_mvs_slam/mvs-texturing/oneTBB-2019_U9/include -DTBB_LIBRARY=/home/lionlai/sfm_mvs_slam/mvs-texturing/oneTBB-2019_U9/build/linux_intel64_gcc_cc12.3.0_libc2.35_kernel6.5.0_release
-
-make -j
-``` -->
-
-### Prepare Camera Parameters
-
-```
-python3 -m venv venv_preprocess_data \
-&& source venv_preprocess_data/bin/activate \
-&& python3 -m pip install numpy
-
-python3 preprocess_camera_parameters.py \
---extrinsic-path ./small_meeting_room_7f/colmap/sparse/0/images.txt \
---intrinsic-path ./small_meeting_room_7f/colmap/sparse/0/distort_cameras.txt \
---output-dir-cam ./img_cam
+```shell
+cmake .. -DTBB_INCLUDE_DIRS=../oneTBB-2019_U9/include \
+         -DTBB_LIBRARIES=../oneTBB-2019_U9/build/linux_intel64_gcc_*_release
 ```
 
-### how to run
+## Prepare 3D Model and Camera Parameters
+
+To prepare your input data, follow the preprocessing script
+`scripts/mvs_texturing_preprocess_camera_parameters.py` in
+the[`inpaint-3d-struct`
+repository](https://github.com/homee-ai/inpaint-3d-struct).
+
+Essentially, `mvs-texturing` only generates good results if input data has the
+correct format:
+
+- **Mesh Quality:** Ensure the input mesh has appropriate triangle sizes. Large
+  triangles may result in incomplete texturing if no single image fully covers a
+  triangle.
+
+- **Camera Parameters:** The .cam file must follow this format:
 
 ```
-mkdir -p output/small_meeting_room_7f/wall_0 \
-&& ./build/apps/texrecon/texrecon \
---tone_mapping=gamma \
---outlier_removal=gauss_damping \
---view_selection_model \
-./input_data/small_meeting_room_7f_img_cam/ \
-./input_data/small_meeting_room_7f_ply/wall_0.ply \
-./output/small_meeting_room_7f/wall_0/textured_mesh
+tx ty tz r00 r01 r02 r10 r11 r12 r20 r21 r22  # extrinsic
+focal_length distort_1 distort_2 pixel_aspect_ratio principal_point_x principal_point_y  # intrinsic
+```
 
-mkdir -p output/victor/wall_2 \
-&& ./build/apps/texrecon/texrecon \
---tone_mapping=gamma \
---outlier_removal=gauss_damping \
---view_selection_model \
-./input_data/victor_img_cam/ \
-./input_data/victor_ply/wall_2.ply \
-./output/victor/wall_2/textured_mesh
+Please read [mve/libs/mve/camera.h](https://github.com/simonfuhrmann/mve/blob/master/libs/mve/camera.h) for more information.
 
-mkdir -p output/twhg/walls_floors_objects \
-&& ./build/apps/texrecon/texrecon \
---tone_mapping=gamma \
---outlier_removal=gauss_damping \
---view_selection_model \
-./input_data/twhg_img_cam/ \
-./input_data/twhg_ply/walls_floors_objects.ply \
-./output/twhg/walls_floors_objects/textured_mesh
 
-mkdir -p output/twhg/walls_floors \
+## Running MVS-Texturing
+
+After `mvs-texturing` is built and input data is prepared, we can start texturizing meshes. The
+following command
+
+```shell
+mkdir -p output \
 && ./build/apps/texrecon/texrecon \
 --tone_mapping=gamma \
 --outlier_removal=gauss_damping \
 --view_selection_model \
 --keep_unseen_faces \
-./input/twhg_img_cam/ \
-./input/twhg_ply/walls_floors.ply \
-./output/twhg/walls_floors/textured_mesh
-
-rm -r output/twhg/thick \
-&& mkdir -p output/twhg/thick \
-&& ./build/apps/texrecon/texrecon \
---tone_mapping=gamma \
---outlier_removal=gauss_damping \
---view_selection_model \
---keep_unseen_faces \
-./input/twhg_img_cam/ \
-./input/twhg_ply/thick.ply \
-./output/twhg/thick/textured_mesh
-
-rm -r output/twhg/thick \
-&& mkdir -p output/twhg/thick \
-&& ./build/apps/texrecon/texrecon \
---tone_mapping=gamma \
---outlier_removal=gauss_damping \
---view_selection_model \
-./input/twhg_img_cam/ \
-./input/twhg_ply/thick.ply \
-./output/twhg/thick/textured_mesh
+./input/img_cam/ \
+./input/scene.ply \
+./output/textured_mesh
 ```
 
-### 
-https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1
+takes the images, camera parameters, and a `scene.ply` file as input and produces
+the results in a destination path prefixed with `./output/textured_mesh`, as
+shown below: 
 
-https://cliutils.gitlab.io/modern-cmake/chapters/intro/dodonot.html
+```
+textured_mesh.conf
+textured_mesh.mtl
+textured_mesh.obj
+textured_mesh_data_costs.spt
+textured_mesh_labeling.vec
+textured_mesh_material0000_map_Kd.png
+textured_mesh_material0001_map_Kd.png
+textured_mesh_view_selection.mtl
+textured_mesh_view_selection.obj
+textured_mesh_view_selection_material0000_map_Kd.png
+textured_mesh_view_selection_material0001_map_Kd.png
+```
