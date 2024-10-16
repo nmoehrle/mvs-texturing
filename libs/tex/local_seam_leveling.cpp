@@ -105,7 +105,7 @@ struct Line {
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     VertexProjectionInfos const & vertex_projection_infos,
-    std::vector<TexturePatch::Ptr> * texture_patches, bool keep_unseen_faces) {
+    std::vector<TexturePatch::Ptr> * texture_patches, Settings const & settings) {
 
     std::size_t const num_vertices = vertex_projection_infos.size();
     std::vector<math::Vec3f> vertex_colors(num_vertices);
@@ -184,9 +184,12 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
      * following logic fails.) Please read `generate_texture_patches()` for more
      * info. A 3x3 RGB image is very small and its color will be influenced
      * easily by neighboring pixels, which is not a desired behaviour. Thus, it
-     * skips the last `texture_patch` for unseen faces.
+     * skips the last `texture_patch` for unseen faces. However, it may be the
+     * case that users don't want to assign predefined color to unseen faces,
+     * i.e., users want color to be calculated automatically. In this case, do
+     * not skip the last `texture_patch`.
      */
-    if (keep_unseen_faces == true) {
+    if (settings.keep_unseen_faces == true && settings.color_unseen_faces[0] != -1) {
         num_texture_patches = texture_patches->size() - 1;
     } else {
         num_texture_patches = texture_patches->size();

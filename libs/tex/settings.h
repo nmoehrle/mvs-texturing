@@ -92,6 +92,7 @@ struct Settings {
     bool local_seam_leveling = true;
     bool hole_filling = true;
     bool keep_unseen_faces = false;
+    std::vector<std::int32_t> color_unseen_faces{-1, -1, -1};
 };
 
 TEX_NAMESPACE_END

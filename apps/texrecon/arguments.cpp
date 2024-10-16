@@ -9,6 +9,7 @@
 
 #include "arguments.h"
 #include "util/file_system.h"
+#include <sstream> 
 
 #define SKIP_GLOBAL_SEAM_LEVELING "skip_global_seam_leveling"
 #define SKIP_GEOMETRIC_VISIBILITY_TEST "skip_geometric_visibility_test"
@@ -17,6 +18,7 @@
 #define WRITE_TIMINGS "write_timings"
 #define SKIP_HOLE_FILLING "skip_hole_filling"
 #define KEEP_UNSEEN_FACES "keep_unseen_faces"
+#define COLOR_UNSEEN_FACES "color_unseen_faces"
 #define NUM_THREADS "num_threads"
 
 Arguments parse_args(int argc, char **argv) {
@@ -83,6 +85,8 @@ Arguments parse_args(int argc, char **argv) {
         "Skip hole filling [false]");
     args.add_option('\0', KEEP_UNSEEN_FACES, false,
         "Keep unseen faces [false]");
+    args.add_option('\0', COLOR_UNSEEN_FACES, true,
+        "Color for unseen faces [R G B]. Default: -1 -1 -1 (auto-calculated color).");
     args.add_option('\0', WRITE_TIMINGS, false,
         "Write out timings for each algorithm step (OUT_PREFIX + _timings.csv)");
     args.add_option('\0', NO_INTERMEDIATE_RESULTS, false,
@@ -142,7 +146,30 @@ Arguments parse_args(int argc, char **argv) {
                 conf.settings.hole_filling = false;
             } else if (i->opt->lopt == KEEP_UNSEEN_FACES) {
                 conf.settings.keep_unseen_faces = true;
-            } else if (i->opt->lopt == WRITE_TIMINGS) {
+            } else if (i->opt->lopt == COLOR_UNSEEN_FACES) {
+                // Parse RGB from string. E.g., "128,128,128"
+                std::istringstream ss(i->arg);
+                std::vector<std::int32_t> color;
+                std::string token;
+                // Split the input string by commas and store each value as an integer.
+                while (std::getline(ss, token, ',')) {
+                    try {
+                        int value = std::stoi(token);
+                        color.push_back(value);
+                    } catch (const std::invalid_argument&) {
+                        throw std::invalid_argument("Error: Invalid integer value in --color_unseen_faces.");
+                    }
+                }
+
+                // Ensure all values are within the valid RGB range (0-255) or -1 for default
+                for (auto val : color) {
+                    if (val != -1 && (val < 0 || val > 255)) {
+                        throw std::invalid_argument("Error: RGB values must be in the range 0-255 or -1.");
+                    }
+                }
+                conf.settings.color_unseen_faces = color;
+            }
+            else if (i->opt->lopt == WRITE_TIMINGS) {
                 conf.write_timings = true;
             } else if (i->opt->lopt == NO_INTERMEDIATE_RESULTS) {
                 conf.write_intermediate_results = false;

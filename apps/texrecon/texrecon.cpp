@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
 
         if (conf.settings.local_seam_leveling) {
             std::cout << "Running local seam leveling:" << std::endl;
-            tex::local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches, conf.settings.keep_unseen_faces);
+            tex::local_seam_leveling(graph, mesh, vertex_projection_infos, &texture_patches, conf.settings);
         }
         timer.measure("Running local seam leveling");
 
