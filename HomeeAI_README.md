@@ -91,12 +91,27 @@ After `mvs-texturing` is built and input data is prepared, we can start texturiz
 following command
 
 ```shell
-mkdir -p output \
+# Keep unseen faces
+rm -r output \
+&& mkdir -p output \
 && ./build/apps/texrecon/texrecon \
 --tone_mapping=gamma \
 --outlier_removal=gauss_damping \
 --view_selection_model \
 --keep_unseen_faces \
+./input/img_cam/ \
+./input/scene.ply \
+./output/textured_mesh
+
+# Assign color to unseen faces
+rm -r output \
+&& mkdir -p output \
+&& ./build/apps/texrecon/texrecon \
+--tone_mapping=gamma \
+--outlier_removal=gauss_damping \
+--view_selection_model \
+--keep_unseen_faces \
+--color_unseen_faces=192,192,192 \
 ./input/img_cam/ \
 ./input/scene.ply \
 ./output/textured_mesh
@@ -119,3 +134,10 @@ textured_mesh_view_selection.obj
 textured_mesh_view_selection_material0000_map_Kd.png
 textured_mesh_view_selection_material0001_map_Kd.png
 ```
+
+In general, it's better not to skip global and local seam leveling, as they
+produce more visually appealing results with fewer seams in the mesh textures.
+
+## CMake references
+https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1
+https://github.com/friendlyanon/cmake-init
