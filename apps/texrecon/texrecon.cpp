@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <tbb/task_scheduler_init.h>
+#include <tbb/task_arena.h>
 #include <omp.h>
 
 #include <util/timer.h>
@@ -60,7 +60,8 @@ int main(int argc, char **argv) {
     }
 
     // Set the number of threads to use.
-    tbb::task_scheduler_init schedule(conf.num_threads > 0 ? conf.num_threads : tbb::task_scheduler_init::automatic);
+    tbb::task_arena arena(conf.num_threads > 0 ? conf.num_threads : tbb::this_task_arena::max_concurrency());
+
     if (conf.num_threads > 0) {
         omp_set_dynamic(0);
         omp_set_num_threads(conf.num_threads);
