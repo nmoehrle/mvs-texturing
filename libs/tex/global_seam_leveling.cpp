@@ -254,7 +254,7 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
 
     util::WallTimer timer;
     std::cout << "\tCalculating adjustments:"<< std::endl;
-    #pragma omp parallel for
+    #pragma omp parallel for ordered
     for (std::size_t channel = 0; channel < 3; ++channel) {
         /* Prepare solver. */
         Eigen::ConjugateGradient<SpMat, Eigen::Lower> cg;
@@ -276,11 +276,11 @@ global_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
         /* Subtract mean because system is underconstrained and we seek the solution with minimal adjustments. */
         x = x.array() - x.mean();
 
-        #pragma omp critical
+        #pragma omp ordered
         std::cout << "\t\tColor channel " << channel << ": CG took "
             << cg.iterations() << " iterations. Residual is " << cg.error() << std::endl;
 
-        #pragma omp critical
+        #pragma omp ordered
         for (std::size_t i = 0; i < num_vertices; ++i) {
             for (std::size_t j = 0; j < labels[i].size(); ++j) {
                 std::size_t label = labels[i][j];

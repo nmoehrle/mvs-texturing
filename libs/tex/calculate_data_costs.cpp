@@ -238,6 +238,7 @@ calculate_face_projection_infos(mve::TriangleMesh::ConstPtr mesh,
 
         //std::sort(projected_face_view_infos.begin(), projected_face_view_infos.end());
 
+        // TODO: Make this part thread-ordered for determinism.
         #pragma omp critical
         {
             for (std::size_t i = projected_face_view_infos.size(); 0 < i; --i) {
