@@ -67,7 +67,7 @@ class TextureView {
           */
         bool valid_pixel(math::Vec2f pixel) const;
 
-        /** TODO */
+       /** Returns if all three given points (that are usually vertices of a face) project in the view at valid pixels. */
         bool inside(math::Vec3f const & v1, math::Vec3f const & v2, math::Vec3f const & v3) const;
 
         /** Returns the RGB pixel values [0, 1] for the give pixel location. */
